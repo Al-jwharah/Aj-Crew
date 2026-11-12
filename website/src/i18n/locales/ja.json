@@ -7779,6 +7779,7 @@
       "unzip_command_debian_ubuntu": "Debian または Ubuntu",
       "unzip_command_fedora_rhel": "Fedora または RHEL",
       "install_kiro_cli_then_run_on_host": "続いて {{platform}} のゲートウェイホストで次のコマンドを実行し、Kiro CLI をインストールします。",
+      "set_up_your_coding_agent": "コーディングエージェントをセットアップする",
       "setup_intro": "<0>{{platform}} ゲートウェイホスト</0>でコーディングエージェントを起動すると、ダッシュボードが自動的に開きます。",
       "setup_intro_unknown_platform": "<0>ゲートウェイホスト</0>でコーディングエージェントを起動すると、ダッシュボードが自動的に開きます。",
       "gateway_host": "ゲートウェイホスト",

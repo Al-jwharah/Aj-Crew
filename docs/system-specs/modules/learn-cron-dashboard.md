@@ -5031,7 +5031,10 @@ auth-cookie refresh scheduler outside this gate, so a stale access cookie can
 still refresh while the dashboard body is blocked. On a new gateway it:
 
 1. displays the connected gateway's OS so a remote browser does not imply an
-   agent must be installed on the browser machine;
+   agent must be installed on the browser machine. The page is titled
+   **Set up your coding agent**, since any agent on it can finish setup; it
+   reads **Set up Kiro** only while a closed LTS login gate hides the Other
+   coding agents picker and Kiro CLI is the only way through;
 2. offers the Kiro CLI card and an independent Other coding agents picker.
    The picker reads `/api/acp-backends`, shows each harness's detected state and
    install command, and lets the owner select a verified harness. A configured

@@ -37,7 +37,7 @@ vi.mock('../api/client', async () => ({
 vi.mock('../providers/adapters/acp', () => ({ clearCachedModels: vi.fn() }))
 
 import { api } from '../api/client'
-import { probe, status } from './KiroPrerequisiteGateTestUtils'
+import { SETUP_TITLE, probe, status } from './KiroPrerequisiteGateTestUtils'
 
 const locked = { lts_login_required: true, installed: true }
 
@@ -193,6 +193,24 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
     expect(screen.queryByRole('button', { name: 'Use other coding agents' })).not.toBeInTheDocument()
   })
 
+  it('titles the page for Kiro while locked and for any coding agent otherwise', async () => {
+    // Locked, the other agents are hidden and Kiro CLI is the only way through,
+    // so the title names it. Unlocked, the same first-run page offers the other
+    // agents too, and a Kiro-only title would be false.
+    vi.mocked(api.kiroPrerequisite).mockResolvedValue(status({ ...locked, installed: false }))
+    const lockedView = renderGate()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Set up Kiro' })).toBeInTheDocument()
+    expect(screen.queryByText('Set up your coding agent')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Use other coding agents' })).not.toBeInTheDocument()
+    lockedView.unmount()
+
+    vi.mocked(api.kiroPrerequisite).mockResolvedValue(status())
+    renderGate()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Set up your coding agent' })).toBeInTheDocument()
+    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Use other coding agents' })).toBeInTheDocument()
+  })
+
   // A relock of a dashboard in use: the app stays mounted and a display-only
   // notice rides beside it, above any open dialog, without touching it.
   function Draft() {
@@ -241,7 +259,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
     // no first-run chrome replaces the app.
     expect(container).not.toContainElement(notice)
     expect(container.textContent).toBe('')
-    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText(SETUP_TITLE)).not.toBeInTheDocument()
 
     // Signing in reopens the gate: the next poll clears the notice, draft kept.
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(open)
@@ -358,7 +376,7 @@ describe('KiroPrerequisiteGate LTS login gate', () => {
     expect(within(screenEl).getByText(VAULT_COMMAND).tagName).toBe('CODE')
     expect(screen.queryByText('kiro-cli login')).not.toBeInTheDocument()
     // No kiro-cli install step: the vault gate does not need kiro-cli.
-    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText(SETUP_TITLE)).not.toBeInTheDocument()
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
     // The side panel names the organization sign-in, not a Kiro CLI install.
     expect(screen.queryByText(/Install Kiro CLI/)).not.toBeInTheDocument()

@@ -43,7 +43,7 @@ vi.mock('../api/client', async () => ({
 vi.mock('../providers/adapters/acp', () => ({ clearCachedModels: vi.fn() }))
 
 import { api, ApiError } from '../api/client'
-import { probe, status } from './KiroPrerequisiteGateTestUtils'
+import { SETUP_TITLE, probe, status } from './KiroPrerequisiteGateTestUtils'
 
 // The Pod remedy block is real nested YAML. Matched on the code element's exact
 // text: RTL's default matcher collapses whitespace, which would hide a lost
@@ -199,7 +199,7 @@ describe('KiroPrerequisiteGate', () => {
     )
 
     expect(await screen.findByText('Dashboard loaded')).toBeInTheDocument()
-    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText(SETUP_TITLE)).not.toBeInTheDocument()
   })
 
   it('sends the user to Kiro CLI setup instead of installing anything', async () => {
@@ -774,7 +774,7 @@ describe('KiroPrerequisiteGate', () => {
     expect(screen.queryByText('kiro-cli login')).not.toBeInTheDocument()
     // Nothing is paused: no gate chrome of any kind renders over the app.
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText(SETUP_TITLE)).not.toBeInTheDocument()
   })
 
   it('leaves an established non-owner dashboard completely unblocked', async () => {
@@ -883,11 +883,11 @@ describe('KiroPrerequisiteGate', () => {
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText(SETUP_TITLE)).not.toBeInTheDocument()
 
     resolveStatus(status())
 
-    expect(await screen.findByText('Set up Kiro')).toBeInTheDocument()
+    expect(await screen.findByText('Set up your coding agent')).toBeInTheDocument()
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
   })
 
@@ -964,7 +964,7 @@ describe('KiroPrerequisiteGate', () => {
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    expect(await screen.findByText('Set up Kiro')).toBeInTheDocument()
+    expect(await screen.findByText('Set up your coding agent')).toBeInTheDocument()
     expect(screen.queryByTestId('kiro-gate-status-error')).not.toBeInTheDocument()
   })
 
@@ -1086,7 +1086,7 @@ describe('KiroPrerequisiteGate', () => {
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    expect(await screen.findByText('Set up Kiro')).toBeInTheDocument()
+    expect(await screen.findByText('Set up your coding agent')).toBeInTheDocument()
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
   })
 

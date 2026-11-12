@@ -123,7 +123,7 @@ async function main() {
     if (path === '/api/chat/slots') return json(route, slots)
     if (path.startsWith('/api/chat/slots/')) return json(route, detail)
     // The first-run gate is a FULL-SCREEN takeover until `ready` — without this
-    // the capture is a screenshot of "Set up Kiro", not of the sidebar.
+    // the capture is a screenshot of the setup page, not of the sidebar.
     if (path === '/api/kiro-prerequisite') {
       return json(route, {
         platform: 'linux',
