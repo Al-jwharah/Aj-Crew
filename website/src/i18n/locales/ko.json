@@ -7779,6 +7779,7 @@
       "unzip_command_debian_ubuntu": "Debian 또는 Ubuntu",
       "unzip_command_fedora_rhel": "Fedora 또는 RHEL",
       "install_kiro_cli_then_run_on_host": "그런 다음 {{platform}} 게이트웨이 호스트에서 다음을 실행해 Kiro CLI를 설치하세요.",
+      "set_up_your_coding_agent": "코딩 에이전트 설정",
       "setup_intro": "<0>{{platform}} 게이트웨이 호스트</0>에서 코딩 에이전트를 실행하면 대시보드가 자동으로 열립니다.",
       "setup_intro_unknown_platform": "<0>게이트웨이 호스트</0>에서 코딩 에이전트를 실행하면 대시보드가 자동으로 열립니다.",
       "gateway_host": "게이트웨이 호스트",

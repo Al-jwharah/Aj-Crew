@@ -8397,6 +8397,7 @@
       "unzip_command_debian_ubuntu": "Debian или Ubuntu",
       "unzip_command_fedora_rhel": "Fedora или RHEL",
       "install_kiro_cli_then_run_on_host": "Затем выполни эту команду на хосте шлюза {{platform}}, чтобы установить Kiro CLI.",
+      "set_up_your_coding_agent": "Настроить агента для программирования",
       "setup_intro": "Запусти агента для программирования на <0>хосте шлюза {{platform}}</0>, и панель откроется автоматически.",
       "setup_intro_unknown_platform": "Запусти агента для программирования на <0>хосте шлюза</0>, и панель откроется автоматически.",
       "gateway_host": "Хост шлюза",

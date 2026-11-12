@@ -977,7 +977,7 @@ background work. It is:
   `_resolve_named_agent_model` in `config.md`). A start that fails is logged and
   leaves no `_bg` session. When the refusal carries the `kiro_cli_missing` tag
   (no Kiro CLI installed, the normal state right after a fresh install, which the
-  dashboard's Set up Kiro page handles) it is one warning line with the
+  dashboard's first-run setup page handles) it is one warning line with the
   refusal's message; any other failure is logged with its traceback
 - **Never expired** by idle cleanup (`_expire_idle` skips it)
 - **Serialized** by the per-session semaphore (one background task at a time)

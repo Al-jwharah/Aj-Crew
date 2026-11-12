@@ -137,7 +137,7 @@ async function main() {
     if (path.startsWith('/api/chat/slots/')) return json(route, detail)
     if (path === '/api/chat/folders') return json(route, folders)
     if (path === '/api/kiro-prerequisite') {
-      // Past the "Set up Kiro" gate: CLI installed, authenticated, ready.
+      // Past the first-run setup gate: CLI installed, authenticated, ready.
       return json(route, {
         platform: 'linux', installed: true, authenticated: true, ready: true,
         initial_setup_complete: true, repair_required: false, docs_url: '',

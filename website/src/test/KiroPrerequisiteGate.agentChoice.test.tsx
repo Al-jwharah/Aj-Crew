@@ -41,7 +41,7 @@ vi.mock('../api/client', async () => ({
 vi.mock('../providers/adapters/acp', () => ({ clearCachedModels: vi.fn() }))
 
 import { api, ApiError } from '../api/client'
-import { probe, status } from './KiroPrerequisiteGateTestUtils'
+import { SETUP_TITLE, probe, status } from './KiroPrerequisiteGateTestUtils'
 
 describe('KiroPrerequisiteGate agent choice', () => {
   const codeBlock = (text: string) =>
@@ -339,7 +339,7 @@ describe('KiroPrerequisiteGate agent choice', () => {
   it('opens the dashboard when the agent choice saved but the setup marker did not', async () => {
     // A 503 whose body says config_saved: the config on disk names the new
     // agent, so re-reading it is what lets a saved, usable agent through. Left
-    // on the failure path alone, the gate would keep showing "Set up Kiro" and
+    // on the failure path alone, the gate would keep showing the setup page and
     // every retry would reproduce the same 503.
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status())
     vi.mocked(api.acpBackends).mockResolvedValue({ backends: [probe()] })
@@ -704,7 +704,7 @@ describe('KiroPrerequisiteGate agent choice', () => {
 
     await settle(queryClient)
     expect(screen.getByText('Dashboard loaded')).toBeInTheDocument()
-    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText(SETUP_TITLE)).not.toBeInTheDocument()
   })
 
   it('disables a sandbox-blocked agent choice before saving when the host has no sandbox', async () => {
@@ -1119,7 +1119,7 @@ describe('KiroPrerequisiteGate agent choice', () => {
     vi.mocked(api.acpBackends).mockRejectedValue(new ApiError(403, 'forbidden'))
     render()
 
-    expect(await screen.findByText('Set up Kiro')).toBeInTheDocument()
+    expect(await screen.findByText('Set up your coding agent')).toBeInTheDocument()
     const toggle = screen.getByRole('button', { name: 'Use other coding agents' })
     if (configured === 'kiro') fireEvent.click(toggle)
     expect(toggle).toHaveAttribute('aria-expanded', 'true')

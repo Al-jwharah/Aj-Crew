@@ -7985,6 +7985,7 @@
       "unzip_command_debian_ubuntu": "Debian oder Ubuntu",
       "unzip_command_fedora_rhel": "Fedora oder RHEL",
       "install_kiro_cli_then_run_on_host": "Führe dann dies auf dem {{platform}}-Gateway-Host aus, um Kiro CLI zu installieren.",
+      "set_up_your_coding_agent": "Deinen Coding-Agenten einrichten",
       "setup_intro": "Bring einen Coding-Agenten auf dem <0>{{platform}}-Gateway-Host</0> zum Laufen, dann öffnet sich das Dashboard automatisch.",
       "setup_intro_unknown_platform": "Bring einen Coding-Agenten auf dem <0>Gateway-Host</0> zum Laufen, dann öffnet sich das Dashboard automatisch.",
       "gateway_host": "Gateway-Host",

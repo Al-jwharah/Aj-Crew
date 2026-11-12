@@ -7779,6 +7779,7 @@
       "unzip_command_debian_ubuntu": "Debian 或 Ubuntu",
       "unzip_command_fedora_rhel": "Fedora 或 RHEL",
       "install_kiro_cli_then_run_on_host": "然后在 {{platform}} 网关主机上运行以下命令来安装 Kiro CLI。",
+      "set_up_your_coding_agent": "设置编程代理",
       "setup_intro": "在<0>{{platform}} 网关主机</0>上运行一个编程代理，然后仪表板会自动打开。",
       "setup_intro_unknown_platform": "在<0>网关主机</0>上运行一个编程代理，然后仪表板会自动打开。",
       "gateway_host": "网关主机",
