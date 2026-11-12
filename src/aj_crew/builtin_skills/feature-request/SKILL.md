@@ -28,9 +28,9 @@ Before gathering details, decide where the report belongs. Take the first case
 that fits:
 
 1. **A security vulnerability.** Do not draft it, search for it or file it.
-   Give the user the security policy and tell them to report it privately by
-   the email address that file lists, with the `[SECURITY]` subject prefix —
-   never in a public issue:
+   Give the user the security policy and tell them to report it privately
+   through the private advisory form that file links — never in a public
+   issue:
 
    ```
    https://github.com/Al-jwharah/Aj-Crew/blob/main/SECURITY.md
@@ -45,10 +45,10 @@ that fits:
    the workflow below as a bug report.
 
 3. **A question, or an idea not yet ready to be a request.** Point the user to
-   Discussions:
+   the question form:
 
    ```
-   https://github.com/Al-jwharah/Aj-Crew/discussions
+   https://github.com/Al-jwharah/Aj-Crew/issues/new?template=question.yml
    ```
 
 4. **Anything else** — a feature request, a bug to file from this conversation,

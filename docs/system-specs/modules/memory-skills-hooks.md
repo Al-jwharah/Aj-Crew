@@ -4607,18 +4607,20 @@ The bundled `feature-request` skill is the in-session answer when a user asks to
 report a problem or send feedback; both phrases are among its triggers, and its
 description names them for the skill index. Before it gathers anything it routes
 the report, first match wins: a security vulnerability goes to `SECURITY.md`'s
-private email and is never drafted or filed in public; something broken on this
+private advisory form and is never drafted or filed in public; something broken on this
 install goes to the Report a Problem dialog, or `ajcrew doctor --bundle` without
 the dashboard, both of which build the redacted diagnostics bundle and link to
 the tracker the edition's `FeedbackTrackerProvider` names; a question or early
-idea goes to Discussions; anything else continues to the skill's GitHub filing
+idea goes to the question issue form; anything else continues to the skill's GitHub filing
 workflow. The "Request a Feature" button does not load the skill but seeds
 `FEATURE_REQUEST_PROMPT_FALLBACK`, which carries the same three routes ahead of
 its own filing workflow. `website/src/test/featureRequestRouting.test.ts` holds
 both copies to these checks: each `issues/new?template=` form they name exists
-in `.github/ISSUE_TEMPLATE/`; the security and Discussions links are the ones
-its `config.yml` lists, cited whole rather than inside a longer link, and
-`SECURITY.md` says not to open a public issue and gives a `mailto:` address; the
+in `.github/ISSUE_TEMPLATE/`; the security link is the one its `config.yml`
+lists and the question link opens the one form there that applies the `question`
+label, each cited whole rather than inside a longer link, and `SECURITY.md` says
+not to open a public issue, links this repository's private advisory form and
+carries no `mailto:` link; the
 security route equals the text the test pins for that copy, ignoring only paired
 `**` bold outside code and the amount of whitespace; the security route comes
 first, which in the skill means that "Route it first", parsed as CommonMark up
