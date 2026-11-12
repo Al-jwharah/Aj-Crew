@@ -6,11 +6,11 @@ import remarkParse from 'remark-parse'
 import { unified } from 'unified'
 import { parse } from 'yaml'
 
-import { FEATURE_REQUEST_PROMPT_FALLBACK } from '../prompts/featureRequest'
+import { FEATURE_REQUEST_PROMPT_FALLBACK, FEATURE_REQUEST_URL } from '../prompts/featureRequest'
 
 // The `feature-request` skill tells the agent where a mid-session problem report
 // goes: a vulnerability to SECURITY.md, a broken install to the Report a Problem
-// dialog, a question to Discussions, the rest to the public issue forms. Every
+// dialog, a question to the question form, the rest to the public issue forms. Every
 // one of those destinations is owned by another file, so each destination is
 // checked against the file that owns it, and the `ajcrew` command against the
 // CLI parser in test/test_feature_request_skill_routing.py. A renamed template, a
@@ -31,6 +31,16 @@ const contactLinks: { name: string; url: string }[] = parse(
   read('.github/ISSUE_TEMPLATE/config.yml'),
 ).contact_links
 const enManual = JSON.parse(read('website/src/i18n/locales/en.manual.json'))
+
+// The form a question goes to: the one issue form that applies the `question`
+// label, as the link the issue chooser opens for it.
+const questionForms = templates.filter(
+  (file) => file !== 'config.yml' && (parse(read(`.github/ISSUE_TEMPLATE/${file}`)).labels ?? []).includes('question'),
+)
+const questionFormUrl = () => {
+  expect(questionForms, 'exactly one issue form applies the question label').toHaveLength(1)
+  return `${FEATURE_REQUEST_URL}?template=${questionForms[0]}`
+}
 
 function contactUrl(name: RegExp): string {
   const link = contactLinks.find((l) => name.test(l.name))
@@ -68,18 +78,18 @@ const flat = (text: string) =>
 // judge meaning.
 const SKILL_SECURITY_ROUTE = (url: string) =>
   '1. A security vulnerability. Do not draft it, search for it or file it. Give the user ' +
-  'the security policy and tell them to report it privately by the email address that ' +
-  'file lists, with the `[SECURITY]` subject prefix — never in a public issue: ``` ' +
+  'the security policy and tell them to report it privately through the private advisory ' +
+  'form that file links — never in a public issue: ``` ' +
   url +
   ' ```'
 const FALLBACK_SECURITY_ROUTE = (url: string) =>
   'If the user describes a security vulnerability, do not draft or file it: give them ' +
   url +
-  ' and tell them to report it privately by email as that file says — never in a public issue.'
+  ' and tell them to report it privately through the private advisory form that file links — never in a public issue.'
 
 // A link counts only where it stands whole: after a space, tab, line break, "("
 // or the start, and before a space, tab, line break or the end, with only
-// closing punctuation between. So ".../discussions-archive" or
+// closing punctuation between. So ".../question.yml.bak" or
 // ".../SECURITY.md.bak" does not cite it. The classes are spelt out because `\s`
 // also matches characters such as U+FEFF that do not end a link.
 function expectCitesWhole(where: string, text: string, url: string) {
@@ -128,8 +138,8 @@ describe('feature-request routing', () => {
       expect(flat(cited[0])).toBe(securityRoute(url))
     })
 
-    it('sends a question to the Discussions link config.yml offers', () => {
-      expectCitesWhole(name, text, contactUrl(/question/i))
+    it('sends a question to the issue form that carries the question label', () => {
+      expectCitesWhole(name, text, questionFormUrl())
     })
 
     // The labels and the Settings path are the shipped English strings, so
@@ -153,10 +163,13 @@ describe('feature-request routing', () => {
 
   // The URL above is only a private route if the file it names says so. The
   // emphasis is stripped first so moving the bold does not read as a change.
-  it('cites a security policy that reports privately by email', () => {
+  it('cites a security policy that reports through a private advisory', () => {
     expect(contactUrl(/security/i)).toMatch(/\/blob\/main\/SECURITY\.md$/)
     expect(securityPolicy.replace(/\*/g, '')).toMatch(/do not create a public/i)
-    expect(securityPolicy).toContain('mailto:')
+    expect(securityPolicy).toContain(`${FEATURE_REQUEST_URL.replace(/\/issues\/new$/, '')}/security/advisories/new`)
+    // An address in the policy is where a reader sends the report, so the policy
+    // links none: the one it names in prose belongs to another project.
+    expect(securityPolicy).not.toContain('mailto:')
   })
 
   // "Take the first case that fits": the skill is parsed as CommonMark, and its
@@ -181,7 +194,7 @@ describe('feature-request routing', () => {
     expectInOrder('skill', flat(spelt(intro, list)), [
       security,
       'Report a Problem dialog',
-      contactUrl(/question/i),
+      questionFormUrl(),
       'Anything else',
     ])
   })
@@ -198,7 +211,7 @@ describe('feature-request routing', () => {
     expectInOrder('fallback', FEATURE_REQUEST_PROMPT_FALLBACK, [
       security,
       'Report a Problem dialog',
-      contactUrl(/question/i),
+      questionFormUrl(),
       'Guide them conversationally',
     ])
   })

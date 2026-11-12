@@ -1,0 +1,31 @@
+name: Question or idea
+description: Ask how something works, or float an idea before it is a request.
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Questions and early ideas live in issues, so the answer stays where the
+        next person with the same question can find it. Found a security
+        vulnerability? Do not write it here: follow
+        [SECURITY.md](https://github.com/Al-jwharah/Aj-Crew/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question or idea
+      description: >-
+        What you want to know, or the idea in a few sentences. For a question,
+        say what you are trying to get done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What you have tried or read
+      description: >-
+        Docs you looked at, commands you ran, or where you got stuck. Leave
+        blank if there is nothing to add.
+    validations:
+      required: false
