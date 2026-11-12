@@ -1,8 +1,8 @@
 # Use Cases & Workflows
 
-Real-world workflows from the Aj Crew community. These combine Aj Crew's
-capabilities — cron jobs, subagents, memory, chat channels, and task runner —
-into end-to-end automation.
+Example workflows that combine Aj Crew's capabilities — cron jobs, subagents,
+memory, chat channels, and task runner — into end-to-end automation. They were
+first written up by users of Kiro Crew, the project Aj Crew is forked from.
 
 ## Backlog Crusher
 
@@ -116,7 +116,7 @@ List available agents with `ajcrew agent list`, then select one for a CLI chat w
 Each installed agent has its own system prompt, tools, and skills — scoped via
 per-agent MCP configuration.
 
-## Tips from the Community
+## Tips
 
 - **Unattended overnight runs**: For `ajcrew run`, allowlist the tools the spec needs in `hooks.auto_approve_tools`; for a gateway started with `--approval yolo`, use an isolated `AJCREW_HOME`. Review the pull requests in the morning.
 - **Workspace isolation**: Use `AJCREW_HOME` and `AJCREW_PORT` env vars to run multiple Aj Crew instances with separate data.

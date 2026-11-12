@@ -203,6 +203,12 @@ install moves between lanes.
 
 #### Pinning an exact version
 
+> **These are upstream's version numbers.** Aj Crew has published no release, so
+> no version below exists on an Aj Crew host. The numbers `0.1.0`, `0.1.1` and
+> `0.1.2` name releases of the upstream Kiro Crew line the installer was written
+> against; the cutoff is the rule the installer enforces against whichever
+> release feed you point it at.
+
 **The minimum pinnable release is `0.1.2`.** `--version` resolves an immutable
 per-version signed manifest, and a pinned install fails closed when that
 manifest does not exist. Manifest signing was enabled during the `0.1.x` line,
@@ -1449,7 +1455,7 @@ shortcuts but does not touch `~/.kiro/crew`.
 
 ```bash
 docker stop ajcrew && docker rm ajcrew   # graceful stop, then remove
-docker rmi ghcr.io/al-jwharah/ajcrew:stable # remove the image (match the tag you pulled)
+docker rmi ajcrew:dev                    # remove the image (match the tag you built)
 ```
 
 `docker stop` sends SIGTERM and gives the gateway time to run its shutdown

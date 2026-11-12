@@ -214,7 +214,7 @@
     {
       "feature": "Use Cases & Workflows",
       "title": "Use Cases & Workflows",
-      "summary": "Real-world workflows from the Aj Crew community. These combine Aj Crew's capabilities \u2014 cron jobs, subagents, memory, chat channels, and task runner \u2014 into end-to-end automation.",
+      "summary": "Example workflows that combine Aj Crew's capabilities \u2014 cron jobs, subagents, memory, chat channels, and task runner \u2014 into end-to-end automation. They were first written up by users of Kiro Crew, the project Aj Crew is forked from.",
       "doc": "use-cases.md",
       "mtime": 1791408314.0
     },

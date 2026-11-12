@@ -123,7 +123,7 @@ gracefully rather than failing the turn.
 - [Coming from kiro-cli](coming-from-kiro-cli.md): how Aj Crew relates to kiro-cli, what
   carries over, why a chat behaves differently, and how to get CLI-style behaviour
 - [Configuration](configuration.md): config file reference, environment variables, sandbox
-- [Use Cases](use-cases.md): real-world workflows from the community
+- [Use Cases](use-cases.md): example end-to-end workflows
 - [Troubleshooting](troubleshooting.md): common issues and fixes
 - [Blocked commands and credential access](blocked-commands.md): why a command was
   refused, what the agent is told to do instead, and how to check your AWS or SSO
