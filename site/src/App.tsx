@@ -1,7 +1,6 @@
 import './App.css';
-import { ScrollProgress, Particles, Nav, Hero, TerminalDemo, Stats, SocialProof, ProblemSolution } from './SectionsTop';
+import { ScrollProgress, Particles, Nav, Hero, TerminalDemo, SocialProof, ProblemSolution } from './SectionsTop';
 import { Features, InAction, HowItWorks, Architecture, ThemesSection, FaqSection, Cta, Footer } from './SectionsBottom';
-import { CaseStudies } from './CaseStudies';
 import { ThemeProvider } from './ThemeContext';
 
 function Landing() {
@@ -18,13 +17,11 @@ function Landing() {
           <Nav />
           <Hero />
           <div className="relative z-10 bg-white dark:bg-[#06080f] transition-colors">
-            <Stats />
             <SocialProof />
             <TerminalDemo />
             <ProblemSolution />
             <Features />
             <InAction />
-            <CaseStudies />
             <HowItWorks />
             <Architecture />
             <ThemesSection />
