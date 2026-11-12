@@ -3,6 +3,10 @@
 Practical solutions for common issues when running Aj Crew in Docker. For
 general setup and configuration, see [docker.md](docker.md).
 
+The commands here use `ajcrew:dev`, the tag
+[Building locally](docker.md#building-locally) produces. Aj Crew publishes no
+container image, so there is nothing to `docker pull`.
+
 ---
 
 ## 1. Container starts but dashboard is unreachable
@@ -25,7 +29,7 @@ compose. Re-create the container with the correct mapping:
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/al-jwharah/ajcrew:stable
+  ajcrew:dev
 ```
 
 ### Check AJCREW_BIND
@@ -51,7 +55,7 @@ docker run -d --name ajcrew \
   -p 127.0.0.1:8080:8080 \
   -e AJCREW_PORT=8080 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/al-jwharah/ajcrew:stable
+  ajcrew:dev
 ```
 
 ### Firewall / Docker Desktop
@@ -137,7 +141,7 @@ sudo chown -R 1000:1000 /path/to/host/dir
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v /path/to/host/dir:/home/ajcrew \
-  ghcr.io/al-jwharah/ajcrew:stable
+  ajcrew:dev
 ```
 
 ### Read-only filesystem
@@ -334,13 +338,13 @@ layer and vanishes on removal:
 
 ```bash
 # WRONG — no volume:
-docker run -d --name ajcrew -p 5476:5476 ghcr.io/al-jwharah/ajcrew:stable
+docker run -d --name ajcrew -p 5476:5476 ajcrew:dev
 
 # CORRECT — named volume:
 docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
   -v ajcrew-home:/home/ajcrew \
-  ghcr.io/al-jwharah/ajcrew:stable
+  ajcrew:dev
 ```
 
 ### `docker compose down -v` removes volumes
@@ -393,7 +397,7 @@ there, being Python's and Debian's own).
 1. **Build a custom image** extending the official one — the reliable route:
 
    ```dockerfile
-   FROM ghcr.io/al-jwharah/ajcrew:stable
+   FROM ajcrew:dev
    USER root
    RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
    USER ajcrew

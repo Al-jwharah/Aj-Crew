@@ -332,7 +332,7 @@ stacks (open in speedscope / flamegraph.pl). See `docs/architecture/design-notes
 | Command | Description |
 |---------|-------------|
 | `AJCREW_DEBUG=1 ajcrew perf sample --call mod:fn` | Profile that callable in-process (no extra dependency) |
-| `AJCREW_DEBUG=1 ajcrew perf sample` | Attach to the running gateway (needs `pip install "ajcrew[perf]"`) |
+| `AJCREW_DEBUG=1 ajcrew perf sample` | Attach to the running gateway (needs py-spy: `pip install py-spy`) |
 | `AJCREW_DEBUG=1 ajcrew perf sample --pid 1234 --seconds 30` | Attach to a specific PID for N seconds (1-300) |
 | `... --interval 0.002` | Seconds between samples (0.001-1.0, default 0.005) |
 | `... --output /tmp/p.folded` | Where to write the profile (default `./ajcrew-profile.folded`) |

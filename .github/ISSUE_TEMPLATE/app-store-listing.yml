@@ -1,14 +1,17 @@
 name: App Store listing request
-description: Request that your Aj Crew app be listed in the official App Store catalog.
+description: Ask for your app to be added to the app list bundled with Aj Crew.
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        The official App Store catalog is maintainer-curated: its repository is
-        not publicly writable, so outside authors do not open the listing pull
-        request themselves. This issue is how you request a listing — a
-        maintainer authors the catalog entry from what you provide here.
+        Aj Crew does not run a published App Store catalog. The one catalog
+        that exists, `apps.crew.kiro.dev`, belongs to the upstream Kiro Crew
+        project, and only its maintainers decide what it lists; an issue here
+        cannot add an app to it. What this issue requests is a row in the seed
+        list bundled with Aj Crew (`src/aj_crew/apps/app-registry.json`), which
+        is what Discover shows on a stock install. The maintainer adds the row
+        from what you provide here.
 
         Before filing, self-run the review checklist in
         [publishing-guide.md section 14](https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/app-kit/publishing-guide.md).
@@ -116,13 +119,10 @@ body:
     attributes:
       label: Ready-to-paste entry (optional)
       description: >-
-        If you have already drafted a catalog entry, paste it here in the
-        authored shape described in section 10 of the publishing guide (the
-        shape of `catalog/official-registry.json` in kirodotdev/KiroCrewApps).
-        `apps.crew.kiro.dev/official-registry.json` serves the published
-        catalog document, not a schema to write against. This is a convenience
-        for the maintainer authoring the entry — it is not authoritative and
-        the pipeline pins whatever commit it resolves.
+        If you have already drafted a seed row, paste it here in the row
+        shape section 10 of the publishing guide gives for the bundled seed
+        (`name`, `gitUrl`, `branch`). This is a convenience for the maintainer
+        adding the row; it is not authoritative.
       render: json
     validations:
       required: false

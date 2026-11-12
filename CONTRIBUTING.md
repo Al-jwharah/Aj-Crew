@@ -22,10 +22,14 @@ it leaves room for an answer nobody had thought of.
 ## Finding Something to Work On
 
 Start with the [open issues](https://github.com/Al-jwharah/Aj-Crew/issues). Issues
-carry an `area:` label naming the subsystem they land in — `area: dashboard`,
-`area: agents`, `area: cron` and so on — so you can filter to the part of the
-codebase you want to work in, and a type label (`bug`, `enhancement`,
-`documentation`) telling you what kind of change it is.
+carry a type label (`bug`, `enhancement`, `documentation`, `question`) telling
+you what kind of change it is.
+
+The `area:` and `tier:` labels this guide and the CI docs mention are applied by
+the triage automation Aj Crew inherited from upstream. That automation is not
+set up on this repository, so those labels do not exist here yet and nothing
+answers a `/claim` comment. Until it is set up, say in a comment on the issue
+that you are working on it, and the maintainer assigns it to you by hand.
 
 Before starting anything substantial, check whether someone is already on it. For a
 large change, open an issue first and get a reaction to the approach. Nobody
@@ -33,6 +37,8 @@ enjoys declining a finished pull request that went the wrong direction, and a
 maintainer can usually tell you in a paragraph.
 
 ### Claiming an issue
+
+This section describes the triage automation once it runs here.
 
 To tell us you are working on a `tier:T1` or `tier:T2` issue, comment `/claim` on it
 as the first line of your comment. If nobody holds it, the maintainers' automation
@@ -75,14 +81,13 @@ The root build target owns frontend dependency installation, SPA staging,
 virtualenv creation, and the editable backend install. Do not duplicate those
 steps manually.
 
-How you clone depends on your access. If you have push access (members of
-[`ajcrew-active-contributors`](https://github.com/orgs/kirodotdev/teams/ajcrew-active-contributors)
-and maintainers), clone this repository directly rather than forking: a branch
-here reaches the CodeBuild runner fleet, which a fork's branches cannot, so a
-fork pull request runs on the shared GitHub-hosted pool and queues behind
-everything else. The second remote points at the same repository on purpose, so
-that every `upstream` command in this guide reads the same whichever way you
-cloned.
+How you clone depends on your access. If you have push access (the people in
+[MAINTAINERS.md](MAINTAINERS.md)), clone this repository directly rather than
+forking. Aj Crew has no runner fleet of its own, so CI runs on GitHub-hosted
+runners either way. The second remote points
+at the same repository on purpose, so that every `upstream` command in this
+guide reads the same whichever way you cloned. In this guide `upstream` means
+this repository, not the Kiro Crew project Aj Crew was forked from.
 
 ```bash
 # With push access: clone this repository
@@ -95,7 +100,7 @@ Without push access, fork first:
 
 ```bash
 # Fork the repo on GitHub, then clone your fork
-git clone https://github.com/<your-username>/AjCrew.git
+git clone https://github.com/<your-username>/Aj-Crew.git
 cd Aj-Crew
 git remote add upstream https://github.com/Al-jwharah/Aj-Crew.git
 ```
@@ -349,8 +354,7 @@ git push --force-with-lease origin <feature-branch>
 ## Pull Request Workflow
 
 1. **Fork** the repository on GitHub, unless you have push access, in which
-   case branch on this repository directly as in First-Time Setup above. Your
-   branches then reach the CodeBuild runner fleet, which a fork's cannot.
+   case branch on this repository directly as in First-Time Setup above.
 2. **Branch** from `main` in a git worktree, never in the main clone (the
    `ajcrew-worktree-dev` skill owns this rule):
    ```bash
@@ -472,13 +476,13 @@ removal request stays honored.
 
 ## Questions?
 
-Open a [GitHub issue](https://github.com/Al-jwharah/Aj-Crew/issues) or start a
-discussion in the repository.
+Open a [question issue](https://github.com/Al-jwharah/Aj-Crew/issues/new?template=question.yml).
+GitHub Discussions is not enabled on this repository.
 
 ## Security Issues
 
 **Do not** report security vulnerabilities through public GitHub issues. See
-[SECURITY.md](SECURITY.md) for responsible disclosure instructions.
+[SECURITY.md](SECURITY.md) for how to report one privately.
 
 ## Code of Conduct
 

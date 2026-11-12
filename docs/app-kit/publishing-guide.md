@@ -429,18 +429,22 @@ your `app.json` into the published entry. Clients install the pinned commit
 exactly and read update availability from the published entry's `version` field,
 so republishing a revised entry is also how an update reaches users.
 
-To request a listing, open an **App Store listing request** issue using the
+That catalog belongs to the upstream Kiro Crew project. Aj Crew is an
+independent fork: its maintainer cannot author entries there, and a stock Aj Crew
+install does not fetch it unless the user opts in. A listing in it is a request
+to upstream's maintainers, on upstream's tracker.
+
+What Aj Crew itself curates is the bundled seed below. To request a row in it,
+open an **App Store listing request** issue using the
 [listing request template](https://github.com/Al-jwharah/Aj-Crew/issues/new?template=app-store-listing.yml).
 Provide the git source, the ref to pin, the display name, a summary, the
 category/tags, and author credit, and confirm the section 14 review checklist.
-A maintainer picks it up and authors the catalog entry with full author credit.
-(Opening the catalog repository up to outside contributors is a possible
-alternative, but it is a maintainer-only org-visibility decision, not something
-an author can do.)
+The maintainer adds the seed row with full author credit, or you open the pull
+request yourself.
 
 **The bundled seed** (`src/aj_crew/apps/app-registry.json` in the Aj Crew
-repo) is the catalog's offline snapshot, not the listing surface: it is what a
-client falls back to when the catalog host is unreachable. Entries here ride the
+repo) is what Discover shows on a stock install, and what a client that opted in
+to the catalog falls back to when the catalog host is unreachable. Entries here ride the
 Aj Crew release train: a seed change follows the normal contribution flow and
 ships with the next release. A catalog row for the same repository supersedes the
 seed row, so the seed needs touching only when offline availability matters.
@@ -686,7 +690,7 @@ useful to Aj Crew users.
 | Enable | Trust the app first, then `POST /api/apps/{name}/enable`, or `ajcrew app enable <name>` |
 | Live reload | `ajcrew app dev <name>` |
 | Update local copy | `POST /api/apps/{name}/update`, or `ajcrew app update <name> [--source <dir>]` |
-| List a registry app | Official catalog: open an [App Store listing request](https://github.com/Al-jwharah/Aj-Crew/issues/new?template=app-store-listing.yml) issue (maintainer-curated). Bundled seed or a federated registry: add an entry to `app-registry.json`, open a pull request |
+| List a registry app | Bundled seed: open an [App Store listing request](https://github.com/Al-jwharah/Aj-Crew/issues/new?template=app-store-listing.yml) issue, or add an entry to `app-registry.json` and open a pull request. Upstream's catalog: ask upstream's maintainers. A federated registry: add an entry to its index |
 | User install | Apps page, Discover, Install |
 | Ship an update | Bump `version`, push |
 
