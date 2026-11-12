@@ -75,12 +75,12 @@ With `agent.acp_backend` set to `kiro`, a missing `kiro-cli` makes spawning a
 session fail with `kiro-cli not found (<searched directories>)`, followed by the
 install link and the `AJCREW_KIRO_BIN` override for a binary outside those
 directories; the default backend runs the bundled engine instead. On the first
-dashboard launch the **Set up Kiro** page detects the missing prerequisite,
-shows copyable installer commands for the host's platform and the login commands
-to run yourself, and offers a **Use other coding agents** picker so another
-configured harness can finish setup instead. Aj Crew does not run the install
-or the login itself. `ajcrew doctor` reports both the binary and the login
-state.
+dashboard launch the **Set up your coding agent** page detects the missing
+prerequisite, shows copyable installer commands for the host's platform and the
+login commands to run yourself, and offers a **Use other coding agents** picker
+so another configured harness can finish setup instead. Aj Crew does not run
+the install or the login itself. `ajcrew doctor` reports both the binary and the
+login state.
 
 ### Embeddings: nothing to install
 
@@ -672,13 +672,13 @@ kiro-cli login
 ```
 
 The desktop app does not carry its own kiro-cli: it detects the one you
-installed, and the **Set up Kiro** page shows the install and sign-in commands
-until it finds one. (A build made with `BUNDLE_KIRO_CLI=1` stages a copy inside
-the app; that copy is not on your shell `PATH`, so the page then serves the
-login command with the bundled binary's absolute path.) If you updated from a
-version that included kiro-cli and never installed your own, install it from
-<https://kiro.dev/cli/>; your sign-in carries over, since both copies read the
-same account store.
+installed, and the **Set up your coding agent** page shows the install and
+sign-in commands until it finds one. (A build made with `BUNDLE_KIRO_CLI=1`
+stages a copy inside the app; that copy is not on your shell `PATH`, so the page
+then serves the login command with the bundled binary's absolute path.) If you
+updated from a version that included kiro-cli and never installed your own,
+install it from <https://kiro.dev/cli/>; your sign-in carries over, since both
+copies read the same account store.
 
 The built-in KAS engine is an alternative that needs no Kiro CLI. It is in
 shadow testing: the switch is off by default on every platform and nothing turns
@@ -1240,7 +1240,7 @@ The `kiro-cli` backend did not answer in time. Five common causes:
 1. **`kiro-cli` is not installed.** With `agent.acp_backend` set to `kiro`,
    the gateway raises `kiro-cli not found (<searched directories>)`. Install
    it, point `AJCREW_KIRO_BIN` at the binary, or use the dashboard's
-   **Set up Kiro** page.
+   **Set up your coding agent** page.
 2. **Not logged in.** Run `kiro-cli login`. An expired session normally
    surfaces as the distinct, non-retryable "kiro-cli is not logged in" error
    rather than a timeout, so check this even when the message differs.

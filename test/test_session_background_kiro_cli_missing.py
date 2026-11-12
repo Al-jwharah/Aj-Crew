@@ -1,7 +1,7 @@
 """The background session's start failure when kiro-cli is not installed.
 
 No kiro-cli is the expected state right after a fresh install, and the dashboard
-answers it with its Set up Kiro page. The background warm therefore reports it
+answers it with its first-run setup page. The background warm therefore reports it
 as one line carrying the refusal's own message, which already names the
 directories searched and the fix. Any other start failure keeps its traceback.
 """

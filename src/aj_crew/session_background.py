@@ -447,7 +447,7 @@ class BackgroundSessionRuntime:
                 await provider.start()
             except Exception as exc:
                 # No kiro-cli is the expected state right after a fresh install,
-                # and the dashboard answers it with its Set up Kiro page; the
+                # and the dashboard answers it with its first-run setup page; the
                 # message already names the directories searched and the fix,
                 # so a traceback would only bury it.
                 if getattr(exc, "kiro_cli_missing", False) is True:

@@ -89,8 +89,8 @@ per its own docs, make sure the binary resolves on your `PATH`, and log in:
 kiro-cli login
 ```
 
-On the first dashboard launch, the Set up Kiro page walks through installing the
-CLI and completing sign-in.
+On the first dashboard launch, the **Set up your coding agent** page walks
+through installing the CLI and completing sign-in.
 
 Already a kiro-cli user? [Coming from kiro-cli](coming-from-kiro-cli.md) covers
 what carries over (agents, MCP servers, steering, your login), why a Crew chat
