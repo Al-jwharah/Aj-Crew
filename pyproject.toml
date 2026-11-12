@@ -21,6 +21,10 @@ dynamic = ["dependencies", "optional-dependencies"]
 
 [project.urls]
 Homepage = "https://github.com/Al-jwharah/Aj-Crew"
+Repository = "https://github.com/Al-jwharah/Aj-Crew"
+Issues = "https://github.com/Al-jwharah/Aj-Crew/issues"
+Documentation = "https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/README.md"
+Changelog = "https://github.com/Al-jwharah/Aj-Crew/blob/main/CHANGELOG.md"
 
 [project.scripts]
 ajcrew = "aj_crew._bootstrap:main"
