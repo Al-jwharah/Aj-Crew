@@ -1561,7 +1561,10 @@ class TestRuntimeDisplayName:
             ("cron:daily", "AjCrew cron job"),  # brand-ok: prompt bytes the model reads
             ("cron_076ab486", "AjCrew cron job"),  # brand-ok: prompt bytes the model reads
             ("subagent:abc-123", "AjCrew subagent"),  # brand-ok: prompt bytes the model reads
-            ("taskrunner:proj:task1", "AjCrew task runner"),  # brand-ok: prompt bytes the model reads
+            (
+                "taskrunner:proj:task1",
+                "AjCrew task runner",  # brand-ok: prompt bytes the model reads
+            ),
             ("_bg", "AjCrew background"),  # brand-ok: prompt bytes the model reads
             ("_hb", "AjCrew heartbeat"),  # brand-ok: prompt bytes the model reads
             ("cli_chat", "CLI terminal"),

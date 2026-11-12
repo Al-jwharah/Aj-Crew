@@ -264,7 +264,8 @@ class TestBotNameSubstitution:
         with patch("aj_crew.context.AjCrewConfig.load") as mock_cfg:
             mock_cfg.return_value.agent.provider = "claude_code"
             ctx = ContextBuilder(bot_name="")
-            assert ctx._substitute_bot_name("You are {bot_name}.") == "You are AjCrew."  # brand-ok: mirrors default bot name
+            got = ctx._substitute_bot_name("You are {bot_name}.")
+            assert got == "You are AjCrew."  # brand-ok: mirrors default bot name
 
     def test_no_placeholder_is_noop(self):
         from aj_crew.context import ContextBuilder

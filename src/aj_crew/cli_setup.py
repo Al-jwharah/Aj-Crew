@@ -323,7 +323,9 @@ def _setup_electron() -> bool:
         shutil.rmtree(app_dest)
     shutil.copytree(str(app_src), str(app_dest))
     print("  ✅ AjCrew.app installed to ~/Applications")
-    print("     Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications")  # brand-ok: app bundle name
+    print(
+        "     Launch via Spotlight (⌘+Space → AjCrew) or Finder → ~/Applications"  # brand-ok: app bundle name
+    )
     return True
 
 
