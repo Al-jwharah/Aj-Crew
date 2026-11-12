@@ -452,8 +452,24 @@ The pip install name is **`ajcrew`**; the import package is `aj_crew`.
 
 #### Installing a PUBLISHED wheel with pip
 
-Aj Crew is not on PyPI, so `pip` reaches it through the release CDN. Two forms
-are published, and they serve different needs:
+Aj Crew has published no wheel: the name is on neither PyPI nor npm, and the
+project runs no release CDN. Do not `pip install` the repository URL either
+(`pip install git+https://github.com/Al-jwharah/Aj-Crew`): that builds a wheel
+without the dashboard, so the gateway starts and `/` answers "Dashboard HTML not
+found".
+
+If a release with a wheel attached appears on the
+[Releases page](https://github.com/Al-jwharah/Aj-Crew/releases), install that
+file by its URL into a venv. The release lists the exact file name:
+
+```bash
+python3 -m venv ~/.ajcrew-venv
+~/.ajcrew-venv/bin/pip install https://github.com/Al-jwharah/Aj-Crew/releases/download/v<version>/ajcrew-<wheel version>-py3-none-any.whl
+~/.ajcrew-venv/bin/ajcrew gateway
+```
+
+The two forms below are what a release CDN serves when someone hosts one; they
+serve different needs:
 
 ```bash
 # 1. Track a channel. A PEP 503 simple index per channel, so pip resolves the
