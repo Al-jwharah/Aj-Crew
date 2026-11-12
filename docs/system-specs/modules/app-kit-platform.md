@@ -6867,7 +6867,7 @@ first. Deleting a wheel-copy file is always allowed. The line's shape and slug a
 checked, not that the commit carries the same change.
 
 **Who owns the pinned repositories.** The first-party app repositories a pin
-names live under `KiroCrewCaptain`, the Aj Crew team's GitHub bot account, and
+names live under `KiroCrewCaptain`, the upstream Kiro Crew team's GitHub bot account, and
 that account is their trust owner (a maintainer ruling). A pin's `commit`,
 `treeSha256` and `archiveSha256` bind one tree, so the owner cannot change what
 an already-shipped pin runs; a later pin, and any pin-follow, trusts whoever
