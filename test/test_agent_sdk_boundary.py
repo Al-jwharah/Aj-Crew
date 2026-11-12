@@ -483,3 +483,135 @@ def test_every_verdict_is_scope_gated(gate):
     assert new_offenders == [rels["new"]]
     assert grown == [rels["grown"]]
     assert shrunk == [rels["shrunk"]]
+
+
+_MOVED_FROM = "src/old_pkg/dashboard/moved.py"
+_MOVED_TO = "src/aj_crew/dashboard/moved.py"
+
+
+@pytest.mark.parametrize(
+    ("base_source", "source", "touched", "expected", "why"),
+    [
+        (
+            "from old_pkg.acp.types import AcpEvent\n",
+            "from aj_crew.acp.types import AcpEvent\n",
+            [1],
+            [],
+            "the move rewrote the package name and nothing else",
+        ),
+        (
+            "import os\nfrom old_pkg.providers.base import (\n    LLMEvent,\n)\n",
+            "from aj_crew.providers.base import LLMEvent\n",
+            [1],
+            [],
+            "the shorter name let the import fit one line; it is the same edge",
+        ),
+        (
+            "from old_pkg.acp.types import AcpEvent\n",
+            "from aj_crew.acp.client import AcpClient\n",
+            [1],
+            [1],
+            "an import swapped for another on the way is an added edge",
+        ),
+        (
+            "from old_pkg.acp.types import AcpEvent\n",
+            "from aj_crew.acp.types import AcpEvent\nfrom aj_crew.acp.types import AcpEvent\n",
+            [1, 2],
+            [2],
+            "a base edge is spent once, so its second copy is added",
+        ),
+        (
+            "from old_pkg.session import SessionManager\n",
+            "from aj_crew.acp.types import AcpEvent\n",
+            [1],
+            [1],
+            "the base copy reaches nothing forbidden",
+        ),
+        (
+            "from old_pkg.acp import (\n",
+            "from aj_crew.acp.types import AcpEvent\n",
+            [1],
+            [1],
+            "a base copy that does not parse proves nothing",
+        ),
+    ],
+    ids=["renamed", "reflowed", "swapped", "copied", "base-clean", "base-unparsable"],
+)
+def test_a_package_move_carries_its_edges_and_adds_none(
+    gate, base_source: str, source: str, touched: list[int], expected: list[int], why: str
+):
+    assert (
+        gate._edges_not_on_base(_MOVED_TO, source, touched, _MOVED_FROM, base_source) == expected
+    ), why
+
+
+def test_only_a_renamed_package_directory_is_a_package_move(gate):
+    assert gate._package_move(_MOVED_FROM, _MOVED_TO) == ("old_pkg", "aj_crew")
+    assert gate._package_move("src/aj_crew/acp/x.py", "src/aj_crew/dashboard/x.py") is None
+    assert gate._package_move("scripts/x.py", "src/aj_crew/x.py") is None
+    assert gate._package_move("src/x.py", "src/aj_crew/x.py") is None
+
+
+class _Scope:
+    """The three ``ratchet_scope`` answers ``_drop_carried_edges`` reads."""
+
+    def __init__(self, pairs, base_sources, base="base-sha"):
+        self.pairs, self.base_sources, self.base = pairs, base_sources, base
+        self.shown: list[str] = []
+
+    def base_ref(self, scope_label):
+        return self.base
+
+    def change_files(self, base):
+        return self.pairs
+
+    def show_each_at(self, base, paths):
+        self.shown.extend(paths)
+        return [self.base_sources.get(path) for path in paths]
+
+
+def test_carried_edges_are_dropped_only_for_a_file_the_package_move_carried(
+    gate, tmp_path, monkeypatch
+):
+    """The added-line verdict survives everywhere the base cannot vouch for the edge."""
+    monkeypatch.setattr(gate, "ROOT", tmp_path)
+    carried = "src/aj_crew/dashboard/carried.py"
+    swapped = "src/aj_crew/dashboard/swapped.py"
+    in_place = "src/aj_crew/dashboard/in_place.py"
+    unpaired = "src/aj_crew/dashboard/unpaired.py"
+    (tmp_path / "src/aj_crew/dashboard").mkdir(parents=True)
+    for rel, text in {
+        carried: "from aj_crew.acp.types import AcpEvent\n",
+        swapped: "from aj_crew.acp.client import AcpClient\n",
+        in_place: "from aj_crew.acp.types import AcpEvent\n",
+        unpaired: "from aj_crew.acp.types import AcpEvent\n",
+    }.items():
+        (tmp_path / rel).write_text(text, encoding="utf-8")
+    offenders = {rel: [1] for rel in (carried, swapped, in_place, unpaired)}
+    held = "from old_pkg.acp.types import AcpEvent\n"
+    scope = _Scope(
+        pairs=[
+            ("src/old_pkg/dashboard/carried.py", carried),
+            ("src/old_pkg/dashboard/swapped.py", swapped),
+            (in_place, in_place),
+            (None, unpaired),
+            ("src/old_pkg/dashboard/clean.py", "src/aj_crew/dashboard/clean.py"),
+        ],
+        base_sources={
+            "src/old_pkg/dashboard/carried.py": held,
+            "src/old_pkg/dashboard/swapped.py": held,
+        },
+    )
+
+    kept = gate._drop_carried_edges(dict(offenders), scope, "merge HEAD^1..HEAD")
+
+    assert kept == {swapped: [1], in_place: [1], unpaired: [1]}
+    assert sorted(scope.shown) == [
+        "src/old_pkg/dashboard/carried.py",
+        "src/old_pkg/dashboard/swapped.py",
+    ], "the base is read only for files that are flagged and moved between packages"
+
+    no_base = _Scope(pairs=scope.pairs, base_sources=scope.base_sources, base=None)
+    assert gate._drop_carried_edges(dict(offenders), no_base, "unknown") == offenders
+    unreadable = _Scope(pairs=scope.pairs, base_sources={})
+    assert gate._drop_carried_edges(dict(offenders), unreadable, "main...HEAD") == offenders

@@ -352,14 +352,19 @@ def _unprivileged_userns() -> bool:
     container's seccomp profile), and then every command codex runs inside its own
     sandbox fails before it starts. Some refuse only a later step: under an
     AppArmor userns restriction ``unshare(CLONE_NEWUSER)`` succeeds and writing
-    ``uid_map`` is refused, which bubblewrap reports as ``setting up uid map``. So
-    the answer is Crew's own launcher probe, which takes each of those steps,
-    rather than ``unshare`` alone. Off Linux the sandbox is not bubblewrap.
+    ``uid_map`` is refused, which bubblewrap reports as ``setting up uid map``.
+    Off Linux the sandbox is not bubblewrap.
 
-    Some hosts pass that probe and still refuse a step only bubblewrap takes:
-    bringing up loopback in a new network namespace, or writing its own uid map.
-    So the answer also runs codex's own bubblewrap preflight up front, never the
-    step's output, which is what keeps a broken sandbox from reading as a host.
+    The answer is codex's own bubblewrap preflight, run up front with the
+    bubblewrap codex runs, never the step's output, which is what keeps a broken
+    sandbox from reading as a host. Crew's launcher probe answers only where the
+    preflight cannot: the two disagree in both directions. A host can pass the
+    launcher probe and still refuse a step only bubblewrap takes (bringing up
+    loopback in a new network namespace, writing its own uid map). And a host can
+    refuse the launcher while it lets bubblewrap through: an AppArmor userns
+    restriction that carries a profile for the system ``bwrap`` (Ubuntu's
+    ``bwrap-userns-restrict``, loaded by default from 25.04) denies an unconfined
+    process its mount namespace and still builds codex's sandbox.
     """
     if not sys.platform.startswith("linux"):
         return True
@@ -390,18 +395,12 @@ def _codex_bwrap() -> str | None:
     return None
 
 
-def _host_builds_codex_sandbox(
-    *, userns: bool, bwrap: str | None, run: Callable[..., subprocess.CompletedProcess]
-) -> bool:
-    """*userns*, unless codex's bubblewrap preflight meets a host refusal.
-
-    Any other preflight outcome (no bubblewrap found, it cannot start, another
-    error) leaves *userns* standing, so the step's own assertions still run.
-    """
-    if not userns or bwrap is None:
-        return userns
+def _run_preflight(
+    bwrap: str, run: Callable[..., subprocess.CompletedProcess]
+) -> subprocess.CompletedProcess | None:
+    """codex's bubblewrap preflight with *bwrap*, or ``None`` when it cannot start."""
     try:
-        probe = run(
+        return run(
             [bwrap, *_BWRAP_PREFLIGHT],
             capture_output=True,
             encoding="utf-8",
@@ -409,25 +408,58 @@ def _host_builds_codex_sandbox(
             timeout=60,  # flake-ok: wall bound on a one-shot host probe, not a wait
         )
     except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def _host_builds_codex_sandbox(
+    *, userns: bool, bwrap: str | None, run: Callable[..., subprocess.CompletedProcess]
+) -> bool:
+    """What codex's bubblewrap preflight measures, else *userns*.
+
+    A preflight that passes says the host builds the sandbox, and one that meets
+    a host refusal says it does not, whatever *userns* is. Any other outcome (no
+    bubblewrap found, it cannot start, another error) leaves *userns* standing,
+    so the step's own assertions still run.
+    """
+    if bwrap is None:
         return userns
-    refused = probe.returncode != 0 and any(r in probe.stderr for r in _BWRAP_HOST_REFUSALS)
-    return not refused
+    probe = _run_preflight(bwrap, run)
+    if probe is None:
+        return userns
+    if probe.returncode == 0:
+        return True
+    if any(refusal in probe.stderr for refusal in _BWRAP_HOST_REFUSALS):
+        return False
+    return userns
+
+
+def _host_probe_report() -> str:
+    """What picked the branch of ``_assert_sandboxed_step``, for a failure message."""
+    if not sys.platform.startswith("linux"):
+        return f"host probe: {sys.platform}, no bubblewrap sandbox"
+    bwrap = _codex_bwrap()
+    report = f"host probe: userns_available={userns_available()!r} bwrap={bwrap!r}"
+    probe = _run_preflight(bwrap, subprocess.run) if bwrap is not None else None
+    if probe is None:
+        return f"{report} preflight=not run"
+    return f"{report} preflight exit={probe.returncode} stderr={probe.stderr[-400:]!r}"
 
 
 def _assert_sandboxed_step(m: dict, step: str, ran: str) -> None:
     """A step that runs inside codex's own sandbox: it ran, or the host forbids one.
 
-    With unprivileged user namespaces on, the step must run (*ran* in its output,
-    exit 0). With them off it must fail the way codex reports a sandbox it could
-    not build -- recorded rather than skipped, because the lane counts a skip as
-    a contract it did not measure, and this IS the measurement on such a host.
+    On a host that builds the sandbox, the step must run (*ran* in its output,
+    exit 0). On one that refuses it must fail the way codex reports a sandbox it
+    could not build -- recorded rather than skipped, because the lane counts a
+    skip as a contract it did not measure, and this IS the measurement on such a
+    host. A failure names the probe that picked the branch.
     """
     text, exit_code = _output(m, step)
     context = f"{step}: exit={exit_code!r} out={text!r}\n{m['_context']}"
     if _unprivileged_userns():
-        assert exit_code == 0 and ran in text, context
+        assert exit_code == 0 and ran in text, f"{context}\n{_host_probe_report()}"
     else:
-        assert exit_code not in (0, None) and "bwrap:" in text, context
+        assert exit_code not in (0, None) and "bwrap:" in text, f"{context}\n{_host_probe_report()}"
 
 
 @pytest.mark.real_adapter
@@ -549,8 +581,36 @@ def test_any_other_preflight_outcome_leaves_crews_probe_standing(run):
     assert not _host_builds_codex_sandbox(userns=False, bwrap="/opt/codex/bwrap", run=run)
 
 
-def test_no_bubblewrap_or_no_userns_runs_no_preflight():
+def test_no_bubblewrap_runs_no_preflight():
     run, calls = _preflight(1, _LOOPBACK)
     assert _host_builds_codex_sandbox(userns=True, bwrap=None, run=run)
-    assert not _host_builds_codex_sandbox(userns=False, bwrap="/opt/codex/bwrap", run=run)
+    assert not _host_builds_codex_sandbox(userns=False, bwrap=None, run=run)
     assert calls == []
+
+
+def test_a_passing_preflight_outranks_a_launcher_probe_that_refuses(monkeypatch):
+    """A host that denies Crew's launcher and lets bubblewrap through runs the step."""
+    run, calls = _preflight(0)
+    assert _host_builds_codex_sandbox(userns=False, bwrap="/usr/bin/bwrap", run=run)
+    assert calls == [["/usr/bin/bwrap", *_BWRAP_PREFLIGHT]]
+    _probe_picks(monkeypatch, run, userns=False)
+    _assert_sandboxed_step(_measured("## main", 0), "git", "##")
+    # The sandboxed branch holds the step to a run: a refusal there is a failure.
+    with pytest.raises(AssertionError):
+        _assert_sandboxed_step(_measured(_UID_MAP, 1), "git", "##")
+
+
+@pytest.mark.parametrize("refusal", [_LOOPBACK, _UID_MAP])
+def test_a_preflight_host_refusal_agrees_with_a_launcher_probe_that_refuses(refusal):
+    run, calls = _preflight(1, refusal + "\n")
+    assert not _host_builds_codex_sandbox(userns=False, bwrap="/opt/codex/bwrap", run=run)
+    assert calls == [["/opt/codex/bwrap", *_BWRAP_PREFLIGHT]]
+
+
+def test_a_failed_step_names_the_probe_that_picked_its_branch(monkeypatch):
+    run, _ = _preflight(0)
+    _probe_picks(monkeypatch, run)
+    this = sys.modules[__name__]
+    monkeypatch.setattr(this, "_host_probe_report", lambda: "host probe: recorded")
+    with pytest.raises(AssertionError, match="host probe: recorded"):
+        _assert_sandboxed_step(_measured(_LOOPBACK, 1), "git", "##")

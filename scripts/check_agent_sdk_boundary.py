@@ -74,6 +74,13 @@ that must only shrink):
 * in a file this change touches, an edge sitting on an ADDED line is a new
   offender even when the count is level -- otherwise deleting one old import
   while adding one new one would slip through unchanged;
+* a change that RENAMES THE PACKAGE DIRECTORY (`src/<old>/` to `src/<new>/`)
+  rewrites every absolute import of the package, so each recorded edge lands on
+  an added line without any edge being added. For a file such a change moves,
+  the added-line rule reads the file's copy on the base, with the old package
+  name read as the new one, and an edge that copy already holds is carried, not
+  added. An edge the base copy does not hold is still an offender, and a file
+  that stays under the same package directory keeps the plain added-line rule;
 * a baselined file whose count has shrunk (or that is clean or gone) must be
   pruned so the list only shrinks -- run `--update-baseline`, which only ever
   lowers counts and deletes lines, never adds or raises one.
@@ -92,6 +99,7 @@ import ast
 import importlib.util
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -309,7 +317,26 @@ def _literal_strings(node: ast.AST) -> tuple[list[str], bool]:
     return found, True
 
 
-def _dynamic_import_targets(rel: str, call: ast.Call) -> list[str]:
+def _rehomed(dotted: str, moved: tuple[str, str] | None) -> str:
+    """`dotted` with the package a move renamed read under its current name.
+
+    `moved` is `(package at the base, package now)`. Only the leading component
+    is compared, and only as a whole component, so `old_pkg.acp` is rehomed and
+    `old_pkg_tools.acp` or `vendor.old_pkg.acp` is not.
+    """
+    if moved is None:
+        return dotted
+    old, new = moved
+    if dotted == old:
+        return new
+    if dotted.startswith(old + "."):
+        return new + dotted[len(old) :]
+    return dotted
+
+
+def _dynamic_import_targets(
+    rel: str, call: ast.Call, moved: tuple[str, str] | None = None
+) -> list[str]:
     """Dotted targets a dynamic-import call reaches, across every argument form.
 
     `import_module(name, package=None)` and
@@ -373,6 +400,9 @@ def _dynamic_import_targets(rel: str, call: ast.Call) -> list[str]:
     elif level:
         name = _absolute_from_relative(rel, level, name)
 
+    # Rehomed BEFORE the fromlist is read: whether a fromlist can reach the
+    # boundary is decided by `name` being an ancestor of a forbidden root.
+    name = _rehomed(name, moved)
     targets = [name]
     fromlist = _positional(call, 3) or _kwarg(call, "fromlist")
     if fromlist is not None and _is_ancestor_of_forbidden(name):
@@ -389,15 +419,17 @@ def _dynamic_import_targets(rel: str, call: ast.Call) -> list[str]:
     return targets
 
 
-def _violations_in_source(rel: str, source: str) -> dict[int, str]:
-    """Line number -> the forbidden root that line reaches, in line order.
+def _edges_in_source(
+    rel: str, source: str, moved: tuple[str, str] | None = None
+) -> dict[int, list[str]]:
+    """Line number -> the forbidden dotted targets that line reaches, in line order.
 
-    Keyed by line so two imports of the same root on one line count once, and
-    carrying the root so the passing message can report both halves of the
-    migration separately instead of guessing from the line's text.
+    Keyed by line so two imports on one line are one entry. `moved` reads a
+    renamed package under its current name (see `_rehomed`), which is how the
+    base copy of a moved file is scanned with today's forbidden roots.
     """
     tree = ast.parse(source)
-    hits: dict[int, str] = {}
+    hits: dict[int, list[str]] = {}
     importers = _dynamic_importer_names(tree)
     for node in ast.walk(tree):
         # These are the only nodes that can name a module, and narrowing to them
@@ -407,12 +439,15 @@ def _violations_in_source(rel: str, source: str) -> dict[int, str]:
             continue
         targets: list[str] = []
         if isinstance(node, ast.Import):
-            targets = [alias.name for alias in node.names]
+            targets = [_rehomed(alias.name, moved) for alias in node.names]
         elif isinstance(node, ast.ImportFrom):
-            base = (
-                _absolute_from_relative(rel, node.level, node.module)
-                if node.level
-                else (node.module or "")
+            base = _rehomed(
+                (
+                    _absolute_from_relative(rel, node.level, node.module)
+                    if node.level
+                    else (node.module or "")
+                ),
+                moved,
             )
             # The from-target alone is not enough. `from aj_crew import acp`
             # has `node.module == "aj_crew"`, which matches no forbidden root,
@@ -434,12 +469,109 @@ def _violations_in_source(rel: str, source: str) -> dict[int, str]:
                 else callee.id if isinstance(callee, ast.Name) else ""
             )
             if name in importers:
-                targets = _dynamic_import_targets(rel, node)
-        for dotted in targets:
-            root = _matched_root(dotted)
-            if root is not None:
-                hits.setdefault(node.lineno, root)
+                targets = _dynamic_import_targets(rel, node, moved)
+        reached = [dotted for dotted in targets if _matched_root(dotted) is not None]
+        if reached:
+            hits.setdefault(node.lineno, []).extend(reached)
     return dict(sorted(hits.items()))
+
+
+def _violations_in_source(rel: str, source: str) -> dict[int, str]:
+    """Line number -> the forbidden root that line reaches, in line order.
+
+    Keyed by line so two imports of the same root on one line count once, and
+    carrying the root so the passing message can report both halves of the
+    migration separately instead of guessing from the line's text.
+    """
+    roots: dict[int, str] = {}
+    for line, reached in _edges_in_source(rel, source).items():
+        root = _matched_root(reached[0])
+        if root is not None:
+            roots[line] = root
+    return roots
+
+
+def _package_move(base_rel: str, rel: str) -> tuple[str, str] | None:
+    """`(package at the base, package now)` when a file's move renames its package.
+
+    The package directory is matched by its place, `src/<package>/`, so a move
+    inside one package, or of a file outside `src/`, is not a package move.
+    """
+    old, new = Path(base_rel).parts, Path(rel).parts
+    if len(old) > 2 and len(new) > 2 and old[0] == new[0] == "src" and old[1] != new[1]:
+        return old[1], new[1]
+    return None
+
+
+def _edges_not_on_base(
+    rel: str, source: str, touched: list[int], base_rel: str, base_source: str
+) -> list[int]:
+    """The `touched` lines of `rel` whose edge its base copy does not already hold.
+
+    For a file a package move carries from `base_rel` to `rel`. An edge is the set
+    of forbidden targets one line reaches, compared with the old package name
+    read as the new one, so `from old_pkg.acp.types import AcpEvent` on the base
+    and `from new_pkg.acp.types import AcpEvent` now are one edge. Each base edge
+    is spent once, and edges on lines the change left alone spend it first: a
+    second copy of an import the base holds once is an added edge. A base copy
+    that does not parse proves nothing, so every touched line stays an offender.
+    """
+    try:
+        base_edges = _edges_in_source(base_rel, base_source, _package_move(base_rel, rel))
+    except SyntaxError:
+        return touched
+    held = Counter(frozenset(reached) for reached in base_edges.values())
+    now = _edges_in_source(rel, source)
+    for line, reached in now.items():
+        if line not in touched:
+            held[frozenset(reached)] -= 1
+    added: list[int] = []
+    for line in touched:
+        edge = frozenset(now.get(line, ()))
+        if held[edge] > 0:
+            held[edge] -= 1
+        else:
+            added.append(line)
+    return added
+
+
+def _drop_carried_edges(
+    added_line_offenders: dict[str, list[int]], scope, scope_label: str
+) -> dict[str, list[int]]:
+    """`added_line_offenders` without the edges a package move only carried.
+
+    Reads the base only for files that are both flagged and moved from another
+    package directory, so a change that moves nothing costs one `git diff`, and
+    one that flags nothing costs none. Anything that cannot be read -- no base
+    commit, no rename pairing, no base copy -- leaves the file's lines flagged.
+    """
+    if not added_line_offenders:
+        return added_line_offenders
+    base = scope.base_ref(scope_label)
+    if base is None:
+        return added_line_offenders
+    try:
+        pairs = scope.change_files(base)
+    except RuntimeError:
+        return added_line_offenders
+    moved_from = {
+        now: was
+        for was, now in pairs
+        if was is not None and now in added_line_offenders and _package_move(was, now) is not None
+    }
+    if not moved_from:
+        return added_line_offenders
+    moved = sorted(moved_from)
+    base_sources = dict(zip(moved, scope.show_each_at(base, [moved_from[rel] for rel in moved])))
+    kept: dict[str, list[int]] = {}
+    for rel, lines in added_line_offenders.items():
+        base_source = base_sources.get(rel)
+        if base_source is not None:
+            source = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+            lines = _edges_not_on_base(rel, source, lines, moved_from[rel], base_source)
+        if lines:
+            kept[rel] = lines
+    return kept
 
 
 def _scan(targets: tuple[str, ...]) -> dict[str, dict[int, str]]:
@@ -620,6 +752,7 @@ def run_gate(baseline_path: Path, update: bool) -> int:
     new_offenders, grown, added_line_offenders, shrunk = _verdicts(
         violations, baseline, changed, added
     )
+    added_line_offenders = _drop_carried_edges(added_line_offenders, scope, scope_label)
 
     for rel in new_offenders:
         print(
@@ -678,9 +811,7 @@ def _self_test() -> int:
         "module import": "import aj_crew.acp.client\n",
         "providers re-export": "from aj_crew.providers.base import LLMEvent\n",
         "package root": "import aj_crew.providers\n",
-        "multi-line": (
-            "from aj_crew.acp.types import (\n    AcpEvent,\n    EVENT_COMPLETE,\n)\n"
-        ),
+        "multi-line": ("from aj_crew.acp.types import (\n    AcpEvent,\n    EVENT_COMPLETE,\n)\n"),
         "TYPE_CHECKING only": (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
@@ -698,9 +829,7 @@ def _self_test() -> int:
             "from importlib import import_module as _im\n" "_im('aj_crew.acp.client')\n"
         ),
         "dynamic importer bound by assignment": (
-            "import importlib\n"
-            "_im = importlib.import_module\n"
-            "_im('aj_crew.providers.acp')\n"
+            "import importlib\n" "_im = importlib.import_module\n" "_im('aj_crew.providers.acp')\n"
         ),
         "dunder fromlist names the package": ("__import__('aj_crew', fromlist=('acp',))\n"),
         "dunder fromlist list form": ("__import__('aj_crew', fromlist=['providers'])\n"),
@@ -775,6 +904,61 @@ def _self_test() -> int:
         if _is_app_test(in_scope):
             failures.append(f"runtime code is treated as an app test: {in_scope}")
 
+    # The package-move rule: an edge a renamed package directory carries is not
+    # added, and everything short of that still is.
+    was = "src/old_pkg/dashboard/probe.py"
+    held = "from old_pkg.acp.types import AcpEvent\n"
+    carried = "from aj_crew.acp.types import AcpEvent\n"
+    moves = {
+        "absolute import rewritten by the move": (held, carried, [1], []),
+        "relative import left as it was": (
+            "from ..acp.types import AcpEvent\n",
+            "from ..acp.types import AcpEvent\n",
+            [1],
+            [],
+        ),
+        "dynamic import rewritten by the move": (
+            "__import__('old_pkg', fromlist=('acp',))\n",
+            "__import__('aj_crew', fromlist=('acp',))\n",
+            [1],
+            [],
+        ),
+        "a different module on the moved line": (
+            held,
+            "from aj_crew.acp.client import AcpClient\n",
+            [1],
+            [1],
+        ),
+        "another name on the moved line": (
+            held,
+            "from aj_crew.acp.types import AcpEvent, EVENT_COMPLETE\n",
+            [1],
+            [1],
+        ),
+        "a second copy of a held edge": (held, carried + carried, [1, 2], [2]),
+        "a held edge kept, and its copy added": (held, carried + carried, [2], [2]),
+        "a base that reaches nothing": ("import os\n", carried, [1], [1]),
+        "a look-alike package is not the moved one": (
+            "from old_pkg_tools.acp.types import AcpEvent\n",
+            carried,
+            [1],
+            [1],
+        ),
+        "a base copy that does not parse": ("from old_pkg.acp import (\n", carried, [1], [1]),
+    }
+    for label, (base_source, source, touched, expected) in moves.items():
+        if _edges_not_on_base(rel, source, touched, was, base_source) != expected:
+            failures.append(f"package-move probe misjudged: {label}")
+    if _package_move(was, rel) != ("old_pkg", "aj_crew"):
+        failures.append("a renamed package directory is not read as a package move")
+    for base_rel, now_rel in (
+        ("src/aj_crew/dashboard/probe.py", "src/aj_crew/session/probe.py"),
+        ("scripts/probe.py", "src/aj_crew/probe.py"),
+        ("src/probe.py", "src/aj_crew/probe.py"),
+    ):
+        if _package_move(base_rel, now_rel) is not None:
+            failures.append(f"not a package move, read as one: {base_rel} -> {now_rel}")
+
     for line in failures:
         print(f"::error::{line}")
     if failures:
@@ -782,7 +966,7 @@ def _self_test() -> int:
         return 1
     print(
         f"self-test passed: {len(flagged)} violation probe(s) flagged, "
-        f"{len(clean)} clean probe(s) ignored."
+        f"{len(clean)} clean probe(s) ignored, {len(moves)} package-move probe(s) judged."
     )
     return 0
 
