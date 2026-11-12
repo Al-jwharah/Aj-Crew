@@ -28,8 +28,8 @@ from denied_commands_security_helpers import (
     _denied_by,
 )
 
-from kiro_crew import security
-from kiro_crew.security import (
+from aj_crew import security
+from aj_crew.security import (
     BUILTIN_DENIED_RULES,
     BUILTIN_DENY_PATTERNS,
     DeniedCommandRule,
@@ -73,7 +73,7 @@ class TestCatalog:
         assert len(set(ids)) == len(BUILTIN_DENIED_RULES)
 
     def test_token_mint_is_blocked_in_both_the_cli_and_module_forms(self):
-        """`kirocrew token` mints a signed dashboard token that authenticates to EVERY gateway
+        """`ajcrew token` mints a signed dashboard token that authenticates to EVERY gateway
         route — including the ops-mission-control autonomy-ceiling PUT — so a prompt-injected
         agent that shells out to it raises its own security ceiling.
 
@@ -84,95 +84,95 @@ class TestCatalog:
         searched the pattern directly and would have gone green on a floor that had stopped
         running at all.
 
-        The module form is why the union matters. `python -m kiro_crew token` mints the
+        The module form is why the union matters. `python -m aj_crew token` mints the
         identical token, but its argv PROGRAM is the interpreter and the underscored import
         name is not a console-script spelling — so neither the command-position regex nor
         `_is_self_program` saw it. `_is_self_module_invocation` closes it structurally.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = list(
             security.compute_effective_denied(security.BUILTIN_DENIED_RULES, (), False, (), ())
         )
 
         for blocked in (
-            "kirocrew token",
-            "kirocrew token --port 6777",
-            'kirocrew "token"',
-            "kirocrew -v --no-jail token",
-            "kiro-crew token",
+            "ajcrew token",
+            "ajcrew token --port 6777",
+            'ajcrew "token"',
+            "ajcrew -v --no-jail token",
+            "aj-crew token",
             # The module form, in the spellings a shell accepts.
-            "python -m kiro_crew token",
-            "python3 -m kiro_crew token --port 6777",
-            "python -mkiro_crew token",
-            "python -m kiro_crew pod token",
+            "python -m aj_crew token",
+            "python3 -m aj_crew token --port 6777",
+            "python -maj_crew token",
+            "python -m aj_crew pod token",
             # Interpreter flags that take a SEPARATE operand. The first version of the module
             # check stopped at the first token not starting with `-`, so the operand (`dev`)
             # ended the scan and the mint went through one flag deeper. Review caught it.
-            "python -X dev -m kiro_crew token",
-            "python -W ignore -m kiro_crew token",
-            "python -Q new -m kiro_crew token",
-            "python -X utf8 -X dev -m kiro_crew token",
-            "python3 -B -X dev -m kiro_crew pod token",
+            "python -X dev -m aj_crew token",
+            "python -W ignore -m aj_crew token",
+            "python -Q new -m aj_crew token",
+            "python -X utf8 -X dev -m aj_crew token",
+            "python3 -B -X dev -m aj_crew pod token",
             # ATTACHED operands are one token and need no skip — covered because the
             # separate-operand fix must not break them.
-            "python -Xdev -m kiro_crew token",
-            "python -Wignore -m kiro_crew token",
+            "python -Xdev -m aj_crew token",
+            "python -Wignore -m aj_crew token",
             # `-x` is a real flag that takes NO operand, and the skip set is lowercased (the
             # floor sees an already-lowercased command, so `-X` arrives as `-x`). A bare `-m`
             # after it must still register as the marker rather than be eaten as an operand.
-            "python -x -m kiro_crew token",
+            "python -x -m aj_crew token",
             # `-c` is the same escape one flag over: an inline program that imports the
             # package reaches the identical mint. Two defects had to be fixed together —
             # the module check read the payload as a script name and bailed, and the verb
             # scan treated the `;` INSIDE the quoted payload as a command separator, ending
             # one token before `token`. Both found in review.
-            'python -c "from kiro_crew.cli import main; main()" token',
-            "python3 -c 'import kiro_crew.cli; kiro_crew.cli.main()' token",
-            'python -c "from kiro_crew import cli; cli.main()" token --port 6777',
+            'python -c "from aj_crew.cli import main; main()" token',
+            "python3 -c 'import aj_crew.cli; aj_crew.cli.main()' token",
+            'python -c "from aj_crew import cli; cli.main()" token --port 6777',
             # Attached spelling: payload inside the same token.
-            'python -c"import kiro_crew.cli;kiro_crew.cli.main()" token',
+            'python -c"import aj_crew.cli;aj_crew.cli.main()" token',
             # Behind an interpreter flag that takes a separate operand.
-            'python -X dev -c "import kiro_crew.cli; kiro_crew.cli.main()" token',
+            'python -X dev -c "import aj_crew.cli; aj_crew.cli.main()" token',
             # Reached without a literal `import` statement.
-            "python -c \"__import__('kiro_crew.cli').cli.main()\" token",
+            "python -c \"__import__('aj_crew.cli').cli.main()\" token",
             # NO `token` ARGV WORD AT ALL. An inline payload is arbitrary Python running with
             # the interpreter's authority, so it can BUILD the verb instead of passing it —
             # which is why the `-c` form is denied on the IMPORT rather than on the verb. The
-            # verb requirement holds everywhere else (`kirocrew doctor` is legitimate) but is
+            # verb requirement holds everywhere else (`ajcrew doctor` is legitimate) but is
             # not enforceable here. Found in review (GPT 5.6).
             "python -c \"import sys; sys.argv.append('token'); "
-            'from kiro_crew.cli import main; main()"',
-            'python -c "from kiro_crew.cli import main; import sys; '
+            'from aj_crew.cli import main; main()"',
+            'python -c "from aj_crew.cli import main; import sys; '
             "sys.argv=['x','token']; main()\"",
-            "python -c \"from kiro_crew.cli import main; main(['token'])\"",
-            'python -c "import kiro_crew.cli as c; c.main()"',
-            'python -X dev -c "import kiro_crew.cli"',
+            "python -c \"from aj_crew.cli import main; main(['token'])\"",
+            'python -c "import aj_crew.cli as c; c.main()"',
+            'python -X dev -c "import aj_crew.cli"',
             # STDIN forms: `python -` and a bare interpreter read the program from stdin, so a
             # heredoc body or a pipe producer reaches the CLI with nothing in argv. The program
             # text is visible on the command line, and matching the import THERE -- in the
             # heredoc body, the redirected file, or the pipe producer, and nowhere else in the
             # frame (see TestStdinProgramTextScoping) -- is the same fail-closed call.
-            "python - <<'PY'\nfrom kiro_crew.cli import main; main()\nPY",
-            "python3 - <<EOF\nimport kiro_crew.cli\nEOF",
-            "echo 'from kiro_crew.cli import main; main()' | python -",
-            "python -X dev - <<'PY'\nimport kiro_crew.cli\nPY",
-            "python << 'PY'\nimport kiro_crew.cli; kiro_crew.cli.main()\nPY",
+            "python - <<'PY'\nfrom aj_crew.cli import main; main()\nPY",
+            "python3 - <<EOF\nimport aj_crew.cli\nEOF",
+            "echo 'from aj_crew.cli import main; main()' | python -",
+            "python -X dev - <<'PY'\nimport aj_crew.cli\nPY",
+            "python << 'PY'\nimport aj_crew.cli; aj_crew.cli.main()\nPY",
         ):
             assert security.is_denied(
                 blocked, denied_regexes=effective
             ), f"token mint not blocked: {blocked!r}"
 
         for allowed in (
-            "ls kirocrew",
+            "ls ajcrew",
             "echo tokens",
             "grep token app.log",
             # Mentions the name AND the verb, but as another program's data.
-            "echo kirocrew token",
+            "echo ajcrew token",
             "pytest test/test_token_auth.py",
             # The product as a module, but not the mint verb.
-            "python -m kiro_crew gateway",
-            "python -X dev -m kiro_crew gateway",
+            "python -m aj_crew gateway",
+            "python -X dev -m aj_crew gateway",
             # A flag operand that happens to look like a path, and a script that is not the
             # product: neither is a module invocation.
             "python -X dev script.py token",
@@ -187,13 +187,13 @@ class TestCatalog:
             "python - <<'PY'\nprint(1)\nPY",
             "echo 'print(1)' | python -",
             # The import name is in a FILENAME being catted to stdin, not the program itself,
-            # and `\bkiro_crew\b` does not match inside `kiro_crew_notes`.
-            "cat kiro_crew_notes.txt | python -",
+            # and `\baj_crew\b` does not match inside `aj_crew_notes`.
+            "cat aj_crew_notes.txt | python -",
             "python -c 'import json; print(json.dumps({}))'",
             "python -c 'import sys; print(sys.version)'",
             # Mentions the import name as DATA for another program, not as code we will run.
-            "grep -r kiro_crew src/",
-            "echo 'import kiro_crew.cli' > /tmp/note.txt",
+            "grep -r aj_crew src/",
+            "echo 'import aj_crew.cli' > /tmp/note.txt",
         ):
             assert not security.is_denied(
                 allowed, denied_regexes=effective
@@ -238,7 +238,7 @@ class TestSelfProtectionFlagInterposition:
 
     The CLI accepts top-level flags BEFORE the subcommand (``-v``/``--verbose`` is
     ``action="count"`` and ``--no-jail`` sits on the top-level parser), so
-    ``kirocrew -v restart`` runs the same restart as ``kirocrew restart``. Four
+    ``ajcrew -v restart`` runs the same restart as ``ajcrew restart``. Four
     self-protection patterns once anchored the subcommand directly to the program
     name and were defeated by exactly that spelling. This walk covers EVERY rule in
     the category AND every floor-only subcommand predicate, so the class cannot
@@ -258,18 +258,18 @@ class TestSelfProtectionFlagInterposition:
         # pattern. It is the one self-management subcommand row that KEEPS a
         # regex: it has no argv-floor twin, and the ownership grab it refuses is
         # real (see ``mcp_cron`` and the cron-store keystone notes).
-        "self-protection-cron-adopt": "kirocrew {flags} cron adopt",
+        "self-protection-cron-adopt": "ajcrew {flags} cron adopt",
         # Keys on the flag LITERAL itself (plain substring), so interposed
         # flags anywhere in the command cannot separate the anchor from the
         # token the rule matches — the flag IS the token.
         "self-protection-dev-mode-out-of-root-confirm": (
-            "kirocrew {flags} app dev my-app --confirm-out-of-install-root"
+            "ajcrew {flags} app dev my-app --confirm-out-of-install-root"
         ),
         # The kill rules key on the kill TARGET, not a CLI subcommand; their gap
         # is between the kill verb and the product name.
-        "self-protection-kill": "pkill {flags} kirocrew",
+        "self-protection-kill": "pkill {flags} ajcrew",
         "self-protection-kill-interpreter": (
-            "python -c \"import os; os.system('pkill {flags} -f kirocrew')\""
+            "python -c \"import os; os.system('pkill {flags} -f ajcrew')\""
         ),
         # Keys on the connection TARGET in operand position; the argv floor
         # resolves the host behind interposed options, so flags between the
@@ -280,17 +280,17 @@ class TestSelfProtectionFlagInterposition:
     # product-name-anywhere regex rows were deleted and the argv floor
     # (``_matches_self_subcommand``) is the whole of their enforcement, ungated.
     _UNGATED_TEMPLATES = {
-        "self-protection-restart": "kirocrew {flags} restart",
-        "self-protection-update": "kirocrew {flags} update",
-        "self-protection-gateway-restart": "kirocrew {flags} gateway restart",
-        "self-protection-cloud": "kirocrew {flags} cloud destroy",
-        "self-protection-skills-authority-retire": "kirocrew {flags} skills authority-retire",
+        "self-protection-restart": "ajcrew {flags} restart",
+        "self-protection-update": "ajcrew {flags} update",
+        "self-protection-gateway-restart": "ajcrew {flags} gateway restart",
+        "self-protection-cloud": "ajcrew {flags} cloud destroy",
+        "self-protection-skills-authority-retire": "ajcrew {flags} skills authority-retire",
     }
     _FLAGS = ("-v", "-vv", "--verbose", "--no-jail", "-v --no-jail")
 
     @staticmethod
     def _effective():
-        from kiro_crew import security
+        from aj_crew import security
 
         return list(
             security.compute_effective_denied(security.BUILTIN_DENIED_RULES, (), False, (), ())
@@ -304,7 +304,7 @@ class TestSelfProtectionFlagInterposition:
         )
 
     def test_every_ungated_floor_has_a_template_and_no_row(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         assert set(self._UNGATED_TEMPLATES) == set(security._SELF_PROTECTION_UNGATED_FLOOR_IDS)
         # Disjoint by construction: an id in both sets would gate a floor on a
@@ -317,7 +317,7 @@ class TestSelfProtectionFlagInterposition:
         )
 
     def test_bare_and_flag_interposed_forms_are_all_denied(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for rule_id, template in {**self._TEMPLATES, **self._UNGATED_TEMPLATES}.items():
@@ -333,11 +333,11 @@ class TestSelfProtectionFlagInterposition:
                 ), f"{rule_id}: flag-interposed form not denied: {cmd!r}"
 
     def test_cloud_flag_interposition_denied_for_every_lifecycle_subcommand(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for sub in ("destroy", "stop", "start", "launch", "connect", "tunnel", "login", "logout"):
-            cmd = f"kirocrew -v cloud {sub}"
+            cmd = f"ajcrew -v cloud {sub}"
             assert security.is_denied(
                 cmd, denied_regexes=effective
             ), f"cloud {sub} not denied behind -v: {cmd!r}"
@@ -350,23 +350,23 @@ class TestSelfProtectionFlagInterposition:
         word sitting AFTER an unrelated subcommand (direct or module form) --
         stay allowed.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for allowed in (
-            "kirocrew -v",
-            "kirocrew --verbose",
-            "kirocrew --no-jail doctor",
-            "kirocrew -v status",
-            "kirocrew -vv cloud status",
+            "ajcrew -v",
+            "ajcrew --verbose",
+            "ajcrew --no-jail doctor",
+            "ajcrew -v status",
+            "ajcrew -vv cloud status",
             # A lifecycle word AFTER an unrelated subcommand is not a lifecycle
             # command: neither tier may scan past the first subcommand word
-            "kirocrew doctor restart",
-            "kirocrew gateway status restart",
-            "kirocrew cloud status destroy",
-            "python -m kiro_crew doctor restart",
-            "python -m kiro_crew gateway status restart",
-            "python -m kiro_crew cloud status destroy",
+            "ajcrew doctor restart",
+            "ajcrew gateway status restart",
+            "ajcrew cloud status destroy",
+            "python -m aj_crew doctor restart",
+            "python -m aj_crew gateway status restart",
+            "python -m aj_crew cloud status destroy",
         ):
             assert not security.is_denied(
                 allowed, denied_regexes=effective
@@ -388,7 +388,7 @@ class TestSelfProtectionFlagInterposition:
         deleted row (a ratchet may only tighten); the row each entry names must
         also EXIST.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         # Exact set, not a per-entry property: an alias for a deleted row (or any
         # other addition) fails here until these lines are changed on purpose.
@@ -399,13 +399,13 @@ class TestSelfProtectionFlagInterposition:
         for legacy, rule_id in security._LEGACY_RULE_ID_BY_PATTERN.items():
             assert rule_id in live_ids, legacy
         for stale in (
-            ".*kiro.?crew restart.*",
-            ".*kiro.?crew(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+restart.*",
-            ".*kiro.?crew update.*",
-            ".*kiro.?crew(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+update.*",
-            ".*kiro.?crew\\s+cloud\\s+(destroy|stop|start|launch|connect|tunnel|log(in|out)).*",
-            ".*kiro.?crew gateway restart.*",
-            ".*kiro.?crew(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+gateway restart.*",
+            ".*aj.?crew restart.*",
+            ".*aj.?crew(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+restart.*",
+            ".*aj.?crew update.*",
+            ".*aj.?crew(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+update.*",
+            ".*aj.?crew\\s+cloud\\s+(destroy|stop|start|launch|connect|tunnel|log(in|out)).*",
+            ".*aj.?crew gateway restart.*",
+            ".*aj.?crew(?:\\s+--?[a-z-]+(?:[= ]\\S+)?)*\\s+gateway restart.*",
         ):
             assert security._rule_id_for_pattern(stale) is None, stale
         assert security._rule_id_for_pattern("not a rule") is None
@@ -415,7 +415,7 @@ class TestSelfProtectionFlagInterposition:
 
     def test_legacy_alias_spellings_stay_out_of_the_enforced_catalog(self):
         """Aliases are lookup-only: not enforced, not built-in, not in the golden."""
-        from kiro_crew import security
+        from aj_crew import security
 
         golden = json.loads(_GOLDEN.read_text(encoding="utf-8"))
         golden_patterns = {g["pattern"] for g in golden}
@@ -443,7 +443,7 @@ class TestSelfProtectionFlagInterposition:
     def _dressings(words):
         """Shell spellings whose argv carries the plain flag/verb tokens.
 
-        Every entry reaches the shell as ``kirocrew [<flag>] <words...>`` after
+        Every entry reaches the shell as ``ajcrew [<flag>] <words...>`` after
         the shell's own de-escaping and quote removal. The ``bare`` and
         ``real-flag`` entries also match the regex tier directly; the escaped,
         continued, and quoted entries split a token in the raw string the regex
@@ -455,26 +455,26 @@ class TestSelfProtectionFlagInterposition:
         each_quoted = " ".join(f'"{w}"' for w in words)
         each_single_quoted = " ".join(f"'{w}'" for w in words)
         return {
-            "bare": f"kirocrew {rest}",
-            "real-flag": f"kirocrew -v {rest}",
-            "backslash-escaped-flag": f"kirocrew -\\v {rest}",  # -\v -> -v
-            "escaped-verb-letter": f"kirocrew \\{first}{tail}",  # \restart -> restart
-            "line-continuation-flag": f"kirocrew -\\\nv {rest}",
-            "continuation-before-verb": f"kirocrew \\\n{first}{tail}",
-            "each-word-quoted": f"kirocrew {each_quoted}",
-            "each-word-single-quoted": f"kirocrew {each_single_quoted}",
+            "bare": f"ajcrew {rest}",
+            "real-flag": f"ajcrew -v {rest}",
+            "backslash-escaped-flag": f"ajcrew -\\v {rest}",  # -\v -> -v
+            "escaped-verb-letter": f"ajcrew \\{first}{tail}",  # \restart -> restart
+            "line-continuation-flag": f"ajcrew -\\\nv {rest}",
+            "continuation-before-verb": f"ajcrew \\\n{first}{tail}",
+            "each-word-quoted": f"ajcrew {each_quoted}",
+            "each-word-single-quoted": f"ajcrew {each_single_quoted}",
             # Quoted FLAGS:
             # the quotes split the flag token in the raw text, but the shell
             # strips them, so the interposed flag still lands in argv. The full
             # flag-by-quote-style cross lives in
             # ``test_self_protection_denied_under_the_full_quoting_cross``.
-            "double-quoted-flag": f'kirocrew "-v" {rest}',  # "-v" -> -v
-            "single-quoted-flag": f"kirocrew '-v' {rest}",
-            "quoted-flag-and-quoted-verb": f'kirocrew "-v" {each_quoted}',
+            "double-quoted-flag": f'ajcrew "-v" {rest}',  # "-v" -> -v
+            "single-quoted-flag": f"ajcrew '-v' {rest}",
+            "quoted-flag-and-quoted-verb": f'ajcrew "-v" {each_quoted}',
         }
 
     def test_self_protection_subcommands_denied_under_every_shell_dressing(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for rule_id, words in self._SUBCOMMANDS.items():
@@ -507,11 +507,11 @@ class TestSelfProtectionFlagInterposition:
         return cmds
 
     def test_self_protection_denied_under_the_full_quoting_cross(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for rule_id, words in self._SUBCOMMANDS.items():
-            for cmd in self._quoting_cross("kirocrew", list(words)):
+            for cmd in self._quoting_cross("ajcrew", list(words)):
                 assert security.is_denied(
                     cmd, denied_regexes=effective
                 ), f"{rule_id} not denied in the quoting cross: {cmd!r}"
@@ -524,7 +524,7 @@ class TestSelfProtectionFlagInterposition:
         is tied to the category by ``test_every_self_protection_rule_has_a_template``:
         a fifth subcommand floor cannot silently skip all three walks, and a
         ``_SUBCOMMANDS`` entry cannot outlive its floor. The GATED floor set must
-        hold no ``kirocrew``-subcommand entry at all except the dev-mode confirm
+        hold no ``ajcrew``-subcommand entry at all except the dev-mode confirm
         rule, whose floor keys on the FLAG literal, not the subcommand words --
         the subcommand walks would quote ``app dev`` alone, which must stay
         allowed without the flag -- so it gets its own quoting cross in
@@ -532,10 +532,10 @@ class TestSelfProtectionFlagInterposition:
         floor re-added to the gated set would be gated on a row lookup again,
         which is the silent-allow trap the ungated set exists to remove.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert set(self._SUBCOMMANDS) == set(security._SELF_PROTECTION_UNGATED_FLOOR_IDS), (
-            "every ungated kirocrew-subcommand floor must register its words in "
+            "every ungated ajcrew-subcommand floor must register its words in "
             "_SUBCOMMANDS (and every _SUBCOMMANDS entry must be an ungated floor), "
             "or the shell-dressing walks silently skip it"
         )
@@ -543,17 +543,17 @@ class TestSelfProtectionFlagInterposition:
         gated_subcommand_ids = {
             rule_id
             for rule_id in security._SELF_PROTECTION_FLOOR_RULE_IDS
-            if self._TEMPLATES.get(rule_id, "").startswith("kirocrew ")
+            if self._TEMPLATES.get(rule_id, "").startswith("ajcrew ")
         }
         assert gated_subcommand_ids == flag_keyed_floor_ids
         # the predicate for each is wired and fires on a de-escaped argv
-        assert security._is_self_restart("kirocrew -\\v restart")
-        assert security._is_self_update("kirocrew \\update")
-        assert security._is_self_gateway_restart("kirocrew -\\v gateway restart")
-        assert security._is_self_cloud_destructive("kirocrew -\\v cloud destroy")
-        assert security._is_self_skills_authority_retire("kirocrew -\\v skills authority-retire")
+        assert security._is_self_restart("ajcrew -\\v restart")
+        assert security._is_self_update("ajcrew \\update")
+        assert security._is_self_gateway_restart("ajcrew -\\v gateway restart")
+        assert security._is_self_cloud_destructive("ajcrew -\\v cloud destroy")
+        assert security._is_self_skills_authority_retire("ajcrew -\\v skills authority-retire")
         assert security._is_dev_mode_out_of_root_confirm(
-            "kirocrew app dev x --confirm-out-of-install-'root'"
+            "ajcrew app dev x --confirm-out-of-install-'root'"
         )
 
     def test_skills_authority_retire_refuses_its_help_form_like_its_sibling_floors(self):
@@ -561,70 +561,70 @@ class TestSelfProtectionFlagInterposition:
         a word that reads as ``--help`` can still reach the shell as nothing, or as a
         plain argument, and the retire runs. The read-only ``skills`` forms stay allowed."""
         for cmd in (
-            "kirocrew skills authority-retire --help",
-            "kirocrew skills authority-retire -h",
-            "python -m kiro_crew skills authority-retire --help",
-            "kirocrew skills authority-retire ${nope:+--help}",
-            "kirocrew skills authority-retire `--help`",
-            "kirocrew skills authority-retire my-skill # --help",
-            "kirocrew skills authority-retire my-skill -- --help",
-            "kirocrew skills authority-retire --reason --help",
-            "kirocrew skills authority-retire --help | head -40",
-            "kirocrew skills authority-retire --help 2>&1",
+            "ajcrew skills authority-retire --help",
+            "ajcrew skills authority-retire -h",
+            "python -m aj_crew skills authority-retire --help",
+            "ajcrew skills authority-retire ${nope:+--help}",
+            "ajcrew skills authority-retire `--help`",
+            "ajcrew skills authority-retire my-skill # --help",
+            "ajcrew skills authority-retire my-skill -- --help",
+            "ajcrew skills authority-retire --reason --help",
+            "ajcrew skills authority-retire --help | head -40",
+            "ajcrew skills authority-retire --help 2>&1",
         ):
             assert security.is_denied(cmd), cmd
-        assert security.is_denied("kirocrew restart --help")
-        for cmd in ("kirocrew skills --help", "kirocrew skills list", "kirocrew skills root"):
+        assert security.is_denied("ajcrew restart --help")
+        for cmd in ("ajcrew skills --help", "ajcrew skills list", "ajcrew skills root"):
             assert not security.is_denied(cmd), cmd
 
     def test_self_protection_denied_under_interposed_redirection(self):
         """A redirection is removed from argv by the shell and can sit anywhere in
         a simple command, so it must not shift the leading subcommand.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for cmd in (
-            "kirocrew 2>/tmp/x restart",  # attached redirect leaves fd residue
-            "kirocrew > /tmp/x restart",  # separate target
-            "kirocrew 2>&1 restart",
-            "kirocrew restart 2>/tmp/log",  # redirect AFTER the subcommand
-            "kirocrew >/dev/null -v update",  # redirect + flag
-            "kirocrew > 'audit;log' restart",  # quoted ';' in the target is a filename, not a boundary
-            "kirocrew 2> 'x|y' restart",  # quoted '|' in the target
+            "ajcrew 2>/tmp/x restart",  # attached redirect leaves fd residue
+            "ajcrew > /tmp/x restart",  # separate target
+            "ajcrew 2>&1 restart",
+            "ajcrew restart 2>/tmp/log",  # redirect AFTER the subcommand
+            "ajcrew >/dev/null -v update",  # redirect + flag
+            "ajcrew > 'audit;log' restart",  # quoted ';' in the target is a filename, not a boundary
+            "ajcrew 2> 'x|y' restart",  # quoted '|' in the target
         ):
             assert security.is_denied(
                 cmd, denied_regexes=effective
             ), f"redirection-interposed form not denied: {cmd!r}"
         # A redirect whose TARGET is a file named like the subcommand runs no
         # subcommand, so it must stay allowed by the floor.
-        assert not security._is_self_restart("kirocrew > restart")
+        assert not security._is_self_restart("ajcrew > restart")
 
     def test_self_protection_denied_under_a_redirection_glued_to_the_subcommand(self):
         """``restart>/tmp/log`` is the argv word ``restart`` plus a redirection, and a
         token whose target may hold a live separator is also read with the token skipped."""
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for cmd in (
-            "kirocrew restart>/tmp/log",
-            "kirocrew restart> /tmp/log",
-            "kirocrew restart</dev/null",
-            "kirocrew 2>/dev/null update>/tmp/log",
-            "kirocrew gateway restart>/tmp/log",
-            "python -m kiro_crew restart>/tmp/log",
-            "bash -c 'kirocrew restart>/tmp/log'",
-            "kirocrew restart;>x",
-            "kirocrew cloud>'a;b' destroy",  # a quoted ';' in the target ends nothing
-            "kirocrew status>x&&kirocrew restart",
-            "kirocrew -v>'a;b' restart",
+            "ajcrew restart>/tmp/log",
+            "ajcrew restart> /tmp/log",
+            "ajcrew restart</dev/null",
+            "ajcrew 2>/dev/null update>/tmp/log",
+            "ajcrew gateway restart>/tmp/log",
+            "python -m aj_crew restart>/tmp/log",
+            "bash -c 'ajcrew restart>/tmp/log'",
+            "ajcrew restart;>x",
+            "ajcrew cloud>'a;b' destroy",  # a quoted ';' in the target ends nothing
+            "ajcrew status>x&&ajcrew restart",
+            "ajcrew -v>'a;b' restart",
         ):
             assert security.is_denied(cmd, denied_regexes=effective), cmd
         for cmd in (
-            "echo kirocrew restart>/tmp/log",
-            "kirocrew status>/tmp/log",
-            "kirocrew restart2>/tmp/log",
-            "kirocrew 2>/tmp/log status",
+            "echo ajcrew restart>/tmp/log",
+            "ajcrew status>/tmp/log",
+            "ajcrew restart2>/tmp/log",
+            "ajcrew 2>/tmp/log status",
         ):
             assert not security.is_denied(cmd, denied_regexes=effective), cmd
 
@@ -633,66 +633,66 @@ class TestSelfProtectionFlagInterposition:
         bash passes, so a flag or the verb hidden in them must not slip past the
         floor -- shlex leaves the ``$`` and does not decode ANSI-C escapes.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for cmd in (
-            "kirocrew $'-v' restart",  # ANSI-C flag
-            "kirocrew $'\\x2d\\x76' restart",  # ANSI-C hex -> -v
-            'kirocrew $"-v" restart',  # locale flag
-            "kirocrew $'restart'",  # ANSI-C on the verb
-            "kirocrew $'-v' cloud destroy",
+            "ajcrew $'-v' restart",  # ANSI-C flag
+            "ajcrew $'\\x2d\\x76' restart",  # ANSI-C hex -> -v
+            'ajcrew $"-v" restart',  # locale flag
+            "ajcrew $'restart'",  # ANSI-C on the verb
+            "ajcrew $'-v' cloud destroy",
         ):
             assert security.is_denied(
                 cmd, denied_regexes=effective
             ), f"$-quoted self-protection form not denied: {cmd!r}"
 
     def test_self_protection_module_form_denied_under_shell_dressing(self):
-        """``python -m kiro_crew <subcommand>`` dispatches the same self-action. The
-        escaped module form (``python -m kiro_crew -\\v restart``) slips past the
+        """``python -m aj_crew <subcommand>`` dispatches the same self-action. The
+        escaped module form (``python -m aj_crew -\\v restart``) slips past the
         interpreter-position regex, so the floor resolves the module name and checks
         the operands after it.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         for cmd in (
-            "python -m kiro_crew restart",
-            r"python -m kiro_crew -\v restart",  # escaped: regex misses, floor catches
-            r"python -mkiro_crew -\v restart",  # attached -m spelling
-            r"python -m kiro_crew \update",
-            "python -m kiro_crew gateway restart",
-            r"python -m kiro_crew -\v cloud destroy",
+            "python -m aj_crew restart",
+            r"python -m aj_crew -\v restart",  # escaped: regex misses, floor catches
+            r"python -maj_crew -\v restart",  # attached -m spelling
+            r"python -m aj_crew \update",
+            "python -m aj_crew gateway restart",
+            r"python -m aj_crew -\v cloud destroy",
         ):
             assert security.is_denied(
                 cmd, denied_regexes=effective
             ), f"module-form self-protection not denied: {cmd!r}"
         # benign module invocations stay allowed at the floor (not a targeted subcommand)
-        assert not security._is_self_restart("python -m kiro_crew status")
-        assert not security._is_self_cloud_destructive("python -m kiro_crew cloud status")
+        assert not security._is_self_restart("python -m aj_crew status")
+        assert not security._is_self_cloud_destructive("python -m aj_crew cloud status")
         assert not security._is_self_restart("python -m pytest test/test_restart.py")
 
     def test_self_protection_module_form_denied_under_version_launchers(self):
-        """Every interpreter launcher spelling of ``-m kiro_crew`` dispatches the
+        """Every interpreter launcher spelling of ``-m aj_crew`` dispatches the
         same self-action.
 
         The spellings come from ``security._PYTHON_PROGRAM_RE``: version-suffixed
         binaries, the Windows ``py`` launcher (its version selector is an
         interpreter flag taking no operand), interpreter flags with separate
-        operands (``-X dev``), and the attached ``-mkiro_crew`` form. Each is
+        operands (``-X dev``), and the attached ``-maj_crew`` form. Each is
         crossed with a bare and flag-interposed tail plus the full quoting
         cross from ``_quoting_cross``, so every launcher cell the retired
         TestCatalog matrix asserted survives here.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         effective = self._effective()
         launchers = (
-            "python -m kiro_crew",
-            "python3 -B -m kiro_crew",
-            "python3.12 -X dev -m kiro_crew",
-            "py -3.12 -m kiro_crew",
-            "python -mkiro_crew",
+            "python -m aj_crew",
+            "python3 -B -m aj_crew",
+            "python3.12 -X dev -m aj_crew",
+            "py -3.12 -m aj_crew",
+            "python -maj_crew",
         )
         for launcher in launchers:
             for rule_id, words in self._SUBCOMMANDS.items():
@@ -707,8 +707,8 @@ class TestSelfProtectionFlagInterposition:
         # The same launchers running a benign subcommand (or another program
         # entirely) stay allowed -- the launcher spelling is not the trigger.
         for allowed in (
-            "py -3.12 -m kiro_crew status",
-            "python3.12 -X dev -m kiro_crew doctor",
+            "py -3.12 -m aj_crew status",
+            "python3.12 -X dev -m aj_crew doctor",
             "python3 -B -m pytest test/test_restart.py",
         ):
             assert not security.is_denied(
@@ -719,17 +719,17 @@ class TestSelfProtectionFlagInterposition:
         """The floor matches a real subcommand invocation, not a mention, a
         benign subcommand, or a different rule's verb.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
-        assert not security._is_self_restart("kirocrew -v status")
-        assert not security._is_self_cloud_destructive("kirocrew cloud status")
-        assert not security._is_self_cloud_destructive("kirocrew -vv cloud status")
+        assert not security._is_self_restart("ajcrew -v status")
+        assert not security._is_self_cloud_destructive("ajcrew cloud status")
+        assert not security._is_self_cloud_destructive("ajcrew -vv cloud status")
         # a mention inside another program's args is not a run (data-consumer /
         # non-program position), so the floor itself does not fire on it
-        assert not security._is_self_restart("echo kirocrew restart")
-        assert not security._is_self_restart("grep restart /var/log/kirocrew.log")
+        assert not security._is_self_restart("echo ajcrew restart")
+        assert not security._is_self_restart("grep restart /var/log/ajcrew.log")
         # gateway-restart is a distinct rule from bare restart
-        assert not security._is_self_restart("kirocrew gateway restart")
+        assert not security._is_self_restart("ajcrew gateway restart")
 
 
 class TestNoCatalogRowMatchesACredentialPath:
@@ -812,50 +812,50 @@ class TestProductNameAnywhereIsNotADenial:
         for rule in BUILTIN_DENIED_RULES:
             if "crew" not in rule.pattern:
                 continue
-            assert not re.search(rule.pattern, "ls ~/kirocrew-wt/notes.md", re.I), rule.id
+            assert not re.search(rule.pattern, "ls ~/ajcrew-wt/notes.md", re.I), rule.id
 
     def test_representative_false_positives_are_allowed(self):
         effective = self._effective()
         for allowed in (
             # The product name in a path, a search pattern, a filename, a
             # redirect target -- each once a match for a subcommand row.
-            "grep -rn kirocrew /Users/me/kirocrew-wt/x/src",
-            "rg update /Users/me/kirocrew-wt/src",
-            "ls /Users/me/kirocrew-wt/restart.log",
-            "ls test/test_kirocrew_cron_schedule.py",
-            "cat ~/kirocrew-wt/docs/cloud/destroy.md",
-            "tail -f /var/log/kirocrew/gateway.log | grep restart",
-            "git -C /Users/me/kirocrew-wt log --grep update",
-            "echo done > ~/kirocrew-wt/update.txt",
-            "python -m pytest test/test_kirocrew_restart.py",
+            "grep -rn ajcrew /Users/me/ajcrew-wt/x/src",
+            "rg update /Users/me/ajcrew-wt/src",
+            "ls /Users/me/ajcrew-wt/restart.log",
+            "ls test/test_ajcrew_cron_schedule.py",
+            "cat ~/ajcrew-wt/docs/cloud/destroy.md",
+            "tail -f /var/log/ajcrew/gateway.log | grep restart",
+            "git -C /Users/me/ajcrew-wt log --grep update",
+            "echo done > ~/ajcrew-wt/update.txt",
+            "python -m pytest test/test_ajcrew_restart.py",
             # The name and the verb as another program's DATA.
-            "echo kirocrew restart",
-            "echo 'kirocrew gateway restart' >> notes.md",
+            "echo ajcrew restart",
+            "echo 'ajcrew gateway restart' >> notes.md",
             # A method name in a search of the product's own tree -- the seven
             # legacy rows refused every one of these.
             "grep -rn get_secret_value src/",
-            "grep -rn read_secret src/kiro_crew",
+            "grep -rn read_secret src/aj_crew",
             "grep -rn delete_stack .",
             "grep -rn terminate_instances src/",
             "grep -rn drop_table src/",
             "grep -rn delete_table src/",
             "grep -rn delete_bucket src/",
-            "sed -n '/delete_bucket/p' src/kiro_crew/cloud/__init__.py",
+            "sed -n '/delete_bucket/p' src/aj_crew/cloud/__init__.py",
         ):
             assert is_denied(allowed, denied_regexes=effective) is None, allowed
 
     def test_the_floor_still_refuses_the_genuine_cases(self):
         effective = self._effective()
         for denied, rule_id in (
-            ("kirocrew restart", "self-protection-restart"),
-            ("kirocrew -v update", "self-protection-update"),
-            ("python -m kiro_crew gateway restart", "self-protection-gateway-restart"),
-            ("kirocrew cloud destroy", "self-protection-cloud"),
+            ("ajcrew restart", "self-protection-restart"),
+            ("ajcrew -v update", "self-protection-update"),
+            ("python -m aj_crew gateway restart", "self-protection-gateway-restart"),
+            ("ajcrew cloud destroy", "self-protection-cloud"),
             # Shell dressing the deleted regex could see through only by
             # matching the name anywhere: the floor reads the argv instead.
-            ("kirocrew -\\v restart", "self-protection-restart"),
-            ("bash -c 'kirocrew restart'", "self-protection-restart"),
-            ("cd /Users/me/kirocrew-wt && kirocrew restart", "self-protection-restart"),
+            ("ajcrew -\\v restart", "self-protection-restart"),
+            ("bash -c 'ajcrew restart'", "self-protection-restart"),
+            ("cd /Users/me/ajcrew-wt && ajcrew restart", "self-protection-restart"),
         ):
             reason = is_denied(denied, denied_regexes=effective)
             assert reason, denied
@@ -875,8 +875,8 @@ class TestProductNameAnywhereIsNotADenial:
         ``self-protection-kill`` has disabled it), which is the contrast that
         proves the ungated loop is what decides here, not a fail-closed default.
         """
-        assert is_denied("kirocrew restart", denied_regexes=[]) is not None
-        assert is_denied("kirocrew cloud destroy", denied_regexes=[]) is not None
+        assert is_denied("ajcrew restart", denied_regexes=[]) is not None
+        assert is_denied("ajcrew cloud destroy", denied_regexes=[]) is not None
         assert is_denied(f"{_PK} -f {_NAME}", denied_regexes=[]) is None
 
     def test_every_gated_floor_id_has_a_live_row(self):
@@ -909,7 +909,7 @@ class TestS3TransferDirection:
     @pytest.fixture(autouse=True)
     def _posix_host(self, _floor_monkeypatch):
         # The reader reads POSIX shell; the Windows tests below set this True.
-        _floor_monkeypatch.setattr("kiro_crew.platform_compat.IS_WINDOWS", False)
+        _floor_monkeypatch.setattr("aj_crew.platform_compat.IS_WINDOWS", False)
 
     DOWNLOADS = [
         "aws s3 cp s3://b/k ./d",
@@ -1060,7 +1060,7 @@ class TestS3TransferDirection:
     def test_narrowing_is_audited_under_its_own_mechanism(self, monkeypatch):
         seen: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.security.deny_gate._emit_deny_exception_event",
+            "aj_crew.security.deny_gate._emit_deny_exception_event",
             lambda _cmd, _pattern, mechanism="": seen.append(mechanism) or True,
         )
         assert is_denied("aws s3 cp --recursive s3://b/p ./d") is None
@@ -1068,7 +1068,7 @@ class TestS3TransferDirection:
 
     def test_a_failed_audit_keeps_the_denial(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.security.deny_gate._emit_deny_exception_event",
+            "aj_crew.security.deny_gate._emit_deny_exception_event",
             lambda *_a, **_k: False,
         )
         assert is_denied("aws s3 cp --recursive s3://b/p ./d") is not None
@@ -1085,7 +1085,7 @@ class TestS3TransferDirection:
     )
     def test_nothing_narrows_on_windows(self, cmd, _floor_monkeypatch):
         # On Windows each row denies what its text matches, as on main.
-        _floor_monkeypatch.setattr("kiro_crew.platform_compat.IS_WINDOWS", True)
+        _floor_monkeypatch.setattr("aj_crew.platform_compat.IS_WINDOWS", True)
         rows = [r for r in BUILTIN_DENIED_RULES if r.id in self._RULE_IDS]
         hits = [r for r in rows if re.search(r.pattern, cmd, re.IGNORECASE)]
         assert hits, f"not a sample main's rows deny: {cmd!r}"
@@ -1100,7 +1100,7 @@ class TestS3TransferDirection:
         calls: list[str] = []
         real = security.s3_direction._s3_download_only
         monkeypatch.setattr(
-            "kiro_crew.security.s3_direction._s3_download_only",
+            "aj_crew.security.s3_direction._s3_download_only",
             lambda view, raw="": calls.append(view) or real(view, raw),
         )
         cmd = "aws s3 cp --recursive --exclude '" + ";aws s3 cp x s3://b" * 50 + "' s3://p/k ./d"
@@ -1150,8 +1150,8 @@ class TestS3TransferDirection:
         assert reason is not None
 
     def test_the_hooks_resolver_carries_provenance(self):
-        from kiro_crew.hook_runtime.denied_commands import resolve_effective_denied_regexes
-        from kiro_crew.hooks import HooksConfig
+        from aj_crew.hook_runtime.denied_commands import resolve_effective_denied_regexes
+        from aj_crew.hooks import HooksConfig
 
         cfg = HooksConfig.from_dict(
             {
@@ -1291,14 +1291,14 @@ class TestLazyPossessiveGapSplit:
     """
 
     def test_split_absorbs_lazy_and_possessive_modifier(self):
-        from kiro_crew.security import _split_deny_frags
+        from aj_crew.security import _split_deny_frags
 
         assert _split_deny_frags(r"curl.*?evil\.example") == ["curl", r"evil\.example"]
         assert _split_deny_frags(r"rm.*+secret") == ["rm", "secret"]
         assert _split_deny_frags(r"a.*?b.*c.*+d") == ["a", "b", "c", "d"]
 
     def test_lazy_gap_rule_still_matches_end_to_end(self):
-        from kiro_crew.security import _DenyMatcher
+        from aj_crew.security import _DenyMatcher
 
         m = _DenyMatcher(r"curl.*?evil\.example")
         assert m._disabled is False
@@ -1308,7 +1308,7 @@ class TestLazyPossessiveGapSplit:
     def test_lazy_user_deny_blocks_via_is_denied(self):
         # A user-authored lazy pattern accepted by is_safe_user_regex must
         # actually deny the matching command (not silently allow it).
-        from kiro_crew.security import is_safe_user_regex
+        from aj_crew.security import is_safe_user_regex
 
         pattern = r"curl.*?evil\.example"
         assert is_safe_user_regex(pattern) is True
@@ -1331,7 +1331,7 @@ class TestGreedyFragmentUnderConsume:
     def test_greedy_gap_pattern_still_matches(self):
         import re
 
-        from kiro_crew.security import _DenyMatcher
+        from aj_crew.security import _DenyMatcher
 
         pattern = r"rm .+.*--no-preserve-root"
         target = "rm x--no-preserve-root"
@@ -1343,7 +1343,7 @@ class TestGreedyFragmentUnderConsume:
         assert m.match("ls -la") is False
 
     def test_greedy_gap_user_deny_blocks_via_is_denied(self):
-        from kiro_crew.security import is_safe_user_regex
+        from aj_crew.security import is_safe_user_regex
 
         pattern = r"rm .+.*--no-preserve-root"
         assert is_safe_user_regex(pattern) is True
@@ -1351,7 +1351,7 @@ class TestGreedyFragmentUnderConsume:
         assert is_denied("echo hello", denied_regexes=[pattern]) is None
 
     def test_underconsume_detector(self):
-        from kiro_crew.security import _frags_can_underconsume
+        from aj_crew.security import _frags_can_underconsume
 
         # Non-final greedy variable-width tail → unsafe (route to bounded).
         assert _frags_can_underconsume(["rm .+", "--no-preserve-root"]) is True
@@ -1381,7 +1381,7 @@ class TestUserPatternExactSemantics:
     def test_alternation_before_gap_matches(self):
         import re
 
-        from kiro_crew.security import _DenyMatcher
+        from aj_crew.security import _DenyMatcher
 
         pattern = r"(ab|a).*b"
         assert re.search(pattern, "ab", re.IGNORECASE) is not None
@@ -1391,7 +1391,7 @@ class TestUserPatternExactSemantics:
         assert m.match("ab") is True
 
     def test_user_alternation_deny_blocks_via_is_denied(self):
-        from kiro_crew.security import is_safe_user_regex
+        from aj_crew.security import is_safe_user_regex
 
         pattern = r"(ab|a).*b"
         assert is_safe_user_regex(pattern) is True
@@ -1402,7 +1402,7 @@ class TestUserPatternExactSemantics:
         # Even a pattern the fragment splitter COULD handle is routed to the
         # exact engine when it is not a built-in — no reliance on the splitter's
         # fidelity for user input.
-        from kiro_crew.security import _DenyMatcher
+        from aj_crew.security import _DenyMatcher
 
         m = _DenyMatcher(r"curl.*evil")  # simple, fragmentable, but user-supplied
         assert m._bounded is True
@@ -1411,7 +1411,7 @@ class TestUserPatternExactSemantics:
     def test_builtins_keep_fragment_fast_path(self):
         # A representative non-alternation built-in stays on the linear fragment
         # path (not bounded) — preserving the ReDoS-safe fast path for the 137.
-        from kiro_crew.security import (
+        from aj_crew.security import (
             BUILTIN_DENIED_RULES,
             _DenyMatcher,
             _has_top_level_alternation,
@@ -1438,7 +1438,7 @@ class TestUserPatternExactSemantics:
         # keeping. What still needs the bounded engine, and so still truncates: a
         # pattern whose fragments can over-consume across a ``.*`` gap, where the
         # linear matcher would UNDER-match and let a denied command through.
-        from kiro_crew.security import _DENY_FALLBACK_SCAN_MAX_CHARS, _DenyMatcher
+        from aj_crew.security import _DENY_FALLBACK_SCAN_MAX_CHARS, _DenyMatcher
 
         # Built-in floor: full-input (no truncation) — a >cap prefix in the SAME
         # segment does not hide a destructive built-in.
@@ -1640,7 +1640,7 @@ class TestIsDeniedReDoSResistance:
         The small-size absolute CPU budget stays as the catastrophic-blowup backstop for cost
         added outside the matcher, where this trace cannot see it.
         """
-        from kiro_crew.security import _DENY_MATCHER_CACHE, _deny_matcher
+        from aj_crew.security import _DENY_MATCHER_CACHE, _deny_matcher
 
         builds = (
             lambda n: "get_credentials " + ("python boto3 " * n),

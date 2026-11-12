@@ -2,7 +2,7 @@
 """Render one built-in template in a plain HTML page and screenshot it.
 
 The harness is the FRAME's two jobs and nothing else: it sets
-``window.kirocrew = {fields, agentic, seq, stale, written_at}`` from the captured fold
+``window.ajcrew = {fields, agentic, seq, stale, written_at}`` from the captured fold
 values, and
 it fills every ``data-dashboard-field`` element by ``textContent`` -- the same binding
 ``website/src/pages/chat/command-center/dashboardDocument.ts`` performs. So what the
@@ -220,20 +220,20 @@ def build_page(
 <body>
 {caption}{fragment}
 <script>
-  window.kirocrew = {json.dumps(api)};
+  window.ajcrew = {json.dumps(api)};
   // The frame's own binding: textContent on each bound element, body descendants only.
   (function () {{
     var nodes = document.body.querySelectorAll('[data-dashboard-field]');
     for (var i = 0; i < nodes.length; i++) {{
       var name = nodes[i].getAttribute('data-dashboard-field');
-      if (!Object.prototype.hasOwnProperty.call(window.kirocrew.fields, name)) continue;
-      var v = window.kirocrew.fields[name];
+      if (!Object.prototype.hasOwnProperty.call(window.ajcrew.fields, name)) continue;
+      var v = window.ajcrew.fields[name];
       nodes[i].textContent = (v === null || v === undefined)
         ? '\\u2014'
         : (typeof v === 'object' ? JSON.stringify(v) : String(v));
     }}
     // Then one push, so the page's own message handler runs the way it will in the frame.
-    window.postMessage({{ type: 'kirocrew:fields' }}, '*');
+    window.postMessage({{ type: 'ajcrew:fields' }}, '*');
   }}());
 </script>
 </body></html>

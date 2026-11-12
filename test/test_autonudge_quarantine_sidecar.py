@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, AutoNudgeStoreUnvetted
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, AutoNudgeStoreUnvetted
 
 
 def _moved_aside_sidecar(base_dir: Path) -> Path:
@@ -50,7 +50,7 @@ class TestTheQuarantineSidecarIsWrittenSafely:
         ``_persist_soon`` only LOGS a failed persist, so ``cycle_count`` would advance in
         memory only and ``max_cycles`` would bound nothing durable.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         fired: list[object] = []
 
@@ -89,8 +89,8 @@ class TestTheQuarantineSidecarIsWrittenSafely:
     async def test_a_refused_store_does_not_tick_a_structured_monitor(self, tmp_path) -> None:
         """A structured monitor's tick delivers before it records, so a refused store
         must stop it the same way it stops a prompt loop, and leave it unarmed."""
-        from kiro_crew.autonudge_service.model import NudgeLoop
-        from kiro_crew.monitoring.models import MonitorState
+        from aj_crew.autonudge_service.model import NudgeLoop
+        from aj_crew.monitoring.models import MonitorState
 
         ticks: list[object] = []
 

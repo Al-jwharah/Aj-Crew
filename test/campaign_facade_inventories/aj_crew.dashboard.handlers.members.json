@@ -1,0 +1,43 @@
+{
+ "base_public_names": [
+  "AjCrewConfig",
+  "DashboardState",
+  "MEMBER_APPROVAL_MODE_UNSET_EFFECTIVE",
+  "MemberSlugError",
+  "api_member_activity",
+  "api_member_briefing",
+  "api_member_fresh_start",
+  "api_member_greet",
+  "api_member_projections",
+  "api_member_rules_get",
+  "api_member_rules_put",
+  "api_member_thread",
+  "api_members",
+  "default_project_dir",
+  "effective_session_key",
+  "load_config_with_content_stamp",
+  "logger",
+  "members_mod",
+  "normalize_member_source",
+  "pin_private_agent_store",
+  "redact_external_text",
+  "rehydrate_slot_from_history_async",
+  "request_slot_origin",
+  "require_owner_dashboard_request"
+ ],
+ "note": "Frozen at the split of src/aj_crew/dashboard/handlers/members.py (S58): every public name it defined, and every name it bound from the rest of aj_crew.",
+ "rebound": {
+  "AjCrewConfig": "aj_crew.config.loader",
+  "DashboardState": "aj_crew.dashboard.state",
+  "MEMBER_APPROVAL_MODE_UNSET_EFFECTIVE": "aj_crew.config.sections",
+  "MemberSlugError": "aj_crew.members",
+  "default_project_dir": "aj_crew.config.loader",
+  "effective_session_key": "aj_crew.dashboard.chat_utils",
+  "load_config_with_content_stamp": "aj_crew.config.loader",
+  "pin_private_agent_store": "aj_crew.dashboard.chat_persistence",
+  "redact_external_text": "aj_crew.external_text",
+  "rehydrate_slot_from_history_async": "aj_crew.dashboard.chat_persistence",
+  "request_slot_origin": "aj_crew.dashboard.state",
+  "require_owner_dashboard_request": "aj_crew.dashboard.handlers._shared"
+ }
+}

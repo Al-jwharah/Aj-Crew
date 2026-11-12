@@ -28,10 +28,10 @@ from connections_mint_helpers import (
 )
 from oauth_url_corpus import OPERATOR_EXTENSION_OAUTH_URLS
 
-from kiro_crew import mcp_grant
-from kiro_crew.acp.types import METHOD_MCP_SERVER_INIT_FAILURE, JsonRpcMessage
-from kiro_crew.connections import mint
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import mcp_grant
+from aj_crew.acp.types import METHOD_MCP_SERVER_INIT_FAILURE, JsonRpcMessage
+from aj_crew.connections import mint
+from aj_crew.testing.wait import await_until, finished
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_mint = connections_mint_helpers._isolated_mint
@@ -54,7 +54,7 @@ async def test_a_successful_mint_holds_the_process_and_serves_the_url():
 
 
 def test_the_session_is_promptless_model_free_and_mounts_one_server():
-    body = mint._mint_spec_body("kirocrew-mint-notion", {"notion": {"url": _URL}}, "desc")
+    body = mint._mint_spec_body("ajcrew-mint-notion", {"notion": {"url": _URL}}, "desc")
 
     assert body["prompt"] == ""
     assert body["model"] == "auto"
@@ -69,7 +69,7 @@ async def test_the_mint_runs_on_a_dedicated_single_server_spec():
     await mint.start_oauth_mint("notion", _URL)
 
     agent = _FakeClient.instances[-1].kwargs["agent"]
-    assert agent.startswith(f"kirocrew-mint-notion-{os.getpid()}-")
+    assert agent.startswith(f"ajcrew-mint-notion-{os.getpid()}-")
     await mint._dispose_mint(mint._mints["notion"])
 
 
@@ -191,7 +191,7 @@ async def test_validation_bounds_readiness_and_both_commands_with_one_deadline(
     class _SlowCommand(_FakeClient):
         async def command_result(self, command: str, args: dict | None = None):
             # flake-ok: pre-existing 10 s sleep standing in for a command that never answers; the 50 ms deadline under test ends it first; moved verbatim, tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 10 s stand-in for a command that never answers and the deadline under test ends it; moved verbatim and tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 10 s stand-in for a command that never answers and the deadline under test ends it; moved verbatim and tracked for a de-flake pass
             await asyncio.sleep(10)
             raise AssertionError("unreachable")
 
@@ -234,7 +234,7 @@ async def test_the_watcher_never_reports_granted_from_the_pair_it_disproved(
 
     # Several poll intervals with the disproven pair sitting on disk, untouched.
     # flake-ok: pre-existing 50 ms window of watcher polls that must not publish the disproven pair; moved verbatim, tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms window of watcher polls that must not publish the disproven pair; moved verbatim and tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms window of watcher polls that must not publish the disproven pair; moved verbatim and tracked for a de-flake pass
     await asyncio.sleep(0.05)
 
     assert mint._mints["notion"]["state"] == "waiting"
@@ -296,7 +296,7 @@ async def test_an_unreadable_fingerprint_still_fails_closed_after_a_disproof(
     fresh = _FakeClient.instances[-1]
 
     # flake-ok: pre-existing 50 ms window of watcher polls that must not publish the stale pair; moved verbatim, tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms window of watcher polls that must not publish the stale pair; moved verbatim and tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms window of watcher polls that must not publish the stale pair; moved verbatim and tracked for a de-flake pass
     await asyncio.sleep(0.05)
 
     # No baseline and no proven revalidation: the stale pair must NOT be published,
@@ -779,7 +779,7 @@ async def test_a_teardown_cancelled_from_outside_still_releases_the_spec_and_pid
 
     task = asyncio.create_task(mint._dispose_mint(entry))
     # flake-ok: pre-existing 50 ms barrier that lets the teardown reach the hanging shutdown before the cancel; moved verbatim, tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms barrier that lets the teardown reach the hanging shutdown before the cancel; moved verbatim and tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms barrier that lets the teardown reach the hanging shutdown before the cancel; moved verbatim and tracked for a de-flake pass
     await asyncio.sleep(0.05)
     task.cancel()
     # flake-ok: pre-existing unbounded await of the teardown task the test has just cancelled; moved verbatim, tracked for a de-flake pass
@@ -852,7 +852,7 @@ async def test_row_identity_survives_a_coarse_clock(monkeypatch: pytest.MonkeyPa
     # tick read the same clock value. Identity must not be a clock reading, or
     # every token guard fails open and the late-failure clobber returns.
     # flake-ok: pre-existing patch of the stdlib time.monotonic the mint module reads, the coarse clock under test, undone by monkeypatch at teardown; moved verbatim, tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing patch of the stdlib time.monotonic the mint module reads as the coarse clock under test; moved verbatim and tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing patch of the stdlib time.monotonic the mint module reads as the coarse clock under test; moved verbatim and tracked for a de-flake pass
     monkeypatch.setattr(mint.time, "monotonic", lambda: 1234.5)
     gate = asyncio.Event()
 

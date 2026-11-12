@@ -17,9 +17,9 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 CHANNELS_PANEL = ROOT / "website" / "src" / "pages" / "settings" / "ChannelsPanel.tsx"
 SCANNED = (
-    (ROOT / "src" / "kiro_crew" / "docs", "*.md"),
+    (ROOT / "src" / "aj_crew" / "docs", "*.md"),
     (ROOT / "docs", "*.md"),
-    (ROOT / "src" / "kiro_crew", "*.py"),
+    (ROOT / "src" / "aj_crew", "*.py"),
 )
 
 # `{ key: 'discord', name: 'Discord', ...` -> "Discord"

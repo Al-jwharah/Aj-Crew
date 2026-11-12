@@ -672,10 +672,10 @@ def _review_contract_module():
         "_review_contract_under_test",
         ROOT
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "builtin_skills"
-        / "kirocrew-dev"
-        / "kirocrew-prepare-pr"
+        / "ajcrew-dev"
+        / "ajcrew-prepare-pr"
         / "scripts"
         / "_review_contract.py",
     )

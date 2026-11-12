@@ -18,12 +18,12 @@
  * Each still is shot in light and dark.
  *
  * Prereqs (once per pod; the member thread needs a long transcript):
- *   kirocrew pod up <worktree> --seed rich --json | tail -1 > "$KIROCREW_SCRATCH/pod-info.json"
- *   kirocrew pod api <worktree> POST /api/members/default/thread --allow-write
+ *   ajcrew pod up <worktree> --seed rich --json | tail -1 > "$AJCREW_SCRATCH/pod-info.json"
+ *   ajcrew pod api <worktree> POST /api/members/default/thread --allow-write
  *   # write sessions/dashboard_member-default.jsonl with >= 6 user turns, then
- *   kirocrew pod api <worktree> POST /api/restart --allow-write
+ *   ajcrew pod api <worktree> POST /api/restart --allow-write
  * Run:
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" OUT_DIR=<dir> \
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" OUT_DIR=<dir> \
  *     node website/scripts/capture-chatpane-pinned-prompt.mjs
  */
 import { readFileSync, mkdirSync, renameSync, rmSync, existsSync, readdirSync } from 'node:fs'

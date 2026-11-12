@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 import ws_event_scoping_helpers
 from ws_event_scoping_helpers import _allowed, _make_state
 
-from kiro_crew.dashboard.ws_event_scope import ws_event_allowed
+from aj_crew.dashboard.ws_event_scope import ws_event_allowed
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _clear_module_caches = ws_event_scoping_helpers._clear_module_caches
@@ -49,12 +49,12 @@ class TestGrantsAreAudited:
         return _make_state({"s1": slot})
 
     def _enable(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         mod._declared_cache[self.APP] = (time.monotonic(), True, frozenset())
 
     def test_an_allowed_event_is_audited_as_granted(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         self._enable()
         state = self._state_with_own_slot()
@@ -80,7 +80,7 @@ class TestGrantsAreAudited:
         were attached per-branch instead of to the result, whichever branch was
         forgotten would show up here.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         self._enable()
         state = self._state_with_own_slot()
@@ -112,7 +112,7 @@ class TestGrantsAreAudited:
 
         # Count SEL emissions, not calls into the audit helper: the helper runs
         # every time and the window is what collapses the write.
-        with patch("kiro_crew.sel.sel") as sel_factory:
+        with patch("aj_crew.sel.sel") as sel_factory:
             for _ in range(5):
                 ws_event_allowed(
                     "chat_delta",
@@ -142,7 +142,7 @@ class TestGrantsAreAudited:
         foreign._origin = ""
         state = _make_state({"s1": own, "s2": foreign})
 
-        with patch("kiro_crew.sel.sel") as sel_factory:
+        with patch("aj_crew.sel.sel") as sel_factory:
             ws_event_allowed(
                 "chat_delta",
                 {"slot": "s1"},
@@ -174,16 +174,16 @@ class TestSuppressedDenyCountIsReported:
     frame (this gate runs per event PER CLIENT on the broadcast hot path)."""
 
     def _clear(self):
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         _wes._sel_last_audit.clear()
 
     def test_next_emission_reports_the_suppressed_tally(self):
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         self._clear()
         state = _make_state({})
-        with patch("kiro_crew.sel.sel") as m:
+        with patch("aj_crew.sel.sel") as m:
             # First denial emits with no tally.
             _wes._audit_deny("app-x", "chat_chunk", "slot_missing")
             assert m.return_value.log_api_access.call_count == 1
@@ -208,10 +208,10 @@ class TestSuppressedDenyCountIsReported:
         self._clear()
 
     def test_tally_resets_after_emission(self):
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         self._clear()
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             _wes._audit_deny("app-y", "log", "unknown_event")
             key = ("app-y", "log", "unknown_event")
             assert _wes._sel_last_audit[key][1] == 0
@@ -288,9 +288,9 @@ class TestDirectSendGrantsAreAudited:
         """Run ``api_ws`` through connect + initial slots push for an app token."""
         import asyncio as _aio
 
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(ws_event_scope, "is_app_enabled", lambda _n: True)
         monkeypatch.setattr(ws_event_scope, "get_app_manifest", lambda _n: self._manifest(declared))
@@ -353,9 +353,9 @@ class TestDirectSendGrantsAreAudited:
         """
         import asyncio as _aio
 
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(ws_event_scope, "is_app_enabled", lambda _n: True)
         monkeypatch.setattr(ws_event_scope, "get_app_manifest", lambda _n: self._manifest(["log"]))
@@ -408,26 +408,26 @@ class TestDirectSendGrantsAreAudited:
         assert "subscribe_logs" in events, "a granted log subscription must leave an SEL record"
 
     def test_audit_helper_records_the_grant(self, monkeypatch):
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         monkeypatch.setattr(_wes, "_sel_last_audit", {})
         with (
             patch.object(dashboard_ws, "_audit_allow", wraps=dashboard_ws._audit_allow) as allow,
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
         ):
             dashboard_ws._audit_grant_quietly("mochi-pet", "dashboard")
         allow.assert_called_once_with("mochi-pet", "dashboard")
         assert list(_wes._sel_last_audit) == [("mochi-pet", "dashboard", "granted")]
 
     def test_audit_helper_names_an_unknown_app_rather_than_sending_empty(self, monkeypatch):
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope as _wes
 
         monkeypatch.setattr(_wes, "_sel_last_audit", {})
         with (
             patch.object(dashboard_ws, "_audit_allow", wraps=dashboard_ws._audit_allow) as allow,
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
         ):
             dashboard_ws._audit_grant_quietly("", "dashboard")
         allow.assert_called_once_with("<unknown>", "dashboard")
@@ -441,7 +441,7 @@ class TestDirectSendGrantsAreAudited:
         copy of this branch is what makes it testable at all -- inlined at three
         call sites it was three never-executed paths.
         """
-        from kiro_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws as dashboard_ws
 
         with patch.object(dashboard_ws, "_audit_allow", side_effect=RuntimeError("sink down")):
             # Must not raise.
@@ -464,7 +464,7 @@ class TestDirectSendGrantsAreAudited:
         off-loop guard in this file already went through.
         """
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
         # The app-token narrowing block inside _push_status: it strips the
         # owner-only fields, and the grant must be recorded in the same branch.
@@ -515,8 +515,8 @@ def _granted(sel_mock) -> list[tuple[str, str]]:
 
 class TestDashboardUserGrantsAreAudited:
     def _predicate(self):
-        from kiro_crew.dashboard import ws_event_scope as mod
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard.state import DashboardState
 
         mod._sel_last_audit.clear()
         state = MagicMock(spec=DashboardState)
@@ -533,10 +533,10 @@ class TestDashboardUserGrantsAreAudited:
         unnamed app token's (``<unknown>``) or the fail-closed empty-app deny
         (``<empty>``).
         """
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         allowed = self._predicate()
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             assert allowed(_dashboard_user_ws(), "chat_chunk", {"slot": "chat-1"}) is True
         assert _granted(sel_mock) == [(DASHBOARD_USER_AUDITEE, "chat_chunk")]
         record = sel_mock.return_value.log_api_access.call_args.kwargs
@@ -550,11 +550,11 @@ class TestDashboardUserGrantsAreAudited:
         A chunk flood collapses to one record; a different event type is a
         different key and gets its own.
         """
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         allowed = self._predicate()
         ws = _dashboard_user_ws()
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             for _ in range(5):
                 assert allowed(ws, "chat_chunk", {"slot": "chat-1"}) is True
             assert allowed(ws, "slots", []) is True
@@ -568,7 +568,7 @@ class TestDashboardUserGrantsAreAudited:
         even when the sink raises. Patched at the module attribute the
         chokepoint resolves at call time, so this exercises the real swallow.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard import ws_event_scope as mod
 
         allowed = self._predicate()
         with patch.object(mod, "_audit_allow", side_effect=RuntimeError("sink down")):
@@ -578,15 +578,15 @@ class TestDashboardUserGrantsAreAudited:
         """No manifest can claim the label, so a record under it is always the
         dashboard user and never an app that picked a confusable id.
         """
-        from kiro_crew.apps.manifest import KEBAB_RE
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.apps.manifest import KEBAB_RE
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         assert KEBAB_RE.match(DASHBOARD_USER_AUDITEE) is None
         assert DASHBOARD_USER_AUDITEE not in ("", "<unknown>", "<empty>")
 
     def test_grant_auditee_names_the_socket_kind(self):
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         assert dashboard_ws._grant_auditee(_dashboard_user_ws(), "") == DASHBOARD_USER_AUDITEE
         app_ws = MagicMock()
@@ -622,8 +622,8 @@ class TestDashboardUserGrantsAreAudited:
         return Request()
 
     def _wire(self, monkeypatch, fake_ws):
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(dashboard_ws, "_check_ws_origin", lambda request: None)
         monkeypatch.setattr(dashboard_ws.web, "WebSocketResponse", lambda **kwargs: fake_ws)
@@ -637,8 +637,8 @@ class TestDashboardUserGrantsAreAudited:
         """
         import asyncio as _aio
 
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         state = self._dashboard_state()
         fake_ws = TestDirectSendGrantsAreAudited()._fake_ws()
@@ -659,7 +659,7 @@ class TestDashboardUserGrantsAreAudited:
 
         from aiohttp import WSMsgType
 
-        from kiro_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws as dashboard_ws
 
         class Msg:
             type = WSMsgType.TEXT
@@ -687,9 +687,9 @@ class TestDashboardUserGrantsAreAudited:
         """The ring replay hands over the privileged gateway log history; the
         grant that admits the owner to it was gated out of the record.
         """
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope as _wes
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         state = self._dashboard_state()
         monkeypatch.setattr(_wes, "_sel_last_audit", {})
@@ -697,7 +697,7 @@ class TestDashboardUserGrantsAreAudited:
             patch.object(
                 dashboard_ws, "_audit_grant_quietly", wraps=dashboard_ws._audit_grant_quietly
             ) as audit,
-            patch("kiro_crew.sel.sel"),
+            patch("aj_crew.sel.sel"),
         ):
             fake_ws = self._drive_one_message(monkeypatch, state, {"type": "subscribe_logs"})
 
@@ -713,9 +713,9 @@ class TestDashboardUserGrantsAreAudited:
         present after a gateway restart is the same record the live broadcast
         leaves -- the divergence the report worried about cannot open.
         """
-        from kiro_crew.dashboard import ws_event_scope as mod
-        from kiro_crew.dashboard.state import DashboardState
-        from kiro_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
+        from aj_crew.dashboard import ws_event_scope as mod
+        from aj_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.ws_event_scope import DASHBOARD_USER_AUDITEE
 
         mod._sel_last_audit.clear()
         state = self._dashboard_state()
@@ -733,7 +733,7 @@ class TestDashboardUserGrantsAreAudited:
             }
         ]
         state.subagents = None
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             fake_ws = self._drive_one_message(monkeypatch, state, {"type": "subscribe_subagents"})
 
         assert any(
@@ -749,7 +749,7 @@ class TestDashboardUserGrantsAreAudited:
         never reaches it.
         """
         src = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "ws.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "ws.py"
         ).read_text(encoding="utf-8")
         marker = 'for _owner_only in ("branch", "commit", "update_policy_file"):'
         assert marker in src, "the app-token narrowing block moved; re-anchor this guard"

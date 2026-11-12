@@ -112,9 +112,9 @@
       {
         "kind": "tool_result",
         "tool_call_id": "tooluse_strands01",
-        "tool_output": "DENIED: Kiro Crew did not approve 'mcp__probe__codeword'",
-        "tool_output_bytes": 56,
-        "tool_output_digest": "ede6b7f02e52236f91bc2e2658ca282b6ea3909134167f97b6e2247be6bb85bc",
+        "tool_output": "DENIED: Aj Crew did not approve 'mcp__probe__codeword'",
+        "tool_output_bytes": 54,
+        "tool_output_digest": "f54d7a85fcc4a6641633145322cc189dbd2f855bfde122261541ab096b023289",
         "tool_status": "failed"
       }
     ],
@@ -318,13 +318,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "(\"Kiro Crew"
+        "text": "(\"Aj Crew"
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "(\"Kiro Crew",
+      "text": "(\"Aj Crew",
       "thinking": false
     }
   },

@@ -26,9 +26,9 @@ const status = {
   missing_agent_specs: [], agent_spec_repair_error: '',
 }
 
-const posixBin = "'/Applications/Kiro Crew.app/Contents/Resources/backend-dist/kiro-cli/kiro-cli-chat'"
+const posixBin = "'/Applications/Aj Crew.app/Contents/Resources/backend-dist/kiro-cli/kiro-cli-chat'"
 const windowsRun = 'powershell.exe -NoProfile -Command "Set-Item Env:KIRO_NO_AUTO_UPDATE 1; '
-  + "& 'C:\\Users\\me\\AppData\\Local\\Programs\\Kiro Crew\\resources\\backend-dist\\kiro-cli\\kiro-cli.exe'"
+  + "& 'C:\\Users\\me\\AppData\\Local\\Programs\\Aj Crew\\resources\\backend-dist\\kiro-cli\\kiro-cli.exe'"
 
 const scenarios = {
   'macos-bundled': {
@@ -55,7 +55,7 @@ try {
     await page.route(url => new URL(url).pathname.startsWith('/api/'), route => {
       const path = new URL(route.request().url()).pathname
       if (path === '/api/kiro-prerequisite') return json(route, { ...status, ...overrides })
-      if (path === '/api/config/kirocrew') return json(route, { agent: {} })
+      if (path === '/api/config/ajcrew') return json(route, { agent: {} })
       if (path === '/api/acp-backends') return json(route, { backends: [] })
       return json(route, {})
     })

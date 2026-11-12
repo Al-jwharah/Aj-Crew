@@ -29,14 +29,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.instances.ssh_tunnel_manager import (
+from aj_crew import platform_compat
+from aj_crew.instances.ssh_tunnel_manager import (
     TunnelState,
     _sanitize_banner,
     _SshTunnel,
     _TransportParams,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class _FakeProc:
@@ -211,7 +211,7 @@ class TestForwardAlive:
         sends zero bytes and the client times out. That stall must read as NOT
         alive — a connect-only probe answers True here and misses the zombie
         entirely."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         fake = _FakeHealthSession(get_raises=asyncio.TimeoutError())
         monkeypatch.setattr(stm.aiohttp, "ClientSession", fake)
@@ -223,7 +223,7 @@ class TestForwardAlive:
     async def test_a_healthy_forward_that_answers_200_is_alive(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         fake = _FakeHealthSession(status=200)
         monkeypatch.setattr(stm.aiohttp, "ClientSession", fake)
@@ -233,7 +233,7 @@ class TestForwardAlive:
     async def test_a_non_2xx_answer_is_still_alive(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A completed response of ANY status proves the far end sent bytes back,
         so a non-2xx answer still reads as a live forward and is NOT torn down."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         fake = _FakeHealthSession(status=404)
         monkeypatch.setattr(stm.aiohttp, "ClientSession", fake)
@@ -247,7 +247,7 @@ class TestForwardAlive:
         own ``/health``, not the gateway's ``/api/health`` — the container
         authorises before routing and would log a control deny for every probe
         aimed at a path it does not serve."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         fake = _FakeHealthSession(status=200)
         monkeypatch.setattr(stm.aiohttp, "ClientSession", fake)
@@ -258,7 +258,7 @@ class TestForwardAlive:
 
     @pytest.mark.asyncio
     async def test_a_connection_error_is_not_alive(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         fake = _FakeHealthSession(get_raises=OSError(111, "Connection refused"))
         monkeypatch.setattr(stm.aiohttp, "ClientSession", fake)
@@ -278,7 +278,7 @@ class TestForwardAlive:
         ``_port_reachable``. A zombie whose local socket is bound
         (``_port_reachable`` True) but whose far end is dead (``_forward_alive``
         False) has to tear the tunnel down."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         monkeypatch.setattr(stm, "_PROBE_INTERVAL", 0.01)
         called = {"port_reachable": 0, "forward_alive": 0}
@@ -331,7 +331,7 @@ class TestCaptureStderr:
 
     @pytest.mark.asyncio
     async def test_the_buffer_is_bounded(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         monkeypatch.setattr(stm, "_MAX_STDERR_CHARS", 16)
         tunnel = _tunnel()
@@ -349,7 +349,7 @@ class TestCaptureStderr:
         from ever being reported, so self-heal would never run. The capture
         returns within the grace and keeps what the child wrote.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         monkeypatch.setattr(stm, "_STDERR_DRAIN_GRACE_SECS", 0.05)
         stream = asyncio.StreamReader()
@@ -420,7 +420,7 @@ class TestStderrIsDrainedWhileRunning:
     ) -> tuple[bool, bool, list[Any]]:
         import sys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         forward = _held_port(listening=True)
         marker = tmp_path / "past-the-writes"
         tunnel = _SshTunnel(
@@ -473,7 +473,7 @@ class TestStderrIsDrainedWhileRunning:
     ) -> None:
         import sys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         # Held bound but not listening, so the readiness wait's connect is refused
         # and no other process can start listening on this port mid-test.
         held = _held_port(listening=False)
@@ -501,7 +501,7 @@ class TestStderrIsDrainedWhileRunning:
         # A grandchild that inherited the pipe can hold it open after the child
         # exits, so the drain never sees EOF. The exit path stops waiting at the
         # bound and keeps what the drain captured.
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         monkeypatch.setattr(stm, "_STDERR_DRAIN_GRACE_SECS", 0.05)
         stream = asyncio.StreamReader()
@@ -531,7 +531,7 @@ class TestStderrIsDrainedWhileRunning:
         # which never sees EOF. A deliberate stop() in that window must end
         # STOPPED without calling on_exit, the self-heal seam: otherwise the stop
         # itself schedules a replacement tunnel.
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         monkeypatch.setattr(stm, "_STDERR_DRAIN_GRACE_SECS", 5.0)
         exits: list[str] = []
@@ -922,7 +922,7 @@ class TestSilentStallWindow:
         without a word) is caught only by the probe, so the probe window is how
         long the crew tab sits on "Connecting...". Each probe must still finish
         well inside one interval."""
-        from kiro_crew.instances import constants as c
+        from aj_crew.instances import constants as c
 
         window = c.DEFAULT_PROBE_INTERVAL_SECS * c.DEFAULT_PROBE_FAILURE_THRESHOLD
         assert window <= 30

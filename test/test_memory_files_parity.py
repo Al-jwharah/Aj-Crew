@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.memory_files import LocalMemoryFiles
-from kiro_crew.platform.interfaces import MemoryRoots
+from aj_crew.memory_files import LocalMemoryFiles
+from aj_crew.platform.interfaces import MemoryRoots
 
 
 def _files(tmp_path: Path) -> LocalMemoryFiles:

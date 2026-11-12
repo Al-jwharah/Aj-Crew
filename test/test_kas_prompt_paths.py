@@ -16,8 +16,8 @@ import sys
 
 import pytest
 
-from kiro_crew.acp.kas_agents import KasAgentTranslationError, resolve_prompt
-from kiro_crew.acp.kas_prompt_paths import is_unsafe_prompt_path
+from aj_crew.acp.kas_agents import KasAgentTranslationError, resolve_prompt
+from aj_crew.acp.kas_prompt_paths import is_unsafe_prompt_path
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX home layout")
 
@@ -58,8 +58,8 @@ def test_the_gh_token_store_is_fenced(agents):
 
 
 def test_the_app_receipt_key_is_refused(agents):
-    from kiro_crew.apps.install_receipt import _SECRET_FILE
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.apps.install_receipt import _SECRET_FILE
+    from aj_crew.config.paths import config_dir
 
     home = agents.parent.parent
     for data_home in (config_dir(), home / ".kiro" / "crew"):
@@ -70,8 +70,8 @@ def test_the_app_receipt_key_is_refused(agents):
 
 
 def test_a_session_token_mapping_is_refused(agents):
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.session_token_sig import _sig_path
+    from aj_crew.config.paths import config_dir
+    from aj_crew.session_token_sig import _sig_path
 
     home = agents.parent.parent
     for data_home in (config_dir(), home / ".kiro" / "crew"):

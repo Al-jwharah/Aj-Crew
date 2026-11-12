@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.testing.wait import default_timeout
 
 SCRIPT = Path(__file__).resolve().parents[1] / ".github" / "scripts" / "resolve-i18n-base.sh"
 

@@ -14,7 +14,7 @@ import pytest
 from auto_research_helpers import isolate_fixture  # noqa: F401 - fixture
 from named_cases_helpers import named_cases
 
-from kiro_crew.apps.builtins.auto_research.handlers import (
+from aj_crew.apps.builtins.auto_research.handlers import (
     CampaignStatus,
     update_campaign_status,
     validate_campaign,
@@ -25,7 +25,7 @@ from kiro_crew.apps.builtins.auto_research.handlers import (
 # --- Redaction ---
 class TestRedaction:
     def test_redact_finding_with_security_module(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_finding
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_finding
 
         # Should not crash even if security module has issues
         finding = {
@@ -37,7 +37,7 @@ class TestRedaction:
         assert "summary" in result
 
     def test_redact_finding_handles_non_string_values(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_finding
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_finding
 
         finding = {"cycle": 1, "new_findings_count": 3, "summary": "test"}
         result = _redact_finding(finding)
@@ -45,7 +45,7 @@ class TestRedaction:
         assert result["new_findings_count"] == 3
 
     def test_redact_finding_handles_list_values(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_finding
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_finding
 
         finding = {"sources_checked": ["http://a.com", "http://b.com"], "sources_empty": []}
         result = _redact_finding(finding)
@@ -57,8 +57,8 @@ class TestRedaction:
 
 class TestAudit:
     def test_audit_does_not_crash(self, monkeypatch, caplog):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.apps.builtins.auto_research.campaign import LOGGER_NAME
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research.campaign import LOGGER_NAME
 
         monkeypatch.setattr(h, "sel", None)
         with caplog.at_level("WARNING", logger=LOGGER_NAME):
@@ -69,7 +69,7 @@ class TestAudit:
         ]
 
     def test_audit_with_extras(self, monkeypatch):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         rows: list[dict] = []
         monkeypatch.setattr(
@@ -96,7 +96,7 @@ class TestHandlerValidation:
         assert "error" in result
 
     def test_write_guidance_rejects_invalid(self, tmp_path: Path):
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             write_guidance("../etc", "text")
             # Should not create any file outside research dir
             assert not (tmp_path / ".." / "etc" / "guidance.txt").exists()
@@ -132,7 +132,7 @@ class TestRequireAuth:
     def test_returns_none_when_user_present(self):
         from unittest.mock import MagicMock
 
-        from kiro_crew.apps.builtins.auto_research.handlers import _require_auth
+        from aj_crew.apps.builtins.auto_research.handlers import _require_auth
 
         request = MagicMock()
         request.get.return_value = "user123"
@@ -149,7 +149,7 @@ class TestRequireAuth:
     def test_a_request_without_a_user_gets_401(self):
         from unittest.mock import MagicMock
 
-        from kiro_crew.apps.builtins.auto_research.handlers import _require_auth
+        from aj_crew.apps.builtins.auto_research.handlers import _require_auth
 
         request = MagicMock()
         request.get.return_value = None
@@ -163,7 +163,7 @@ class TestRequireAuth:
 
 class TestRedactionNested:
     def test_recursive_nested_dict(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_finding
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_finding
 
         finding = {"metadata": {"nested": "value", "deep": {"level": "data"}}, "cycle": 1}
         result = _redact_finding(finding)
@@ -171,14 +171,14 @@ class TestRedactionNested:
         assert isinstance(result["metadata"]["deep"], dict)
 
     def test_recursive_list_of_dicts(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_finding
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_finding
 
         finding = {"items": [{"name": "a"}, {"name": "b"}], "cycle": 1}
         result = _redact_finding(finding)
         assert len(result["items"]) == 2
 
     def test_mixed_list(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_finding
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_finding
 
         finding = {"mixed": ["text", 42, {"k": "v"}, ["nested"]]}
         result = _redact_finding(finding)
@@ -187,7 +187,7 @@ class TestRedactionNested:
 
 class TestRedactCampaignFields:
     def test_redacts_sub_questions_and_sources_json(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_campaign
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_campaign
 
         c = _redact_campaign(
             {
@@ -207,7 +207,7 @@ class TestRedactCampaignFields:
         assert c["success_criteria"] == "done when build passes"
 
     def test_handles_malformed_json_fields(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _redact_campaign
+        from aj_crew.apps.builtins.auto_research.handlers import _redact_campaign
 
         c = _redact_campaign({"sub_questions": "not json{", "sources": "[bad"})
         # Malformed fields left untouched, no crash.

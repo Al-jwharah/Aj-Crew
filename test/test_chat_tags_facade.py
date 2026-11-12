@@ -1,8 +1,8 @@
 """The the session tags facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.chat_tags`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-``kiro_crew.dashboard.chat_tags_<role>`` owners, and keeps slot tag assignment, the sidebar columns and the column drop itself. Callers, tests and
-documents still reach every name as ``kiro_crew.dashboard.chat_tags.<name>``, and the moved code
+``aj_crew.dashboard.chat_tags`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+``aj_crew.dashboard.chat_tags_<role>`` owners, and keeps slot tag assignment, the sidebar columns and the column drop itself. Callers, tests and
+documents still reach every name as ``aj_crew.dashboard.chat_tags.<name>``, and the moved code
 reads its names as plain module globals, so a patch through the facade reaches that code
 only because the mirror writes it into every module holding the name.
 
@@ -30,9 +30,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard import chat_tags
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.dashboard import chat_tags
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_chat_tags_facade")
 
@@ -40,8 +40,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_chat_tags_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.chat_tags"
-OWNER_PREFIX = "kiro_crew.dashboard.chat_tags_"
+FACADE = "aj_crew.dashboard.chat_tags"
+OWNER_PREFIX = "aj_crew.dashboard.chat_tags_"
 DASHBOARD_DIR = Path(chat_tags.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
@@ -195,7 +195,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -218,7 +218,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.dashboard.chat_tags import
+    """At BASE the module bound these by import, so ``from aj_crew.dashboard.chat_tags import
     <name>`` type-checked. Now an owner holds them, so the facade names each one from its
     home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)
@@ -247,7 +247,7 @@ def test_the_moved_classes_keep_the_facade_module() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.chat_tags`` imported cleanly before the split; the mirror
+    """``python -m aj_crew.dashboard.chat_tags`` imported cleanly before the split; the mirror
     installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(chat_tags.__file__).resolve().parents[2])

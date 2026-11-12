@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import lts_sign_in as sign_in
-from kiro_crew.auth.store import KasToken, TokenStore
+from aj_crew import lts_sign_in as sign_in
+from aj_crew.auth.store import KasToken, TokenStore
 
 _ARN = "arn:aws:codewhisperer:us-east-1:123456789012:profile/ABCDEFGHIJKL"
 _OTHER_ARN = "arn:aws:codewhisperer:us-east-1:210987654321:profile/ZYXWVUTSRQPO"
@@ -23,7 +23,7 @@ _REAL_KIRO_CLI_STORE = sign_in._kiro_cli_store
 @pytest.fixture(name="store")
 def store_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TokenStore:
     store = TokenStore(tmp_path / "vault")
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: store)
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: store)
     monkeypatch.delenv("KIRO_API_KEY", raising=False)
     return store
 
@@ -100,7 +100,7 @@ def kiro_cli_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture(name="unpinned")
 def unpinned_fixture(monkeypatch: pytest.MonkeyPatch):
-    from kiro_crew.platform import enterprise_policy_fetch as epf
+    from aj_crew.platform import enterprise_policy_fetch as epf
 
     monkeypatch.setattr(epf, "_pinned", "")
     monkeypatch.delenv(epf.PROFILE_PIN_ENV, raising=False)
@@ -144,7 +144,7 @@ class TestSelection:
             def holds_no_identity(self) -> bool:
                 raise OSError("unreadable")
 
-        monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: Broken())
+        monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: Broken())
         assert _cause() == sign_in.CAUSE_SIGN_IN_UNUSABLE
 
     def test_the_result_is_frozen_and_never_prints_the_token(self, vault) -> None:
@@ -245,9 +245,9 @@ class TestKiroCli:
         local, roaming = tmp_path / "Local" / "data.sqlite3", tmp_path / "Roaming" / "data.sqlite3"
         monkeypatch.setattr(sign_in, "_kiro_cli_store", _REAL_KIRO_CLI_STORE)
         monkeypatch.setattr(
-            "kiro_crew.identity_stores.kiro_cli_store_candidates", lambda *_a: (local, roaming)
+            "aj_crew.identity_stores.kiro_cli_store_candidates", lambda *_a: (local, roaming)
         )
-        monkeypatch.setattr("kiro_crew.identity_stores.selected_store", lambda *_a: local)
+        monkeypatch.setattr("aj_crew.identity_stores.selected_store", lambda *_a: local)
 
         class Denied:
             def __getattr__(self, name):
@@ -268,7 +268,7 @@ class TestKiroCli:
         assert _cause() == sign_in.CAUSE_SIGN_IN_UNUSABLE
 
     def test_the_store_read_is_audited_under_a_registered_id(self) -> None:
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         assert sign_in.KIRO_CLI_STORE_READ_ID in hooks._AUDIT_ONLY_READ_IDS
 
@@ -310,7 +310,7 @@ class TestKiroCli:
         monkeypatch.setattr(sign_in, "_warned_mismatches", set())
         vault()
         kiro_cli(profile_arn=_OTHER_ARN)
-        with caplog.at_level("WARNING", logger="kiro_crew.lts_sign_in"):
+        with caplog.at_level("WARNING", logger="aj_crew.lts_sign_in"):
             assert sign_in.resolve(policy=sign_in.OSS).source is sign_in.Source.VAULT
             assert sign_in.resolve(policy=sign_in.OSS).source is sign_in.Source.VAULT
         warnings = [r for r in caplog.records if "different accounts" in r.getMessage()]
@@ -325,7 +325,7 @@ class TestKiroCli:
         assert sign_in.resolve().source is sign_in.Source.VAULT
 
     def test_the_spawn_owner_follows_the_pick(self, vault, kiro_cli) -> None:
-        from kiro_crew.auth.bridge import vault_holds_identity
+        from aj_crew.auth.bridge import vault_holds_identity
 
         kiro_cli()
         assert vault_holds_identity() is False
@@ -337,12 +337,12 @@ class TestAccountLock:
     def test_a_damaged_kiro_cli_store_never_stops_the_gateway(
         self, store, kiro_cli, unpinned, monkeypatch
     ) -> None:
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         epf = unpinned
         stops: list[int] = []
         monkeypatch.setattr(
-            "kiro_crew.platform.policy_distribution.central_ceiling_installed", lambda: True
+            "aj_crew.platform.policy_distribution.central_ceiling_installed", lambda: True
         )
         monkeypatch.setattr(epf.signal, "raise_signal", lambda sig: stops.append(sig))
         path = kiro_cli()
@@ -356,11 +356,11 @@ class TestAccountLock:
     def test_a_kiro_cli_sign_out_is_an_account_change(
         self, store, kiro_cli, unpinned, monkeypatch
     ) -> None:
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         epf = unpinned
         monkeypatch.setattr(
-            "kiro_crew.platform.policy_distribution.central_ceiling_installed", lambda: False
+            "aj_crew.platform.policy_distribution.central_ceiling_installed", lambda: False
         )
         path = kiro_cli()
         assert epf.pinned_scope()
@@ -383,12 +383,12 @@ class TestAccountLock:
     def test_an_unreadable_vault_is_not_an_account_change(
         self, vault, unpinned, monkeypatch
     ) -> None:
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         epf = unpinned
         stops: list[int] = []
         monkeypatch.setattr(
-            "kiro_crew.platform.policy_distribution.central_ceiling_installed", lambda: True
+            "aj_crew.platform.policy_distribution.central_ceiling_installed", lambda: True
         )
         monkeypatch.setattr(epf.signal, "raise_signal", lambda sig: stops.append(sig))
         vault()
@@ -398,7 +398,7 @@ class TestAccountLock:
             def holds_no_identity(self) -> bool:
                 raise OSError("unreadable")
 
-        monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: Broken())
+        monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: Broken())
         with pytest.raises(PlatformCompositionError) as exc:
             epf.assert_signed_in_unchanged()
         assert epf.ACCOUNT_CHANGED not in str(exc.value)
@@ -407,7 +407,7 @@ class TestAccountLock:
     def test_a_never_pinned_start_is_never_called_an_account_change(
         self, vault, unpinned, monkeypatch
     ) -> None:
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         epf = unpinned
         monkeypatch.setattr(epf, "signed_in_scope", lambda: "")  # pin read raced a sign-in
@@ -417,7 +417,7 @@ class TestAccountLock:
         assert epf.ACCOUNT_CHANGED not in str(exc.value)
 
     def test_the_lock_and_the_fetch_name_the_same_account(self, vault) -> None:
-        from kiro_crew.platform import enterprise_policy_fetch as epf
+        from aj_crew.platform import enterprise_policy_fetch as epf
 
         vault()
         assert epf.signed_in_scope() == epf.profile_scope(epf.signed_in_identity().profile_arn)
@@ -478,7 +478,7 @@ class TestLoginSource:
     def test_kas_login_and_the_gate_agree_on_an_empty_refusal_marker(self, vault, store) -> None:
         # A refusal write cut short leaves an empty marker: the gate closes, and
         # `kas login` must not answer "already signed in" over it.
-        from kiro_crew.auth.whoami import resolve_signed_in
+        from aj_crew.auth.whoami import resolve_signed_in
 
         vault(expires_in=-3600)
         path = store._refresh_rejected_path("identity_center")
@@ -530,32 +530,32 @@ class TestLoginSource:
         assert sign_in.sign_in_command() == (sign_in.vault_sign_in_command(), False)
 
     def test_the_sign_in_command_names_this_installs_launcher(self, store, monkeypatch) -> None:
-        # A desktop AppImage puts no `kirocrew` on PATH: the bare name would fail.
-        launcher = "/tmp/.mount_Kiro Crew/usr/bin/kirocrew"
+        # A desktop AppImage puts no `ajcrew` on PATH: the bare name would fail.
+        launcher = "/tmp/.mount_Aj Crew/usr/bin/ajcrew"
         monkeypatch.setattr(sign_in.sys, "platform", "linux")
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", lambda: launcher)
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", lambda: launcher)
         command, _ = sign_in.sign_in_command()
         assert command == f"'{launcher}' kas login --provider idc --start-url"
         assert sign_in.sign_in_hint().startswith(f"`'{launcher}' kas login")
         assert "<" not in command and ">" not in command
 
     def test_posix_renders_with_shlex_join(self) -> None:
-        argv = ["/opt/Kiro Crew/bin/kirocrew", "kas", "login", "--start-url", "https://a/start"]
+        argv = ["/opt/Aj Crew/bin/ajcrew", "kas", "login", "--start-url", "https://a/start"]
         assert sign_in.render_command(argv, platform="linux") == (
-            "'/opt/Kiro Crew/bin/kirocrew' kas login --start-url https://a/start"
+            "'/opt/Aj Crew/bin/ajcrew' kas login --start-url https://a/start"
         )
 
     def test_windows_renders_a_powershell_call_for_a_path_with_spaces(self) -> None:
         # A quoted path alone is a string to PowerShell; `&` runs it.
-        argv = [r"C:\Program Files\Kiro Crew\kirocrew.exe", "kas", "login", "--provider", "idc"]
+        argv = [r"C:\Program Files\Aj Crew\ajcrew.exe", "kas", "login", "--provider", "idc"]
         assert sign_in.render_command(argv, platform="win32") == (
-            r"& 'C:\Program Files\Kiro Crew\kirocrew.exe' kas login --provider idc"
+            r"& 'C:\Program Files\Aj Crew\ajcrew.exe' kas login --provider idc"
         )
 
     def test_windows_doubles_a_quote_inside_the_path(self) -> None:
-        argv = [r"C:\Users\O'Brien\kirocrew.exe", "kas", "login"]
+        argv = [r"C:\Users\O'Brien\ajcrew.exe", "kas", "login"]
         assert sign_in.render_command(argv, platform="win32") == (
-            r"& 'C:\Users\O''Brien\kirocrew.exe' kas login"
+            r"& 'C:\Users\O''Brien\ajcrew.exe' kas login"
         )
 
     def test_windows_command_for_this_install_is_the_powershell_form(
@@ -563,17 +563,17 @@ class TestLoginSource:
     ) -> None:
         monkeypatch.setattr(sign_in.sys, "platform", "win32")
         monkeypatch.setattr(
-            "kiro_crew.agent._resolve_kirocrew_bin", lambda: r"C:\Program Files\Kiro\kirocrew.exe"
+            "aj_crew.agent._resolve_ajcrew_bin", lambda: r"C:\Program Files\Kiro\ajcrew.exe"
         )
         assert sign_in.vault_sign_in_command() == (
-            r"& 'C:\Program Files\Kiro\kirocrew.exe' kas login --provider idc --start-url"
+            r"& 'C:\Program Files\Kiro\ajcrew.exe' kas login --provider idc --start-url"
         )
 
     def test_the_sign_in_command_falls_back_to_the_bare_name(self, store, monkeypatch) -> None:
         def broken() -> str:
             raise OSError("no install")
 
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", broken)
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", broken)
         # Rendered for a POSIX shell here; the Windows form has its own tests.
         monkeypatch.setattr(sign_in.sys, "platform", "linux")
         assert sign_in.sign_in_command() == (sign_in.BARE_SIGN_IN_COMMAND, False)
@@ -605,7 +605,7 @@ class TestLoginSource:
     def test_describe_reports_the_sign_in(self, vault) -> None:
         vault()
         line = sign_in.describe()
-        assert line.startswith("✅") and "Kiro Crew's own sign-in" in line and _ARN in line
+        assert line.startswith("✅") and "Aj Crew's own sign-in" in line and _ARN in line
 
     def test_describe_reports_no_sign_in(self, store) -> None:
         assert sign_in.describe().startswith("❌ no Kiro sign-in was found")
@@ -613,27 +613,27 @@ class TestLoginSource:
 
 class TestDoctor:
     def test_an_lts_doctor_reports_the_sign_in(self, vault, monkeypatch, capsys) -> None:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         vault()
         issues: list[str] = []
         cli_doctor._doctor_lts_sign_in(issues)
         out = capsys.readouterr().out
-        assert "sign-in:" in out and "Kiro Crew's own sign-in" in out and _ARN in out
+        assert "sign-in:" in out and "Aj Crew's own sign-in" in out and _ARN in out
         assert issues == []
 
     def test_an_lts_doctor_with_no_sign_in_is_an_issue(self, store, monkeypatch, capsys) -> None:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         issues: list[str] = []
         cli_doctor._doctor_lts_sign_in(issues)
         assert "no Kiro sign-in was found" in capsys.readouterr().out
         assert issues and issues[0].startswith("LTS sign-in: no Kiro sign-in")
 
     def test_an_oss_doctor_prints_no_sign_in_row(self, store, capsys) -> None:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         issues: list[str] = []
         cli_doctor._doctor_lts_sign_in(issues)
@@ -653,7 +653,7 @@ class TestEditionFree:
             if isinstance(node, (ast.Import, ast.ImportFrom))
             for alias in node.names
         } | {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
-        assert "edition" not in names and "kiro_crew.edition" not in names
+        assert "edition" not in names and "aj_crew.edition" not in names
 
     def test_the_resolver_answers_in_an_oss_build(self, vault) -> None:
         vault()
@@ -661,6 +661,6 @@ class TestEditionFree:
 
     @pytest.mark.asyncio
     async def test_the_gate_wiring_builds_no_source_in_oss(self) -> None:
-        from kiro_crew.dashboard.lts_gate_middleware import lts_login_source
+        from aj_crew.dashboard.lts_gate_middleware import lts_login_source
 
         assert await lts_login_source() is None

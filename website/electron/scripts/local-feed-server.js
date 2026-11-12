@@ -25,8 +25,8 @@
  * with `new URL(fileUrl, base)`, which ignores the base for absolute urls.
  *
  * Usage:
- *   node local-feed-server.js --port 8799 --zip /path/KiroCrew.zip --version 1.0.1
- *   KIROCREW_UPDATE_FEED=http://127.0.0.1:8799/feed <app binary>
+ *   node local-feed-server.js --port 8799 --zip /path/AjCrew.zip --version 1.0.1
+ *   AJCREW_UPDATE_FEED=http://127.0.0.1:8799/feed <app binary>
  *
  * The client permits plain http for loopback hosts only (buildFeedBase), so
  * this harness needs no TLS.
@@ -138,7 +138,7 @@ hashZip().then(
       console.log(`[feed] listening on http://127.0.0.1:${PORT}`);
       console.log(`[feed] serving version=${LATEST} from ${ZIP}`);
       console.log(`[feed]   size=${ZIP_SIZE} sha512(base64)=${ZIP_SHA512.slice(0, 24)}…`);
-      console.log(`[feed] point the app at it: KIROCREW_UPDATE_FEED=http://127.0.0.1:${PORT}/feed`);
+      console.log(`[feed] point the app at it: AJCREW_UPDATE_FEED=http://127.0.0.1:${PORT}/feed`);
     });
   },
   (err) => {

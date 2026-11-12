@@ -11,7 +11,7 @@ already wrote are still unread in the socket buffer when the daemon closes, so
 the kernel answers RST instead of FIN. Either way the two possible outcomes are
 very far apart:
 
-* raise :class:`~kiro_crew.mcp_gateway.stub.FallbackRequestedError`, which
+* raise :class:`~aj_crew.mcp_gateway.stub.FallbackRequestedError`, which
   ``main`` converts into ``fallback_exec`` -- the stub then ``execvpe`` the real
   backend, so the session works with pooling lost and one line in
   ``stub_fallback.jsonl``; or
@@ -48,9 +48,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import stub, transport
-from kiro_crew.testing.wait import finished
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import stub, transport
+from aj_crew.testing.wait import finished
 
 
 def _endpoint_dir() -> str | None:

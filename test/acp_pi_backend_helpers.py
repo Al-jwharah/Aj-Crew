@@ -16,14 +16,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp._dispatch import GATE_ENVELOPE_MARKER
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_PI, gate_probe_command_for
-from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp._dispatch import GATE_ENVELOPE_MARKER
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_PI, gate_probe_command_for
+from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
 
 _ENV_PI_ACP_BIN = "PI_ACP_BIN"
 _ENV_PI_COMMAND = "PI_ACP_PI_COMMAND"
@@ -50,7 +50,7 @@ def _registry(*entries: tuple[str, str | None]) -> list:
     return out
 
 
-def _response(commands: list, request_id: str = "kiro-crew-gate-readback") -> str:
+def _response(commands: list, request_id: str = "aj-crew-gate-readback") -> str:
     return json.dumps(
         {
             "id": request_id,
@@ -75,11 +75,11 @@ class _PiLaunchRig:
 
     PI_ACP_ARGV = ["/opt/bin/node", "/opt/lib/pi-acp/dist/index.js"]
     PI_BIN = "/opt/bin/pi"
-    SEALED = "/opt/run/kirocrew_pi_gate_1.ts"
-    LAUNCHER = "/opt/run/kirocrew_pi_gate_1_x.sh"
+    SEALED = "/opt/run/ajcrew_pi_gate_1.ts"
+    LAUNCHER = "/opt/run/ajcrew_pi_gate_1_x.sh"
     HIDDEN = ("/opt/creds/.aws",)
-    SANDBOX = ["/opt/run/kirocrew_sandbox_launcher"]
-    CLEANUP = "/opt/run/kirocrew_sandbox_readback"
+    SANDBOX = ["/opt/run/ajcrew_sandbox_launcher"]
+    CLEANUP = "/opt/run/ajcrew_sandbox_readback"
     MODE = "standard"
 
     def __init__(self, monkeypatch, tmp_path, *, routing=("", ""), node_choice=None):
@@ -151,7 +151,7 @@ class _PiLaunchRig:
             self.loop_thread = threading.get_ident()
             return await self.adapter.resolve_spawn(
                 SpawnContext(
-                    agent="kirocrew",
+                    agent="ajcrew",
                     work_dir=self._tmp_path,
                     model=None,
                     environ={},

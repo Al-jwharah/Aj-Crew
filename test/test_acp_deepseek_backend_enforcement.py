@@ -15,10 +15,10 @@ from acp_deepseek_backend_helpers import (  # noqa: F401 -- fixtures are used by
     _pinned_kiro_cli_version,
 )
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import deepseek as deepseek_mod
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp_backends import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_KIRO,
@@ -71,7 +71,7 @@ def test_a_denial_the_harness_reports_does_not_trip_the_ungated_call_guard() -> 
     """
     import asyncio
 
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.types import JsonRpcMessage
 
     client = AcpClient.__new__(AcpClient)
     client._acp_backend = ACP_BACKEND_DEEPSEEK
@@ -111,7 +111,7 @@ def test_a_denial_the_harness_reports_does_not_trip_the_ungated_call_guard() -> 
     assert client._kill_process.await_count == 0
 
     # The guard still has teeth for the case it exists for.
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     with pytest.raises(AcpToolGateUnroutable):
         asyncio.run(client._tripwire_pi_gate(update("never-asked", "completed")))
@@ -124,16 +124,16 @@ def test_the_load_marker_is_never_written_into_a_sealed_leaf() -> None:
     The gate-artifact leaf is sealed (``sandbox._CREW_NOFOLLOW_READONLY_DIR_LEAVES``), so a
     marker there is never written and every session is refused. Pins the pairing, not the path.
     """
-    from kiro_crew import sandbox as sandbox_module
-    from kiro_crew.acp import client as client_module
-    from kiro_crew.agent_sdk.tool_gate import PI_GATE_ARTIFACT_LEAF
+    from aj_crew import sandbox as sandbox_module
+    from aj_crew.acp import client as client_module
+    from aj_crew.agent_sdk.tool_gate import PI_GATE_ARTIFACT_LEAF
 
     # The leaf the gate's own code is sealed into is read-only to the child ...
     assert PI_GATE_ARTIFACT_LEAF in sandbox_module._CREW_NOFOLLOW_READONLY_DIR_LEAVES
     # ... so the marker must not be placed in it, nor in any other sealed leaf.
     artifact_dir = pathlib.Path(client_module._pi_gate_artifact_dir())
     marker_dir = pathlib.Path("/scratch-window/session-1")
-    marker = marker_dir / "kirocrew_dsh_gate_deadbeef.marker.json"
+    marker = marker_dir / "ajcrew_dsh_gate_deadbeef.marker.json"
     assert artifact_dir not in marker.parents
     for leaf in sandbox_module._CREW_NOFOLLOW_READONLY_DIR_LEAVES:
         assert leaf not in marker.parts, f"the marker sits under the sealed leaf {leaf!r}"
@@ -148,8 +148,8 @@ def test_every_file_the_gate_writers_leave_in_the_leaf_is_swept(monkeypatch, tmp
     Every name the writers produce must be claimed by the sweep's family table, or one
     sealed plugin and patch pair leaks per gateway process.
     """
-    from kiro_crew import sandbox as sandbox_module
-    from kiro_crew.acp import client as client_module
+    from aj_crew import sandbox as sandbox_module
+    from aj_crew.acp import client as client_module
 
     artifact_dir = tmp_path / "pi-gate"
     artifact_dir.mkdir()
@@ -163,7 +163,7 @@ def test_every_file_the_gate_writers_leave_in_the_leaf_is_swept(monkeypatch, tmp
     # listed; a stage orphaned by a crash between mkstemp and replace has to be
     # reclaimed too, so both stage spellings are checked alongside the survivors.
     pid = os.getpid()
-    written += [f"kirocrew_dsh_gate_{pid}_stage.tmp", f"kirocrew_dsh_patch_{pid}_stage.tmp"]
+    written += [f"ajcrew_dsh_gate_{pid}_stage.tmp", f"ajcrew_dsh_patch_{pid}_stage.tmp"]
     for name in written:
         prefix = next((p for p in families if name.startswith(p)), None)
         assert prefix is not None, f"{name} is written to the leaf but no sweep family claims it"
@@ -174,15 +174,15 @@ def test_every_file_the_gate_writers_leave_in_the_leaf_is_swept(monkeypatch, tmp
 
 def test_stale_dsh_gate_artifacts_are_swept_from_the_leaf(monkeypatch, tmp_path) -> None:
     """A dead gateway's sealed plugin, patch and orphaned stages are all reclaimed."""
-    from kiro_crew import sandbox as sandbox_module
+    from aj_crew import sandbox as sandbox_module
 
     artifact_dir = tmp_path / "pi-gate"
     artifact_dir.mkdir()
     stale = [
-        artifact_dir / "kirocrew_dsh_gate_999999.mjs",
-        artifact_dir / "kirocrew_dsh_gate_999999.patch.yml",
-        artifact_dir / "kirocrew_dsh_gate_999999_abc123.tmp",
-        artifact_dir / "kirocrew_dsh_patch_999999_abc123.tmp",
+        artifact_dir / "ajcrew_dsh_gate_999999.mjs",
+        artifact_dir / "ajcrew_dsh_gate_999999.patch.yml",
+        artifact_dir / "ajcrew_dsh_gate_999999_abc123.tmp",
+        artifact_dir / "ajcrew_dsh_patch_999999_abc123.tmp",
     ]
     for path in stale:
         path.write_text("gate", encoding="utf-8")
@@ -201,13 +201,13 @@ def test_a_live_gateways_dsh_gate_artifacts_survive_the_sweep(monkeypatch, tmp_p
     liveness alone -- an age rule here would delete the sealed plugin from under a
     running gateway's next deepseek spawn.
     """
-    from kiro_crew import sandbox as sandbox_module
+    from aj_crew import sandbox as sandbox_module
 
     artifact_dir = tmp_path / "pi-gate"
     artifact_dir.mkdir()
     live = [
-        artifact_dir / "kirocrew_dsh_gate_424242.mjs",
-        artifact_dir / "kirocrew_dsh_gate_424242.patch.yml",
+        artifact_dir / "ajcrew_dsh_gate_424242.mjs",
+        artifact_dir / "ajcrew_dsh_gate_424242.patch.yml",
     ]
     for path in live:
         path.write_text("gate", encoding="utf-8")
@@ -230,8 +230,8 @@ def test_a_completed_call_the_gate_never_asked_about_stops_the_session() -> None
     """
     import asyncio
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.types import JsonRpcMessage
 
     client = AcpClient.__new__(AcpClient)
     client._acp_backend = ACP_BACKEND_DEEPSEEK
@@ -285,7 +285,7 @@ def test_the_permission_frame_records_the_call_the_tripwire_will_look_for() -> N
     frame whose ``toolCall`` carries just a ``toolCallId``. Reading it through pi's
     envelope would record nothing and every completed call would trip.
     """
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.types import JsonRpcMessage
 
     client = AcpClient.__new__(AcpClient)
     client._acp_backend = ACP_BACKEND_DEEPSEEK
@@ -336,7 +336,7 @@ def _asked(client, frame) -> None:
     ``approve_tool`` approves only a request the client built an event for, so a
     test that approves seeds the event the builder would have recorded.
     """
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     client._note_pi_gate_asked(frame)
     client._permission_gate_events[frame.id] = AcpEvent(
@@ -346,7 +346,7 @@ def _asked(client, frame) -> None:
 
 def _deepseek_permission_frame(tool_call_id: str, request_id: int):
     """This harness's own permission frame: the call is named directly, with no envelope."""
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.types import JsonRpcMessage
 
     return JsonRpcMessage(
         id=request_id,
@@ -356,7 +356,7 @@ def _deepseek_permission_frame(tool_call_id: str, request_id: int):
 
 
 def _deepseek_completed(tool_call_id: str):
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.types import JsonRpcMessage
 
     return JsonRpcMessage(
         method="session/update",
@@ -379,7 +379,7 @@ def test_a_re_asked_call_is_judged_on_its_fresh_verdict_not_the_stale_deny(monke
     """
     import asyncio
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     client, killed = _deepseek_tripwire_client(monkeypatch)
 
@@ -415,7 +415,7 @@ def test_a_completed_call_consumes_its_ask_so_a_reused_id_must_be_asked_again(mo
     """
     import asyncio
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     client, killed = _deepseek_tripwire_client(monkeypatch)
     asked = _deepseek_permission_frame("call_0", 1)
@@ -449,8 +449,8 @@ def test_a_failed_terminal_consumes_the_gate_state_too(monkeypatch) -> None:
     """
     import asyncio
 
-    from kiro_crew.acp.client import AcpToolGateUnroutable
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp.types import JsonRpcMessage
 
     def failed(tool_call_id: str) -> JsonRpcMessage:
         frame = _deepseek_completed(tool_call_id)
@@ -479,7 +479,7 @@ def test_registering_an_unverified_harness_as_selectable_is_refused(monkeypatch)
     No KNOWN id is UNVERIFIED (``test_no_known_backend_is_unverified``), so the refusal is
     exercised by making this id unrouted for the test.
     """
-    from kiro_crew.agent_sdk import backends as sdk_backends
+    from aj_crew.agent_sdk import backends as sdk_backends
 
     monkeypatch.setitem(sdk_backends.ACP_BACKEND_ROUTING, ACP_BACKEND_DEEPSEEK, Routing.UNVERIFIED)
     baseline_before = set(sdk_backends._baseline)
@@ -515,7 +515,7 @@ def test_the_refusal_has_no_escape_hatch() -> None:
     """
     import inspect
 
-    from kiro_crew.agent_sdk import backends as sdk_backends
+    from aj_crew.agent_sdk import backends as sdk_backends
 
     signature = inspect.signature(sdk_backends.register_selectable_backend)
     assert list(signature.parameters) == ["backend"], (
@@ -531,7 +531,7 @@ def test_a_routed_harness_still_registers() -> None:
     ``UNVERIFIED`` harness would walk straight onto the switch. It is also what keeps the
     unconditional refusal from being a blanket one -- a routed harness still registers.
     """
-    from kiro_crew.agent_sdk import backends as sdk_backends
+    from aj_crew.agent_sdk import backends as sdk_backends
 
     baseline_before = set(sdk_backends._baseline)
     selectable_before = set(sdk_backends._selectable)
@@ -555,7 +555,7 @@ def test_no_known_backend_is_unverified() -> None:
     assert unverified == set()
     # Every known id is named EXPLICITLY, so none of them is unverified merely by
     # omission.
-    from kiro_crew.acp_backends import ACP_BACKEND_ROUTING
+    from aj_crew.acp_backends import ACP_BACKEND_ROUTING
 
     assert set(ACP_BACKEND_ROUTING) >= ACP_BACKENDS_KNOWN
     # And the shipped baseline now carries this harness, which is the point of the
@@ -570,8 +570,8 @@ def test_it_carves_nothing_out_of_the_deny_list_because_its_key_comes_from_the_v
     harness reads its key from the environment (``agent.deepseek_env``), so both leaves
     stay masked; asserted on the resolved mask.
     """
-    from kiro_crew.agent_sdk import host_auth
-    from kiro_crew.agent_sdk import tool_gate as gate
+    from aj_crew.agent_sdk import host_auth
+    from aj_crew.agent_sdk import tool_gate as gate
 
     declaration = host_auth.declaration_for(ACP_BACKEND_DEEPSEEK)
     assert declaration.adapter_own_leaves == ()
@@ -611,7 +611,7 @@ def test_the_credential_leaves_are_declared_with_their_override_spelling() -> No
     is what lets a reader check the right file is fenced without re-deriving which
     prefix the variable replaces.
     """
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.agent_sdk import host_auth
 
     declaration = host_auth.declaration_for(ACP_BACKEND_DEEPSEEK)
     assert declaration.credential_leaves == (".dsh/.credentials.yaml", ".dsh/.env")

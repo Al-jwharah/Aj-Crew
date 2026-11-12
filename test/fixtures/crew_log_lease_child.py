@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import sys
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
 
 #: Written to stdout once the turn is open and this process owns the log.
 OWNED = "owned"
@@ -29,7 +29,7 @@ RELEASE = "release"
 
 def main() -> int:
     session_id = sys.argv[1]
-    CrewLog.create(lg.KIND_SESSION, session_id, owner="qa", agent="kirocrew")
+    CrewLog.create(lg.KIND_SESSION, session_id, owner="qa", agent="ajcrew")
     handle = CrewLog.open(lg.KIND_SESSION, session_id)
     # Two entries the parent can recognize: a turn that is open, and a tool call
     # inside it that has no outcome yet. A repair would close both.

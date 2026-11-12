@@ -13,8 +13,8 @@ import json
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers.artifacts_parts.library_reads import _scan_artifacts
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers.artifacts_parts.library_reads import _scan_artifacts
 
 _SLUG = "hand-edited-tags"
 

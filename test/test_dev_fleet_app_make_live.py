@@ -18,11 +18,11 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _POSIX_ONLY, _mk_make_live_wt, _stub_make_live
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
 
 # Own-commits-only argv in _worktree_detail
 
@@ -180,7 +180,7 @@ async def test_restart_gateway_audited():
     (the backend does not expose it — see gateway_routes.py)."""
     import inspect
 
-    from kiro_crew.apps.builtins.dev_fleet import gateway_routes
+    from aj_crew.apps.builtins.dev_fleet import gateway_routes
 
     assert not hasattr(mod, "api_dev_fleet_restart_gateway")
     fn = gateway_routes.handle_restart_gateway
@@ -209,7 +209,7 @@ async def test_make_live_dry_run_plan(monkeypatch, tmp_path):
     plan = res["plan"]
     assert plan["mechanism"] == "live-target pointer"
     assert plan["pointer_path"] == str(ptr_dir / "live_target.json")
-    assert plan["exec"] == str(wt / ".venv" / "bin" / "kirocrew")
+    assert plan["exec"] == str(wt / ".venv" / "bin" / "ajcrew")
     assert plan["restart"] == "automatic"
     assert plan["target"] == str(wt)
     # dry-run writes nothing: pointer file absent, no commands issued.
@@ -246,7 +246,7 @@ async def test_make_live_already_live(monkeypatch, tmp_path):
 
 @pytest.mark.asyncio
 async def test_make_live_missing_venv(monkeypatch, tmp_path):
-    """No .venv/bin/kirocrew -> actionable Provision error."""
+    """No .venv/bin/ajcrew -> actionable Provision error."""
     wt = _mk_make_live_wt(tmp_path, venv=False, dist=True)
     _stub_make_live(monkeypatch, wt)
     res = await mod._make_live(str(wt), dry_run=True)
@@ -257,7 +257,7 @@ async def test_make_live_missing_venv(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 @_POSIX_ONLY
 async def test_make_live_venv_not_executable(monkeypatch, tmp_path):
-    """.venv/bin/kirocrew present but NOT executable -> a distinct, actionable
+    """.venv/bin/ajcrew present but NOT executable -> a distinct, actionable
     error (missing_venv is for the not-a-file case). A non-executable binary
     would stop the live gateway but never start the replacement, so this MUST
     be refused before any cutover."""
@@ -539,7 +539,7 @@ async def test_live_worktree_path_reads_working_directory_with_spaces(monkeypatc
     """_live_worktree_path resolves via `systemctl show --property=
     WorkingDirectory --value`, which (unlike the ExecStart path= regex) is NOT
     truncated at spaces — so a checkout path containing a space resolves whole."""
-    spacey = "/home/u/my worktrees/kirocrew-wt-feat"
+    spacey = "/home/u/my worktrees/ajcrew-wt-feat"
 
     async def fake_run_cmd(cmd, **kw):
         assert "--property=WorkingDirectory" in cmd and "--value" in cmd
@@ -559,9 +559,9 @@ async def test_live_worktree_path_reads_working_directory_with_spaces(monkeypatc
 @pytest.mark.asyncio
 async def test_live_worktree_path_falls_back_to_execstart(monkeypatch, tmp_path):
     """When WorkingDirectory is empty, fall back to parsing ExecStart's path=."""
-    checkout = tmp_path / "kirocrew-wt-feat"
+    checkout = tmp_path / "ajcrew-wt-feat"
     (checkout / ".venv" / "bin").mkdir(parents=True)
-    exe = checkout / ".venv" / "bin" / "kirocrew"
+    exe = checkout / ".venv" / "bin" / "ajcrew"
 
     async def fake_run_cmd(cmd, **kw):
         if "--property=WorkingDirectory" in cmd:
@@ -585,14 +585,14 @@ async def test_live_worktree_path_falls_back_to_execstart(monkeypatch, tmp_path)
 async def test_make_live_already_live_space_path(monkeypatch, tmp_path):
     """already_live is detected when the live WorkingDirectory contains spaces;
     an ExecStart path= regex truncates at the space and never matches."""
-    wt = tmp_path / "my worktrees" / "kirocrew-wt-feat"
+    wt = tmp_path / "my worktrees" / "ajcrew-wt-feat"
     wt.mkdir(parents=True)
     vb = wt / ".venv" / "bin"
     vb.mkdir(parents=True)
-    kc = vb / "kirocrew"
+    kc = vb / "ajcrew"
     kc.write_text("#!/bin/sh\n")
     kc.chmod(0o755)
-    dd = wt / "src" / "kiro_crew" / "static" / "dist"
+    dd = wt / "src" / "aj_crew" / "static" / "dist"
     dd.mkdir(parents=True)
     (dd / "index.html").write_text("<html></html>")
     _stub_make_live(monkeypatch, wt, live=str(wt.resolve()))
@@ -607,7 +607,7 @@ def test_make_live_route_registered_and_audited():
 
     from aiohttp import web as _web
 
-    from kiro_crew.apps.builtins.dev_fleet import gateway_routes
+    from aj_crew.apps.builtins.dev_fleet import gateway_routes
 
     backend_paths = [
         getattr(r.resource, "canonical", None) for r in mod.create_app().router.routes()
@@ -627,14 +627,14 @@ def test_in_pod_tristate(monkeypatch, tmp_path):
     """_in_pod is tri-state: True inside a pod home, False outside, and None
     when the config home cannot be resolved (fail-closed: a False there would
     let a pod cut the live gateway)."""
-    import kiro_crew.config.loader as cfg_loader
+    import aj_crew.config.loader as cfg_loader
 
-    pod_home = tmp_path / ".kirocrew-pods" / "kirocrew-wt-x"
+    pod_home = tmp_path / ".ajcrew-pods" / "ajcrew-wt-x"
     pod_home.mkdir(parents=True)
     monkeypatch.setattr(cfg_loader, "config_dir", lambda: pod_home)
     assert mod._in_pod() is True
 
-    live_home = tmp_path / ".kirocrew"
+    live_home = tmp_path / ".ajcrew"
     live_home.mkdir()
     monkeypatch.setattr(cfg_loader, "config_dir", lambda: live_home)
     assert mod._in_pod() is False
@@ -728,7 +728,7 @@ async def test_live_user_unit_status_darwin_agent_not_indirected(monkeypatch, tm
     )
     monkeypatch.setattr(runtime_mod, "_run_cmd", AsyncMock(return_value=(0, "  pid = 7\n", "")))
     plist = tmp_path / "agent.plist"
-    plist.write_text("<string>/usr/local/bin/kirocrew</string>")
+    plist.write_text("<string>/usr/local/bin/ajcrew</string>")
     monkeypatch.setattr(
         live_mod.gateway_service.LaunchdBackend, "plist_path", staticmethod(lambda: plist)
     )
@@ -744,7 +744,7 @@ async def test_live_user_unit_status_darwin_ok(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(runtime_mod, "_run_cmd", AsyncMock(return_value=(0, "  pid = 7\n", "")))
     link = tmp_path / "live-gateway"
-    link.write_text("#!/bin/sh\nexec '/usr/local/bin/kirocrew' \"$@\"\n")
+    link.write_text("#!/bin/sh\nexec '/usr/local/bin/ajcrew' \"$@\"\n")
     plist = tmp_path / "agent.plist"
     plist.write_text(f"<string>{link}</string>")
     monkeypatch.setattr(
@@ -809,7 +809,7 @@ async def test_live_user_unit_status_ok_and_missing(monkeypatch):
     assert await mod._live_user_unit_status() == "ok"
 
     async def cat_missing(cmd, **kw):
-        return (1, "", "No files found for kirocrew-gateway.service.")
+        return (1, "", "No files found for ajcrew-gateway.service.")
 
     monkeypatch.setattr(runtime_mod, "_run_cmd", cat_missing)
     assert await mod._live_user_unit_status() == "no_user_unit"

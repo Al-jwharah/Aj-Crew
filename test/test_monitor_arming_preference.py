@@ -31,10 +31,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.schema import SCHEMA_REGISTRY, requires_restart
-from kiro_crew.config.sections import MonitoringConfig
-from kiro_crew.mcp_tools import control
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.schema import SCHEMA_REGISTRY, requires_restart
+from aj_crew.config.sections import MonitoringConfig
+from aj_crew.mcp_tools import control
 
 _KEY = "monitoring.prefer_structured_arming"
 
@@ -46,8 +46,8 @@ _BY_DEFAULT_MARK = "arms monitor_watch by default"
 
 def _pin(monkeypatch: pytest.MonkeyPatch, *, on: bool) -> None:
     """Pin the resolved config the descriptor builder reads."""
-    pinned = KiroCrewConfig(monitoring=MonitoringConfig(prefer_structured_arming=on))
-    monkeypatch.setattr(control.KiroCrewConfig, "load", classmethod(lambda cls: pinned))
+    pinned = AjCrewConfig(monitoring=MonitoringConfig(prefer_structured_arming=on))
+    monkeypatch.setattr(control.AjCrewConfig, "load", classmethod(lambda cls: pinned))
 
 
 def _descriptions() -> tuple[str, str]:
@@ -141,10 +141,10 @@ class TestTheReadIsLiveAndFailsToTheShippedPosition:
     ) -> None:
         """Off is what ships, so an unreadable config must not re-point arming."""
 
-        def _boom(cls: type) -> KiroCrewConfig:
+        def _boom(cls: type) -> AjCrewConfig:
             raise OSError("config.json is unreadable")
 
-        monkeypatch.setattr(control.KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(control.AjCrewConfig, "load", classmethod(_boom))
         start, watch = _descriptions()
 
         assert _CONDITIONAL_MARK in start
@@ -195,9 +195,9 @@ class TestAnInstallThatPredatesTheKey:
         """
         stored = tmp_path / "config.json"
         stored.write_text(json.dumps({"agent": {}, "dashboard": {}}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: stored)
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: stored)
 
-        resolved = KiroCrewConfig.load()
+        resolved = AjCrewConfig.load()
 
         assert resolved.monitoring.prefer_structured_arming is False
 
@@ -208,9 +208,9 @@ class TestAnInstallThatPredatesTheKey:
         stored.write_text(
             json.dumps({"monitoring": {"prefer_structured_arming": True}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: stored)
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: stored)
 
-        assert KiroCrewConfig.load().monitoring.prefer_structured_arming is True
+        assert AjCrewConfig.load().monitoring.prefer_structured_arming is True
 
     def test_an_operator_choice_survives_a_save_and_reload(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -225,12 +225,12 @@ class TestAnInstallThatPredatesTheKey:
         omission COSTS, which is the half an operator would notice.
         """
         stored = tmp_path / "config.json"
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: stored)
-        chosen = KiroCrewConfig(monitoring=MonitoringConfig(prefer_structured_arming=True))
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: stored)
+        chosen = AjCrewConfig(monitoring=MonitoringConfig(prefer_structured_arming=True))
 
         stored.write_text(json.dumps(chosen.to_dict()), encoding="utf-8")
 
-        assert KiroCrewConfig.load().monitoring.prefer_structured_arming is True
+        assert AjCrewConfig.load().monitoring.prefer_structured_arming is True
 
 
 class TestAMalformedRuntimeCeilingIsNamedWhenItIsReplaced:
@@ -241,13 +241,13 @@ class TestAMalformedRuntimeCeilingIsNamedWhenItIsReplaced:
     person who typed the value is the one who can correct it. The warning names
     the value that was replaced and the ceiling that replaced it."""
 
-    _LOGGER = "kiro_crew.monitoring.limits"
+    _LOGGER = "aj_crew.monitoring.limits"
 
     @pytest.mark.parametrize("bad", ["7d", 0, -1, 2_592_001, 1.5, True, {}])
     def test_a_configured_value_the_policy_rejects_is_named(
         self, bad: object, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, coerce_runtime_ceiling
+        from aj_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, coerce_runtime_ceiling
 
         with caplog.at_level(logging.WARNING, logger=self._LOGGER):
             assert coerce_runtime_ceiling(bad) == DEFAULT_RUNTIME_CEILING_SECS
@@ -260,7 +260,7 @@ class TestAMalformedRuntimeCeilingIsNamedWhenItIsReplaced:
     def test_an_unset_key_is_the_ordinary_default_and_stays_quiet(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, coerce_runtime_ceiling
+        from aj_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, coerce_runtime_ceiling
 
         with caplog.at_level(logging.WARNING, logger=self._LOGGER):
             assert coerce_runtime_ceiling(None) == DEFAULT_RUNTIME_CEILING_SECS
@@ -268,7 +268,7 @@ class TestAMalformedRuntimeCeilingIsNamedWhenItIsReplaced:
         assert not [r for r in caplog.records if r.name == self._LOGGER]
 
     def test_a_valid_value_is_kept_and_stays_quiet(self, caplog: pytest.LogCaptureFixture) -> None:
-        from kiro_crew.monitoring.limits import coerce_runtime_ceiling
+        from aj_crew.monitoring.limits import coerce_runtime_ceiling
 
         with caplog.at_level(logging.WARNING, logger=self._LOGGER):
             assert coerce_runtime_ceiling(2_592_000) == 2_592_000
@@ -284,10 +284,10 @@ class TestAMalformedRuntimeCeilingIsNamedWhenItIsReplaced:
         stored.write_text(
             json.dumps({"monitoring": {"max_runtime_secs": "thirty days"}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: stored)
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: stored)
 
         with caplog.at_level(logging.WARNING, logger=self._LOGGER):
-            resolved = KiroCrewConfig.load()
+            resolved = AjCrewConfig.load()
 
         assert resolved.monitoring.max_runtime_secs == 604_800
         assert any("'thirty days'" in r.getMessage() for r in caplog.records)
@@ -357,7 +357,7 @@ class TestTheOperatorFacingClaimsSurviveMeasurement:
         """
         overclaims = ("blocks monitor_start", "disables monitor_start", "requires monitor_watch")
         sites = {
-            "src/kiro_crew/config/service_sections.py (schema help)": self._entry().help,
+            "src/aj_crew/config/service_sections.py (schema help)": self._entry().help,
             "config-baseline.json": _baseline_help(_KEY),
             str(_SPEC): _spec_paragraph_about("prefer_structured_arming"),
         }
@@ -395,8 +395,8 @@ class TestTheReversibilityClaimIsMeasuredNotAsserted:
 
     @staticmethod
     def _stopped_row(outcome: object) -> object:
-        from kiro_crew.autonudge import NudgeLoop
-        from kiro_crew.monitoring.models import MonitorState
+        from aj_crew.autonudge import NudgeLoop
+        from aj_crew.monitoring.models import MonitorState
 
         state = MonitorState(
             kind="github_pull_request",
@@ -412,15 +412,15 @@ class TestTheReversibilityClaimIsMeasuredNotAsserted:
         return loop
 
     def test_a_user_stop_is_retained_evidence_and_refuses_a_re_arm(self) -> None:
-        from kiro_crew.autonudge import _stopped_row_is_replaceable
-        from kiro_crew.monitoring.models import MonitorOutcome
+        from aj_crew.autonudge import _stopped_row_is_replaceable
+        from aj_crew.monitoring.models import MonitorOutcome
 
         assert not _stopped_row_is_replaceable(self._stopped_row(MonitorOutcome.USER_STOP))
 
     def test_only_the_system_imposed_outcomes_are_replaceable(self) -> None:
         """The four the spec names, and no consumer-recorded one beside them."""
-        from kiro_crew.autonudge import _stopped_row_is_replaceable
-        from kiro_crew.monitoring.models import MonitorOutcome
+        from aj_crew.autonudge import _stopped_row_is_replaceable
+        from aj_crew.monitoring.models import MonitorOutcome
 
         replaceable = {
             outcome
@@ -460,7 +460,7 @@ class TestTheSettingsPromiseHasWiringBehindIt:
     """
 
     def test_the_key_is_patchable_from_settings(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         assert _KEY in _EDITABLE_CONFIG, (
             f"{_KEY} must be PATCH-able or Settings renders a toggle that cannot "
@@ -485,11 +485,11 @@ class TestNothingReadsConfigOnTheNamesOnlyPath:
     ) -> None:
         loads: list[int] = []
 
-        def _counted(cls: type) -> KiroCrewConfig:
+        def _counted(cls: type) -> AjCrewConfig:
             loads.append(1)
-            return KiroCrewConfig(monitoring=MonitoringConfig(prefer_structured_arming=True))
+            return AjCrewConfig(monitoring=MonitoringConfig(prefer_structured_arming=True))
 
-        monkeypatch.setattr(control.KiroCrewConfig, "load", classmethod(_counted))
+        monkeypatch.setattr(control.AjCrewConfig, "load", classmethod(_counted))
 
         start = next(
             item["description"]

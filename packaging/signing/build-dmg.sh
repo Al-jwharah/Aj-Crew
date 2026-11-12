@@ -29,7 +29,7 @@ fi
 # shellcheck source=hdiutil-detach.sh
 source "$(dirname "${BASH_SOURCE[0]}")/hdiutil-detach.sh"
 
-scratch_dir="$(mktemp -d "${TMPDIR:-/tmp}/kirocrew-dmg.XXXXXX")"
+scratch_dir="$(mktemp -d "${TMPDIR:-/tmp}/ajcrew-dmg.XXXXXX")"
 mount_dir="$scratch_dir/mount"
 read_write_image="$scratch_dir/layout-rw.dmg"
 # Whole-disk device node of the currently attached image (empty when none).

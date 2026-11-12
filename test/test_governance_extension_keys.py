@@ -2,7 +2,7 @@
 
 RFC crew-lts-edition, appendix rows "Extension install", "Extension
 uninstall", "Plugin sync", "App versions" and "App developer mode"
-(``kiro_crew.extension_governance``). LTS: an unnamed key answers the
+(``aj_crew.extension_governance``). LTS: an unnamed key answers the
 baseline, which is off. ``oss``: an unnamed key permits, as before.
 """
 
@@ -14,12 +14,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import extension_governance as eg
-from kiro_crew.apps import dev_mode
-from kiro_crew.apps.admission import app_admission_denied
-from kiro_crew.edition_locks import LOCKED_BY_POLICY
-from kiro_crew.platform.capability_bound import BoundedCapabilityManager
-from kiro_crew.platform.governance import CapabilityGate, ScopedRuleset, parse_policy
+from aj_crew import extension_governance as eg
+from aj_crew.apps import dev_mode
+from aj_crew.apps.admission import app_admission_denied
+from aj_crew.edition_locks import LOCKED_BY_POLICY
+from aj_crew.platform.capability_bound import BoundedCapabilityManager
+from aj_crew.platform.governance import CapabilityGate, ScopedRuleset, parse_policy
 
 _ALL_OPS = [
     "install_mcp",
@@ -34,13 +34,13 @@ _ALL_OPS = [
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture
 def fake_sel(monkeypatch):
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     fake = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: fake)
@@ -49,11 +49,11 @@ def fake_sel(monkeypatch):
 
 @pytest.fixture
 def lts(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def _install_policy(monkeypatch, body: dict | None) -> None:
-    from kiro_crew.platform import context as pc
+    from aj_crew.platform import context as pc
 
     ceiling = parse_policy({"version": 1, "boot": {}, **body}) if body is not None else None
     ctx = SimpleNamespace(governance=ceiling)
@@ -74,7 +74,7 @@ class _Inner:
         self.drift = drift or []
 
     async def _ok(self, name: str):
-        from kiro_crew.platform.interfaces import CapabilityResult
+        from aj_crew.platform.interfaces import CapabilityResult
 
         self.calls.append(name)
         return CapabilityResult(ok=True)
@@ -197,7 +197,7 @@ def test_a_registration_without_a_manifest_is_judged_by_its_own_version(
     assert app_admission_denied("my-app", manifest=None, version="2.0.0")
     # Re-enable or boot of that registration: no manifest, no caller version, so the
     # installed record's version is judged.
-    from kiro_crew.apps import manager
+    from aj_crew.apps import manager
 
     record = SimpleNamespace(version="1.0.0")
     monkeypatch.setattr(manager, "_read_installed", lambda name: record)
@@ -245,7 +245,7 @@ def test_an_ungoverned_switch_writes_no_audit(isolated_home, fake_sel, monkeypat
 
 
 def test_a_governance_error_denies(isolated_home, fake_sel, monkeypatch) -> None:
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.platform import governance_profiles
 
     def _boom(*_a, **_k):
         raise RuntimeError("boom")
@@ -280,7 +280,7 @@ def test_dev_mode_enable_is_refused_and_audited(lts, isolated_home, monkeypatch)
 
 @pytest.mark.parametrize("edition", ["oss", "lts"])
 def test_dev_mode_metadata_follows_the_key(isolated_home, fake_sel, monkeypatch, edition) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", edition)
+    monkeypatch.setattr("aj_crew.edition.EDITION", edition)
     _install_policy(monkeypatch, {})
     monkeypatch.setattr(dev_mode, "_read_installed", lambda name: SimpleNamespace(dev=True))
     monkeypatch.setattr(dev_mode, "_read_dev_sentinel", lambda: {"some-app"})
@@ -297,7 +297,7 @@ def test_dev_mode_metadata_follows_the_key(isolated_home, fake_sel, monkeypatch,
 def test_a_null_manifest_version_is_refused_by_a_deny_list(
     isolated_home, fake_sel, monkeypatch
 ) -> None:
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.manifest import AppManifest
 
     _install_policy(monkeypatch, {"app_versions": {"mode": "deny", "deny": ["demoapp@2.*"]}})
     manifest = AppManifest.from_dict({"name": "demoapp", "version": None})

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import webhooks
+from aj_crew import webhooks
 
 
 @pytest.fixture()
@@ -263,7 +263,7 @@ class TestFreshness:
 
     def test_load_hook_context_uses_shared_helper(self, tmp_path, monkeypatch):
         """The injection path and the badge must never disagree."""
-        from kiro_crew.dashboard.handlers import hooks as hooks_handlers
+        from aj_crew.dashboard.handlers import hooks as hooks_handlers
 
         path = Path(tmp_path) / "hooks.json"
         now = time.time()
@@ -286,14 +286,14 @@ class TestFreshness:
         assert hooks_handlers._load_hook_context("absent") == ""
 
     def test_load_hook_context_missing_file(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import hooks as hooks_handlers
+        from aj_crew.dashboard.handlers import hooks as hooks_handlers
 
         monkeypatch.setattr(hooks_handlers, "_HOOK_STORE_PATH", Path(tmp_path) / "nope.json")
         assert hooks_handlers._load_hook_context("x") == ""
 
     def test_restored_context_carries_its_guidance_ahead_of_the_payload(self):
         """The webhook-session rules travel with the banner, not the base prompt."""
-        from kiro_crew.dashboard.handlers import hooks as hooks_handlers
+        from aj_crew.dashboard.handlers import hooks as hooks_handlers
 
         payload = "PAYLOAD-SENTINEL"
         text = hooks_handlers._with_restored_context("SAVED-SENTINEL", payload)
@@ -310,7 +310,7 @@ class TestFreshness:
 
     def test_webhook_guidance_left_the_base_prompt(self):
         prompt = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "config" / "prompt.md"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config" / "prompt.md"
         ).read_text(encoding="utf-8")
         assert "Webhook-Triggered Sessions" not in prompt
         assert "=== Restored Context" not in prompt
@@ -558,7 +558,7 @@ class TestCrossOsPermissions:
         live credential store, minting access to ``/api/hooks/agent``. The gate
         therefore has to cover the whole directory, which is what this pins.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         home = pathlib.Path.home()
         store_dir = home / ".kiro/crew" / webhooks.SECRETS_DIRNAME
@@ -667,7 +667,7 @@ class TestCredentialStoreIsOffTheAgentFileFloor:
     """
 
     def test_token_store_is_a_sensitive_path(self):
-        from kiro_crew.hooks import is_sensitive_path
+        from aj_crew.hooks import is_sensitive_path
 
         assert is_sensitive_path(str(webhooks.WebhookTokenStore().path))
 
@@ -679,7 +679,7 @@ class TestCredentialStoreIsOffTheAgentFileFloor:
         the pre-rename inode writable by a same-UID agent, and os.replace would
         have published that content as the live store.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert webhooks.SECRETS_DIRNAME in security._CREW_SECRET_LEAVES
 

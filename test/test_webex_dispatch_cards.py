@@ -22,12 +22,12 @@ from webex_dispatch_helpers import (
     _spin,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent
-from kiro_crew.testing.wait import await_until
-from kiro_crew.webex import cards
-from kiro_crew.webex import transport_dispatch as webex_dispatch
-from kiro_crew.webex.client import WebexInbound
-from kiro_crew.webex.transport_dispatch import WebexDispatcher
+from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent
+from aj_crew.testing.wait import await_until
+from aj_crew.webex import cards
+from aj_crew.webex import transport_dispatch as webex_dispatch
+from aj_crew.webex.client import WebexInbound
+from aj_crew.webex.transport_dispatch import WebexDispatcher
 
 # ------------------------------------------------------------------
 # Tests: Adaptive Card presses
@@ -99,7 +99,7 @@ class TestOptionsCardPress:
         async def _capture(turn, *, sessions, ctx_builder):
             turns.append(turn.user_text)
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_options_press("0", "N1"))
 
         assert turns == ["Keep going"]
@@ -128,7 +128,7 @@ class TestOptionsCardPress:
         async def _capture(turn, *, sessions, ctx_builder):
             turns.append(turn.user_text)
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_options_press("0", "N1"))
 
         assert turns == ["/yolo on"]
@@ -146,7 +146,7 @@ class TestOptionsCardPress:
         async def _capture(turn, *, sessions, ctx_builder):
             turns.append(turn.user_text)
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_options_press("0", "NOPE"))
 
         assert turns == []
@@ -166,7 +166,7 @@ class TestOptionsCardPress:
         key = d._session_key("intruder@example.com")
         d._choices.publish(key, "N1", ["Keep going"])
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.sel") as fake_sel:
+        with mock.patch("aj_crew.webex.transport_dispatch.sel") as fake_sel:
             await d.handle_message(_options_press("0", "N1", email="intruder@example.com"))
 
         assert client.sent == []
@@ -213,7 +213,7 @@ class TestOutboundRedaction:
         async def _capture(turn, *, sessions, ctx_builder):
             pass
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_options_press("0", "N1"))
 
         echo = client.sent[0][1]
@@ -363,7 +363,7 @@ class TestApprovalCardPress:
         task = await self._pending(d, key)
         nonce = webex_dispatch._APPROVALS.reserve(key, "1")
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.sel") as fake_sel:
+        with mock.patch("aj_crew.webex.transport_dispatch.sel") as fake_sel:
             await d.handle_message(_approval_press("deny", "FORGED"))
             await d.handle_message(_approval_press("deny", nonce))
 
@@ -388,7 +388,7 @@ class TestApprovalCardPress:
         task = await self._pending(d, key)
         nonce = webex_dispatch._APPROVALS.reserve(key, "1")
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.sel") as fake_sel:
+        with mock.patch("aj_crew.webex.transport_dispatch.sel") as fake_sel:
             await d.handle_message(_approval_press("approve", "FORGED"))
             # Still open: the refused press must not have spent the decision.
             assert webex_dispatch._APPROVALS.has_pending(key)
@@ -413,7 +413,7 @@ class TestApprovalCardPress:
         """
         from dataclasses import replace
 
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         client = FakeClient()
         d = _dispatcher(FakeSessions(FakeProvider([])), FakeCtx(), client)
@@ -448,7 +448,7 @@ class TestGovernanceOnPresses:
         async def _denied(_channel: str, **_kw: object) -> bool:
             return False
 
-        with mock.patch("kiro_crew.webex.transport_dispatch.inbound_permitted", _denied):
+        with mock.patch("aj_crew.webex.transport_dispatch.inbound_permitted", _denied):
             await d.handle_message(_options_press("0", "N1"))
 
         assert client.sent == []

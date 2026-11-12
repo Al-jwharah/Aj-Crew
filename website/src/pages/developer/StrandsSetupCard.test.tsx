@@ -32,7 +32,7 @@ beforeEach(() => {
   config = { agent: {} }
   vault = []
   calls.length = 0
-  vi.spyOn(api, 'kirocrewConfig').mockImplementation(async () => structuredClone(config) as never)
+  vi.spyOn(api, 'ajcrewConfig').mockImplementation(async () => structuredClone(config) as never)
   vi.spyOn(api, 'secretsList').mockImplementation(async () => ({ names: [...vault], managed: [] }) as never)
   vi.spyOn(api, 'secretsSave').mockImplementation(async (name: string) => {
     calls.push(`vault+${name}`)
@@ -305,10 +305,10 @@ describe('StrandsSetupCard', () => {
     const field = () => within(screen.getByTestId('strands-field-ANTHROPIC_API_KEY'))
     const save = field().getByRole('button', { name: 'Save' })
     let reread: () => void = () => {}
-    const read = vi.mocked(api.kirocrewConfig).getMockImplementation()!
+    const read = vi.mocked(api.ajcrewConfig).getMockImplementation()!
     vi.mocked(api.secretsSave).mockImplementationOnce(async (name: string) => {
       vault.push(name)
-      vi.mocked(api.kirocrewConfig).mockImplementation(
+      vi.mocked(api.ajcrewConfig).mockImplementation(
         () => new Promise(resolve => { reread = () => resolve(read() as never) }) as never,
       )
       return {} as never
@@ -318,7 +318,7 @@ describe('StrandsSetupCard', () => {
     await waitFor(() => expect((input as HTMLInputElement).value).toBe(''))
     expect(save).not.toBeDisabled()
     expect(save).toHaveFocus()
-    vi.mocked(api.kirocrewConfig).mockImplementation(read)
+    vi.mocked(api.ajcrewConfig).mockImplementation(read)
     await act(async () => { reread() })
     const replace = await field().findByRole('button', { name: /Replace/ })
     await waitFor(() => expect(replace).toHaveFocus())
@@ -495,8 +495,8 @@ describe('StrandsSetupCard', () => {
     // Hold the config re-read the save triggers, so the window between the
     // save landing and the field re-enabling stays open.
     let reread: () => void = () => {}
-    const current = vi.mocked(api.kirocrewConfig).getMockImplementation()!
-    vi.mocked(api.kirocrewConfig).mockImplementation(
+    const current = vi.mocked(api.ajcrewConfig).getMockImplementation()!
+    vi.mocked(api.ajcrewConfig).mockImplementation(
       () => new Promise(resolve => { reread = () => resolve(current() as never) }) as never,
     )
     const save = within(modelRow).getByRole('button', { name: 'Save' })
@@ -504,7 +504,7 @@ describe('StrandsSetupCard', () => {
     fireEvent.click(save)
     await waitFor(() => expect(within(modelRow).queryByRole('button', { name: 'Save' })).toBeNull())
     other.focus()
-    vi.mocked(api.kirocrewConfig).mockImplementation(current)
+    vi.mocked(api.ajcrewConfig).mockImplementation(current)
     await act(async () => { reread() })
     await waitFor(() => expect(screen.getByLabelText('Model')).not.toBeDisabled())
     expect(other).toHaveFocus()
@@ -550,7 +550,7 @@ describe('StrandsSetupCard', () => {
   it('needs no model for Bedrock', async () => {
     renderCard()
     await screen.findByLabelText('Model')
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
     expect(screen.queryByTestId('strands-model-missing')).toBeNull()
   })
 

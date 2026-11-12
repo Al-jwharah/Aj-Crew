@@ -116,10 +116,10 @@ export default function ShareCard({ question, excerpt, onExcerptEdit, onQuestion
         boxSizing: 'border-box',
         padding: '26px 28px 22px',
         borderRadius: 20,
-        // Solid brand purple, never a gradient: the brand system is flat, and a
+        // Solid brand ink, never a gradient: the brand system is flat, and a
         // flat fill also survives every platform's re-encode without banding.
-        background: '#7c3aed',
-        color: '#f5f3ff',
+        background: '#0b0c0f',
+        color: '#f4f5f7',
         fontFamily: "-apple-system, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', sans-serif",
         position: 'relative',
         overflow: 'hidden',
@@ -143,7 +143,7 @@ export default function ShareCard({ question, excerpt, onExcerptEdit, onQuestion
             background: 'rgba(255,255,255,0.08)',
             fontSize: 13,
             lineHeight: '19px',
-            color: '#e4defc',
+            color: '#d5d8de',
             whiteSpace: 'pre-wrap',
             overflowWrap: 'anywhere',
           }}
@@ -177,10 +177,10 @@ export default function ShareCard({ question, excerpt, onExcerptEdit, onQuestion
         }}
       >
         <span style={{ fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <Sparkles size={13} color="#f5f3ff" aria-hidden="true" />
+          <Sparkles size={13} color="#2dd4bf" aria-hidden="true" />
           {i18nT('pages.chat.share.card_footer')}
         </span>
-        <span style={{ fontSize: 11.5, color: '#cfc6ff' }}>{SHARE_REPO_URL.replace('https://', '')}</span>
+        <span style={{ fontSize: 11.5, color: '#8e96a3' }}>{SHARE_REPO_URL.replace('https://', '')}</span>
       </div>
     </div>
   )

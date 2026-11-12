@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import pinned_fs, snapshot
+from aj_crew import pinned_fs, snapshot
 
 # ── The helper's own contract ────────────────────────────────────────────────
 
@@ -71,12 +71,12 @@ class TestFdRealPathHome:
     """
 
     def test_defined_in_pinned_fs_and_exported(self):
-        assert pinned_fs.fd_real_path.__module__ == "kiro_crew.pinned_fs"
+        assert pinned_fs.fd_real_path.__module__ == "aj_crew.pinned_fs"
         assert "fd_real_path" in pinned_fs.__all__
 
     def test_every_consumer_binds_the_pinned_fs_object(self):
-        from kiro_crew import hooks, sandbox
-        from kiro_crew.apps import routes as app_routes
+        from aj_crew import hooks, sandbox
+        from aj_crew.apps import routes as app_routes
 
         assert hooks._fd_real_path is pinned_fs.fd_real_path
         assert sandbox.fd_real_path is pinned_fs.fd_real_path

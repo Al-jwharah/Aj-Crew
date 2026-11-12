@@ -17,15 +17,15 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.dashboard import refresh_tokens
+from aj_crew import sandbox
+from aj_crew.dashboard import refresh_tokens
 
 
 @pytest.fixture()
 def crew_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     home = tmp_path / "crew"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -59,7 +59,7 @@ def test_a_failed_write_leaves_the_store_empty_and_says_so(
         raise OSError(errno.ENOSPC, "No space left on device")
 
     with mock.patch.object(os, "fdopen", side_effect=full_disk):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
             assert sandbox._materialize_refresh_chains_mask_target(established) == str(store)
 
     assert store.read_bytes() == b""

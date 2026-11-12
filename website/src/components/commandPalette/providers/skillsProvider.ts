@@ -137,7 +137,7 @@ export function createSkillsProvider(deps: SkillsProviderDeps): ResourceProvider
       const results: Result[] = []
       // Dedup by name: /api/skills can return the same skill more than once
       // when a shared package skills dir is enumerated by multiple source loaders
-      // (e.g. source "kirocrew" + "aim"). Keep the first occurrence.
+      // (e.g. source "ajcrew" + "aim"). Keep the first occurrence.
       const seen = new Set<string>()
       for (const s of skills) {
         // The $-picker asks for consent on this row; the palette cannot, so it

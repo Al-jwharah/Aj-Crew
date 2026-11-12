@@ -2,7 +2,7 @@
 
 ``_collect_target_env`` runs on every rewrite pass (one call per agent spec,
 plus one per kept overlay), so a single ambiguous config — two distinct server
-names that normalize to one ``KIROCREW_MCP_TARGET_<SERVER>`` env key — would
+names that normalize to one ``AJCREW_MCP_TARGET_<SERVER>`` env key — would
 print the same WARNING line on every pass. The emitter latches each distinct
 normalized key at module level so the notice fires once per key per process.
 """
@@ -13,14 +13,14 @@ import logging
 
 import pytest
 
-from kiro_crew.mcp_gateway import rewriter
-from kiro_crew.mcp_gateway.rewriter import (
+from aj_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway.rewriter import (
     _WRAPPER_MARKER,
     _collect_target_env,
     _reset_collision_warnings,
 )
 
-_COLLISION_TEXT = "KIROCREW_MCP_TARGET env-key collision on"
+_COLLISION_TEXT = "AJCREW_MCP_TARGET env-key collision on"
 
 
 @pytest.fixture(autouse=True)
@@ -53,7 +53,7 @@ def test_colliding_pair_warns_once_across_two_passes(caplog):
     """Two server names normalizing to one env key, rewritten twice, produce
     exactly one WARNING record for that key."""
     # "builder-mcp" and "builder_mcp" both normalize to
-    # KIROCREW_MCP_TARGET_BUILDER_MCP; distinct target specs make it a real
+    # AJCREW_MCP_TARGET_BUILDER_MCP; distinct target specs make it a real
     # collision rather than a first-wins no-op.
     servers = {
         "builder-mcp": _wrapped_entry("/opt/a/builder", "--mode=a"),
@@ -70,7 +70,7 @@ def test_colliding_pair_warns_once_across_two_passes(caplog):
         if r.levelno == logging.WARNING and _COLLISION_TEXT in r.getMessage()
     ]
     assert len(warnings) == 1, [r.getMessage() for r in warnings]
-    assert "KIROCREW_MCP_TARGET_BUILDER_MCP" in warnings[0].getMessage()
+    assert "AJCREW_MCP_TARGET_BUILDER_MCP" in warnings[0].getMessage()
     # The full first-occurrence text is preserved.
     assert "the args-hashed key is used at resolve time" in warnings[0].getMessage()
 
@@ -94,8 +94,8 @@ def test_two_distinct_colliding_keys_each_warn_once(caplog):
         if r.levelno == logging.WARNING and _COLLISION_TEXT in r.getMessage()
     ]
     keyed = {
-        "BUILDER_MCP": sum("KIROCREW_MCP_TARGET_BUILDER_MCP" in r.getMessage() for r in warnings),
-        "SEARCH_MCP": sum("KIROCREW_MCP_TARGET_SEARCH_MCP" in r.getMessage() for r in warnings),
+        "BUILDER_MCP": sum("AJCREW_MCP_TARGET_BUILDER_MCP" in r.getMessage() for r in warnings),
+        "SEARCH_MCP": sum("AJCREW_MCP_TARGET_SEARCH_MCP" in r.getMessage() for r in warnings),
     }
     assert keyed == {"BUILDER_MCP": 1, "SEARCH_MCP": 1}, [r.getMessage() for r in warnings]
 
