@@ -174,12 +174,30 @@ def _fix_shell_profiles() -> None:
         print(f"  ⚠️  Run {sources} or open a new terminal for PATH changes to take effect.")
 
 
+def _kiro_family_backend_is_selected() -> bool:
+    """True when the configured ACP backend is kiro-family (kiro-cli or KAS).
+
+    Kept here rather than imported from ``kiro_prerequisite_service``: that module
+    is an owner of the ``kiro_prerequisite`` family, and only the family may import
+    its owners. Fails safe to True when the config cannot be read, so the kiro-cli
+    note is still shown when the backend is unknown.
+    """
+    try:
+        from aj_crew.acp_backends import ACP_BACKENDS_KIRO_FAMILY
+
+        return AjCrewConfig.load().agent.acp_backend in ACP_BACKENDS_KIRO_FAMILY
+    except Exception:
+        return True
+
+
 def _ensure_prerequisites() -> bool:
     """Report on optional prerequisites resolved from PATH.
 
-    The public build's agent backend is ``kiro-cli``. This performs no installs
-    and never blocks setup — it only prints guidance for tooling that is missing
-    from PATH. Always returns True so setup proceeds.
+    When the configured backend is kiro-family (kiro-cli or KAS relay), prints
+    guidance when kiro-cli is missing.  With any other backend selected, kiro-cli
+    is not required and the note is omitted.  This performs no installs and never
+    blocks setup — it only prints guidance for tooling that is missing from PATH.
+    Always returns True so setup proceeds.
     """
     header_printed = False
 
@@ -197,8 +215,11 @@ def _ensure_prerequisites() -> bool:
             f"  ⚠️  node not found on PATH — install Node.js >= v{format_node_version(MIN_NODE_VERSION)} from https://nodejs.org\n"
         )
 
-    # kiro-cli is the agent backend. Note its absence so the user can install it.
-    if not shutil.which(KIRO_CLI_BIN):
+    # kiro-cli is the agent backend only on the kiro-family backends (kiro-cli
+    # direct or KAS relay). On any other backend it is not required; skip the
+    # note so users of claude, codex, goose, strands, etc. do not see spurious
+    # "install kiro-cli" guidance.
+    if _kiro_family_backend_is_selected() and not shutil.which(KIRO_CLI_BIN):
         _header()
         print(
             "  ℹ️  kiro-cli not found on PATH — install it (the agent backend) "

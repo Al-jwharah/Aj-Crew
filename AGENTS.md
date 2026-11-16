@@ -253,8 +253,10 @@ seams: [app-kit-platform](docs/system-specs/modules/app-kit-platform.md).
 - Do NOT proactively `git commit`. Commit only when asked.
 - Do NOT `git push` unless the user explicitly says to push. Being asked to commit
   is NOT permission to push.
-- `main` is the default branch; changes land through a GitHub PR. The full flow:
-  [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Owner workflow (overrides the PR flow in CONTRIBUTING.md):** work lands on `main`
+  directly, from the main project folder only. No feature branches, no pull requests.
+  Before each task, create and push a lightweight tag `pre-task-N` on the current
+  `main`. Ask the owner for explicit approval before any execution step.
 - Never `git stash` (every worktree shares one stash list) and never overlay a
   whole tree with `git checkout <ref> -- .`. To bring the main clone current,
   follow the `ajcrew-worktree-dev` skill.

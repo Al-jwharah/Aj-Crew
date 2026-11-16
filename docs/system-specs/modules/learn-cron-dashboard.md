@@ -2264,6 +2264,14 @@ specified compatibility change.
   during an operation, every three seconds for a waiting non-owner, and every
   30 seconds otherwise; those polls are now free reads that render whatever the
   latch says.
+  **When a non-kiro-family backend is configured** (`agent.acp_backend` is
+  neither kiro-cli nor KAS relay), `warm_up()` skips the probe entirely and
+  returns `None`: kiro-cli is not needed for sessions on independent-setup
+  harnesses (claude, codex, goose, strands, deepseek, opencode, pi, copilot),
+  so spawning it at boot would waste resources and emit confusing
+  "kiro not ready" log lines.  The readiness status stays at its construction
+  default, which is sufficient for those harnesses.  `cli setup` likewise omits
+  the kiro-cli install hint when a non-kiro-family backend is configured.
   **A probe that TIMED OUT is a third condition, not a missing binary.**
   `probe_timed_out` on the snapshot separates "the spawn never answered" from
   both "no binary on disk" and "the sandbox refused the spawn". It is its own

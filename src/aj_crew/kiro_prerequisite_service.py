@@ -99,6 +99,28 @@ def _resolve_config_set_hints() -> dict[str, Any] | None:
     return config_set_hints_for_launcher(launcher, sys.platform)
 
 
+def _kiro_family_backend_is_selected() -> bool:
+    """Return True when the currently configured ACP backend is kiro-family.
+
+    "Kiro-family" means kiro-cli direct (``ACP_BACKEND_KIRO``) or KAS relay
+    (``ACP_BACKEND_KAS``).  On any other backend the kiro-cli probe is not
+    needed: ``warm_up`` skips it and ``_ensure_prerequisites`` omits the
+    kiro-cli install hint.
+
+    Fails safe: an unreadable config returns ``True`` so the probe still runs
+    when the configured backend is unknown.  Runs synchronously and must stay
+    free of any import that re-enters ``AjCrewConfig.load()``.
+    """
+    try:
+        from aj_crew.acp_backends import ACP_BACKENDS_KIRO_FAMILY
+        from aj_crew.config import AjCrewConfig
+
+        backend = AjCrewConfig.load().agent.acp_backend
+        return backend in ACP_BACKENDS_KIRO_FAMILY
+    except Exception:
+        return True
+
+
 #: The modules whose functions :class:`KiroPrerequisiteService` binds as its members,
 #: this one included.
 _MEMBER_OWNERS = frozenset(
@@ -506,8 +528,15 @@ class KiroPrerequisiteService:
         NOT await it, and failures are contained. A warm-up is strictly an
         optimization: the dashboard renders without waiting for it (readiness
         gates nothing in the UI), so it must never delay boot.
+
+        When the configured backend is not kiro-family (i.e. not kiro-cli or KAS),
+        kiro-cli is not needed for sessions, so the probe is skipped entirely and
+        ``None`` is returned.  The readiness status stays at its construction
+        default, which is sufficient for independent-setup harnesses.
         """
 
+        if not _kiro_family_backend_is_selected():
+            return None
         if self._warm_up_task is not None:
             return self._warm_up_task
 
