@@ -35,7 +35,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +50,57 @@ ROOT = Path(__file__).resolve().parents[1]
 WHOLE_TREE_ENV = "RATCHET_SCOPE_WHOLE_TREE"
 
 _HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
+_PRE_TASK_TAG_RE = re.compile(r"^pre-task-(\d+)$")
+
+
+def latest_pre_task_tag(
+    *,
+    cwd: Path | None = None,
+    env: Mapping[str, str] | None = None,
+) -> str | None:
+    """Return the highest ancestor ``pre-task-N`` tag for direct-on-``main`` local work.
+
+    Under the local-only ``main`` workflow (no feature branches, ``git tag pre-task-N``
+    before each task, no ``git push``), ``HEAD`` sits on ``main`` while ``origin/main``
+    is either absent or frozen at an older pre-local-mode commit. Selecting the highest
+    numeric ``pre-task-N`` tag that is an ancestor of ``HEAD`` (and at least as recent
+    as ``origin/main`` when ``origin/main`` is also an ancestor of ``HEAD``) scopes
+    local ratchets and ``local-gate.py`` to the active task instead of an empty
+    ``main...HEAD`` diff or multi-task history. Never activates on CI or off ``main``.
+    """
+    environ = os.environ if env is None else env
+    if environ.get("GITHUB_ACTIONS", "").strip():
+        return None
+    code, branch = _git_result("symbolic-ref", "--quiet", "--short", "HEAD", cwd=cwd)
+    if code != 0 or (branch or "").strip() != "main":
+        return None
+    code, raw_tags = _git_result("tag", "--list", "pre-task-*", cwd=cwd)
+    if code != 0 or not (raw_tags or "").strip():
+        return None
+    numbered: list[tuple[int, str]] = []
+    for line in (raw_tags or "").splitlines():
+        tag = line.strip()
+        match = _PRE_TASK_TAG_RE.fullmatch(tag)
+        if match is not None:
+            numbered.append((int(match.group(1)), tag))
+    if not numbered:
+        return None
+    numbered.sort(reverse=True)
+    origin_is_ancestor = (
+        _readable("origin/main", cwd=cwd)
+        and _git_result("merge-base", "--is-ancestor", "origin/main", "HEAD", cwd=cwd)[0] == 0
+    )
+    for _num, tag in numbered:
+        if not _readable(tag, cwd=cwd):
+            continue
+        if _git_result("merge-base", "--is-ancestor", tag, "HEAD", cwd=cwd)[0] != 0:
+            continue
+        if origin_is_ancestor and (
+            _git_result("merge-base", "--is-ancestor", "origin/main", tag, cwd=cwd)[0] != 0
+        ):
+            continue
+        return tag
+    return None
 
 
 def _git(*args: str) -> tuple[int, str]:
@@ -182,6 +233,10 @@ def changed_paths() -> tuple[set[str] | None, str]:
     if is_merge and _first_parent_is_base():
         attempts.append(("merge HEAD^1..HEAD", ["diff", "--name-only", "HEAD^1", "HEAD"]))
         attempts.append(("merge parents", ["diff", "--name-only", "HEAD^1", "HEAD^2"]))
+    else:
+        pre_task = latest_pre_task_tag(cwd=ROOT)
+        if pre_task is not None:
+            attempts.append((f"{pre_task}...HEAD", ["diff", "--name-only", pre_task]))
     for base in ("origin/main", "main"):
         attempts.append((f"{base}...HEAD", ["diff", "--name-only", f"{base}...HEAD"]))
     for label, args in attempts:
@@ -512,6 +567,12 @@ def change_merge_base(
         if not pr_base and event in ("push", "merge_group"):
             return parents[0], f"the {event} commit's first parent"
     branch = pr_base or "main"
+    if not pr_base and not event:
+        pre_task = latest_pre_task_tag(cwd=cwd, env=environ)
+        if pre_task is not None:
+            found = _merge_base_with(pre_task, cwd=cwd)
+            if found is not None:
+                return found, f"the merge-base with {pre_task}"
     candidates: list[tuple[str, str]] = []
     for remote in ("upstream", "origin"):
         found = _merge_base_with(f"{remote}/{branch}", cwd=cwd)

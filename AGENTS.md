@@ -213,7 +213,7 @@ moves, widens or generalizes them, and it is selected at `agent.acp_backend` —
 capability sets and the CI half:
 [harness-parity](docs/system-specs/modules/harness-parity.md). Run the added-line
 gate locally with
-`HARNESS_BASE_REF=origin/main python3 scripts/check_harness_parity.py`.
+`HARNESS_BASE_REF=origin/main python3 scripts/check_harness_parity.py` (or `HARNESS_BASE_REF=pre-task-N` on local `main`).
 
 ## No built-in apps
 
@@ -324,15 +324,19 @@ from the suffix rule: [release](docs/build/release.md).
 ```bash
 python3 scripts/check_black_formatting.py && python3 scripts/check_subprocess_encoding.py && isort src/aj_crew test conftest.py xdist_budget.py
 flake8 src/aj_crew test conftest.py xdist_budget.py && mypy src/aj_crew
-BASE="$(git merge-base HEAD origin/main)" && COMMENT_HISTORY_BASE_REF="$BASE" python3 scripts/check_comment_history.py && BRAND_BASE_REF="$BASE" python3 scripts/check_brand_name.py
+BASE="$(python3 -c 'import sys; sys.path.insert(0, "scripts"); import ratchet_scope as r; print(r.latest_pre_task_tag() or "origin/main")')" && COMMENT_HISTORY_BASE_REF="$BASE" python3 scripts/check_comment_history.py && BRAND_BASE_REF="$BASE" python3 scripts/check_brand_name.py
 python3 scripts/local-gate.py
 ```
 
 The third line runs the two diff-scoped Fast Gate checks most often red on a
-PR: history narration in an added comment, and a misspelled product name on an
-added line. If `check_black_formatting.py` reports a baselined file as now
-black-clean (formatting what you touched does that), run it with
-`--update-baseline` and commit the shorter baseline.
+change: history narration in an added comment, and a misspelled product name on
+an added line. On local `main`, `ratchet_scope.py` and `local-gate.py`
+automatically resolve the highest ancestor `pre-task-N` tag as the diff base so
+direct-on-`main` local-only work (where `git push` is forbidden and
+`origin/main` is absent or frozen) scopes accurately to the active task. If
+`check_black_formatting.py` reports a baselined file as now black-clean
+(formatting what you touched does that), run it with `--update-baseline` and
+commit the shorter baseline.
 
 `local-gate.py` runs the tests related to your diff on both surfaces with a
 bounded worker count; the full suite is CI's job and never runs locally unless a

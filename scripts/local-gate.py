@@ -88,6 +88,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 # directly; this driver runs the same selection for both surfaces in one go so
 # an iteration pass has one command to type and one verdict to read.
 sys.path.insert(0, str(_REPO_ROOT / "scripts"))
+from ratchet_scope import latest_pre_task_tag  # noqa: E402
 from run_scoped_tests import (  # noqa: E402  (path set immediately above)
     LauncherMissing,
     SelectionUntrustworthy,
@@ -158,21 +159,32 @@ def changed_files(base: str) -> list[str] | None:
     try:
         merge_base = subprocess.run(
             ["git", "merge-base", "HEAD", base],
-            cwd=_REPO_ROOT, capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=30,
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
         )
         if merge_base.returncode != 0:
             return None
         committed = subprocess.run(
-            ["git", "diff", "--name-only", "--no-renames",
-             merge_base.stdout.strip(), "HEAD"],
-            cwd=_REPO_ROOT, capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=30,
+            ["git", "diff", "--name-only", "--no-renames", merge_base.stdout.strip(), "HEAD"],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
         )
         working = subprocess.run(
             ["git", "status", "--porcelain", "--untracked-files=all", "--no-renames"],
-            cwd=_REPO_ROOT, capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=30,
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
         )
         if committed.returncode != 0 or working.returncode != 0:
             return None
@@ -292,8 +304,12 @@ def gate_env(base: str) -> dict[str, str]:
     try:
         proc = subprocess.run(
             ["git", "merge-base", "HEAD", base],
-            cwd=_REPO_ROOT, capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=30,
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
         )
     except (OSError, subprocess.SubprocessError):
         return env
@@ -307,8 +323,14 @@ def _output(argv: list[str], cwd: Path, env: dict[str, str] | None = None) -> st
     """Stripped stdout of ``argv`` run in ``cwd``, or None when it cannot answer."""
     try:
         proc = subprocess.run(
-            argv, cwd=cwd, env=env, capture_output=True, text=True,
-            encoding="utf-8", errors="replace", timeout=120,
+            argv,
+            cwd=cwd,
+            env=env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=120,
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -403,7 +425,10 @@ class Proofs:
         if tools is None:
             return None
         return {
-            "tree": self.tree, "argv": cmd, "cwd": str(cwd), "env": _digest(self.env),
+            "tree": self.tree,
+            "argv": cmd,
+            "cwd": str(cwd),
+            "env": _digest(self.env),
             "tools": tools,
         }
 
@@ -429,7 +454,9 @@ class Proofs:
         staged = path.with_suffix(f".{os.getpid()}.tmp")
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
-            staged.write_text(json.dumps({"identity": identity, "at": self.clock()}), encoding="utf-8")
+            staged.write_text(
+                json.dumps({"identity": identity, "at": self.clock()}), encoding="utf-8"
+            )
             os.replace(staged, path)
         except OSError:
             with contextlib.suppress(OSError):
@@ -485,23 +512,41 @@ def build_plan(args: argparse.Namespace) -> Plan:
         _add_related(plan, "backend", paths)
         _add_related(plan, "frontend", paths)
     except SelectionUntrustworthy as exc:
-        raise GateCannotSee(f"cannot select related tests -- running nothing (exit 2): {exc}") from exc
+        raise GateCannotSee(
+            f"cannot select related tests -- running nothing (exit 2): {exc}"
+        ) from exc
     return plan
+
+
+def resolve_default_base() -> str:
+    """Default diff base: latest ancestor ``pre-task-N`` tag on local ``main``, else ``origin/main``."""
+    tag = latest_pre_task_tag(cwd=_REPO_ROOT)
+    return tag if tag is not None else "origin/main"
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", default="origin/main",
-                        help="base ref for the diff (default: origin/main)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="print the plan without running anything")
-    parser.add_argument("--full", action="store_true",
-                        help="run both surfaces' FULL suites (for a human who asks; "
-                             "nothing else selects this)")
-    parser.add_argument("--no-reuse", action="store_true",
-                        help="run every selected command even when it already passed on "
-                             "this exact tree")
+    parser.add_argument(
+        "--base",
+        default=None,
+        help="base ref for the diff (default: pre-task-N on local main, else origin/main)",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="print the plan without running anything"
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="run both surfaces' FULL suites (for a human who asks; " "nothing else selects this)",
+    )
+    parser.add_argument(
+        "--no-reuse",
+        action="store_true",
+        help="run every selected command even when it already passed on " "this exact tree",
+    )
     args = parser.parse_args(argv)
+    if args.base is None:
+        args.base = resolve_default_base()
 
     try:
         plan = build_plan(args)
@@ -513,8 +558,11 @@ def main(argv: list[str] | None = None) -> int:
     for note in plan.notes:
         print(f"  {note}", file=sys.stderr)
     for label, cmd, cwd in plan.commands:
-        print(f"  [{label}] (cwd={cwd.relative_to(_REPO_ROOT) if cwd != _REPO_ROOT else '.'}) "
-              f"{shlex.join(cmd[:8])}{' ...' if len(cmd) > 8 else ''}", file=sys.stderr)
+        print(
+            f"  [{label}] (cwd={cwd.relative_to(_REPO_ROOT) if cwd != _REPO_ROOT else '.'}) "
+            f"{shlex.join(cmd[:8])}{' ...' if len(cmd) > 8 else ''}",
+            file=sys.stderr,
+        )
     if not plan.commands:
         print("local-gate: nothing to run locally", file=sys.stderr)
         return 0
@@ -528,8 +576,11 @@ def main(argv: list[str] | None = None) -> int:
     for label, cmd, cwd in plan.commands:
         age = None if proofs is None else proofs.age(cmd, cwd)
         if age is not None and not args.no_reuse:
-            print(f"local-gate: [{label}] reused, not run: it passed on this exact tree "
-                  f"{age:.0f}s ago (--no-reuse runs it again)", file=sys.stderr)
+            print(
+                f"local-gate: [{label}] reused, not run: it passed on this exact tree "
+                f"{age:.0f}s ago (--no-reuse runs it again)",
+                file=sys.stderr,
+            )
             continue
         print(f"local-gate: running [{label}]", file=sys.stderr)
         try:

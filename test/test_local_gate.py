@@ -56,6 +56,7 @@ def test_script_exists(gate) -> None:
 # classify(): the three-bucket rules
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
@@ -92,6 +93,7 @@ def test_changed_files_keeps_both_rename_endpoints(gate, monkeypatch) -> None:
     same contract run_scoped_tests.py and CI's dorny/paths-filter apply), and
     the porcelain parser keeps BOTH sides of a defensive ``old -> new`` arrow.
     """
+
     class _Proc:
         def __init__(self, stdout: str = "") -> None:
             self.returncode = 0
@@ -104,7 +106,7 @@ def test_changed_files_keeps_both_rename_endpoints(gate, monkeypatch) -> None:
             assert "--no-renames" in argv, "committed diff must not fold renames"
             return _Proc("src/aj_crew/gateway.py\n")
         assert "--no-renames" in argv, "porcelain status must not fold renames"
-        return _Proc('R  src/aj_crew/moved.py -> temp-screenshots/f/moved.png\n')
+        return _Proc("R  src/aj_crew/moved.py -> temp-screenshots/f/moved.png\n")
 
     monkeypatch.setattr(gate.subprocess, "run", fake_run)
     paths = gate.changed_files("main")
@@ -116,9 +118,7 @@ def test_changed_files_keeps_both_rename_endpoints(gate, monkeypatch) -> None:
 
 
 def test_classify_mixed_diff_sets_both_flags(gate) -> None:
-    frontend, meta, backend = gate.classify(
-        ["website/src/App.tsx", "src/aj_crew/gateway.py"]
-    )
+    frontend, meta, backend = gate.classify(["website/src/App.tsx", "src/aj_crew/gateway.py"])
     assert frontend and backend and not meta
 
 
@@ -133,6 +133,7 @@ def test_classify_ignores_blank_lines(gate) -> None:
 # ---------------------------------------------------------------------------
 # CI parity: the buckets MUST be the ones ci.yml uses
 # ---------------------------------------------------------------------------
+
 
 def test_bucket_prefixes_match_ci_changes_job(gate) -> None:
     """The bucket rules must be exactly ci.yml's — in BOTH directions.
@@ -195,8 +196,7 @@ def test_bucket_prefixes_match_ci_changes_job(gate) -> None:
     # real bucket would silently shadow it while the set-union above still
     # passed. Keep the carve-out disjoint from the buckets it is carved from.
     assert not (
-        set(gate._IGNORED_PREFIXES)
-        & (set(gate._FRONTEND_PREFIXES) | set(gate._META_PREFIXES))
+        set(gate._IGNORED_PREFIXES) & (set(gate._FRONTEND_PREFIXES) | set(gate._META_PREFIXES))
     ), "_IGNORED_PREFIXES must not overlap the frontend/meta bucket prefixes"
 
 
@@ -227,6 +227,7 @@ def test_electron_filter_is_still_mirrored_from_ci(gate) -> None:
 # build_plan(): never a full suite unless asked; fail closed on doubt
 # ---------------------------------------------------------------------------
 
+
 def _plan_labels(plan) -> list[str]:
     return [label for label, _cmd, _cwd in plan.commands]
 
@@ -241,9 +242,11 @@ def _related(monkeypatch, gate, table: dict[str, list[str]]) -> None:
     Targets still pass through the real ``backend_argv`` / ``frontend_argv``
     and therefore the real ``validated_targets`` admission check.
     """
+
     def fake_related(surface, paths, root=None):
         targets = table.get(surface, [])
         return targets, f"related: {len(targets)} test file(s) (full suite deferred to CI)"
+
     monkeypatch.setattr(gate, "related_targets", fake_related)
 
 
@@ -277,7 +280,9 @@ def test_an_inherited_tighter_cap_is_never_raised(gate, monkeypatch) -> None:
 
 def test_main_passes_the_capped_env_to_every_command(gate, monkeypatch) -> None:
     plan = gate.Plan("test plan")
-    plan.add("backend (related)", [gate.sys.executable, "-m", "pytest", "-n", "auto"], gate._REPO_ROOT)
+    plan.add(
+        "backend (related)", [gate.sys.executable, "-m", "pytest", "-n", "auto"], gate._REPO_ROOT
+    )
     monkeypatch.setattr(gate, "build_plan", lambda _args: plan)
     monkeypatch.delenv("PYTEST_XDIST_AUTO_NUM_WORKERS", raising=False)
     seen: list[dict] = []
@@ -326,7 +331,8 @@ def test_gate_env_keeps_an_explicit_i18n_base_ref(gate, monkeypatch) -> None:
 def test_gate_env_leaves_the_ref_unset_when_the_base_cannot_resolve(gate, monkeypatch) -> None:
     monkeypatch.delenv("I18N_BASE_REF", raising=False)
     monkeypatch.setattr(
-        gate.subprocess, "run",
+        gate.subprocess,
+        "run",
         lambda cmd, **_k: subprocess.CompletedProcess(cmd, 128, stdout="", stderr="bad"),
     )
     assert "I18N_BASE_REF" not in gate.gate_env("origin/nope")
@@ -375,7 +381,8 @@ def test_evidence_only_diff_runs_nothing(gate, monkeypatch) -> None:
     matrix. Locally there is nothing related to run and the full suite stays
     CI's."""
     monkeypatch.setattr(
-        gate, "changed_files",
+        gate,
+        "changed_files",
         lambda base: ["temp-screenshots/feature/shot.png"],
     )
     plan = gate.build_plan(_args())
@@ -387,13 +394,18 @@ def test_both_surfaces_does_not_run_full(gate, monkeypatch) -> None:
     """One backend file plus one frontend file: each surface gets its related
     set; neither surface, and not the pair, is a reason for the full suite."""
     monkeypatch.setattr(
-        gate, "changed_files",
+        gate,
+        "changed_files",
         lambda base: ["website/src/App.tsx", "src/aj_crew/gateway.py"],
     )
-    _related(monkeypatch, gate, {
-        "backend": ["test/test_gatewayd_diag.py"],
-        "frontend": ["src/test/App.deployRoute.test.tsx"],
-    })
+    _related(
+        monkeypatch,
+        gate,
+        {
+            "backend": ["test/test_gatewayd_diag.py"],
+            "frontend": ["src/test/App.deployRoute.test.tsx"],
+        },
+    )
     plan = gate.build_plan(_args())
     assert not _is_full(plan)
     assert _plan_labels(plan) == ["backend (related)", "frontend (related)"]
@@ -433,7 +445,8 @@ def test_related_set_is_batched_under_the_windows_argv_limit(gate, monkeypatch) 
     many = [f"test/test_widely_referenced_module_{i:04d}.py" for i in range(1100)]
     _related(monkeypatch, gate, {"backend": many})
     monkeypatch.setattr(
-        gate, "backend_argv",
+        gate,
+        "backend_argv",
         lambda targets: ["python", "-m", "pytest", "-q", "-n", "12", "--no-cov", "--", *targets],
     )
     plan = gate.build_plan(_args())
@@ -463,12 +476,17 @@ def test_selector_failure_fails_closed(gate, monkeypatch) -> None:
 # build_plan(): the related shapes
 # ---------------------------------------------------------------------------
 
+
 def test_frontend_only_diff_runs_related_on_both_surfaces(gate, monkeypatch) -> None:
     monkeypatch.setattr(gate, "changed_files", lambda base: ["website/src/App.tsx"])
-    _related(monkeypatch, gate, {
-        "backend": ["test/test_redaction_mirror_parity.py"],
-        "frontend": ["src/test/App.deployRoute.test.tsx"],
-    })
+    _related(
+        monkeypatch,
+        gate,
+        {
+            "backend": ["test/test_redaction_mirror_parity.py"],
+            "frontend": ["src/test/App.deployRoute.test.tsx"],
+        },
+    )
     plan = gate.build_plan(_args())
     labels = _plan_labels(plan)
     assert labels == ["backend (related)", "frontend (related)"]
@@ -495,10 +513,14 @@ def test_missing_node_does_not_discard_the_backend_plan(gate, monkeypatch, capsy
     saying CI runs those specs. It must NOT surface as ``GateCannotSee``.
     """
     monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
-    _related(monkeypatch, gate, {
-        "backend": ["test/test_gatewayd_diag.py"],
-        "frontend": ["src/test/AcpAdapter.defaults.test.ts"],
-    })
+    _related(
+        monkeypatch,
+        gate,
+        {
+            "backend": ["test/test_gatewayd_diag.py"],
+            "frontend": ["src/test/AcpAdapter.defaults.test.ts"],
+        },
+    )
 
     def no_node(targets):
         raise gate.LauncherMissing("npx is not on PATH, so the frontend suite cannot be launched")
@@ -511,7 +533,8 @@ def test_missing_node_does_not_discard_the_backend_plan(gate, monkeypatch, capsy
 
     monkeypatch.setattr(gate, "build_plan", lambda _args: plan)
     monkeypatch.setattr(
-        gate.subprocess, "run",
+        gate.subprocess,
+        "run",
         lambda *_a, **_k: subprocess.CompletedProcess([], 0),
     )
     assert gate.main([]) == 0
@@ -527,10 +550,14 @@ def test_a_missing_runner_is_a_selection_error_everywhere_else(gate) -> None:
 
 def test_backend_only_diff_runs_related_not_full(gate, monkeypatch) -> None:
     monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
-    _related(monkeypatch, gate, {
-        "backend": ["test/test_gatewayd_diag.py"],
-        "frontend": ["src/test/AcpAdapter.defaults.test.ts"],
-    })
+    _related(
+        monkeypatch,
+        gate,
+        {
+            "backend": ["test/test_gatewayd_diag.py"],
+            "frontend": ["src/test/AcpAdapter.defaults.test.ts"],
+        },
+    )
     plan = gate.build_plan(_args())
     assert _plan_labels(plan) == ["backend (related)", "frontend (related)"]
     _label, be_cmd, be_cwd = plan.commands[0]
@@ -546,9 +573,9 @@ def test_backend_only_diff_runs_related_not_full(gate, monkeypatch) -> None:
 # ---------------------------------------------------------------------------
 
 HOSTILE_TARGETS = [
-    "--config=evil.ini",       # reaches pytest as an OPTION, not a path
+    "--config=evil.ini",  # reaches pytest as an OPTION, not a path
     "-p=no:randomly",
-    "../outside.py",           # escapes the tree
+    "../outside.py",  # escapes the tree
     "test/does_not_exist.py",  # named but absent: the selection is stale
 ]
 
@@ -624,6 +651,7 @@ def test_vitest_targets_are_not_preceded_by_a_double_dash(gate, monkeypatch) -> 
 # execution: Node's Windows launchers are .cmd shims
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("name", ["npm", "npx"])
 def test_node_command_resolves_platform_launcher(gate, monkeypatch, name: str) -> None:
     launcher = rf"C:\Program Files\nodejs\{name}.CMD"
@@ -662,6 +690,7 @@ def test_missing_node_launcher_fails_cleanly(gate, monkeypatch, capsys) -> None:
 # End-to-end dry run against the real repo (no tests executed)
 # ---------------------------------------------------------------------------
 
+
 def test_dry_run_full_exits_zero_and_prints_plan(gate, capsys) -> None:
     rc = gate.main(["--dry-run", "--full"])
     assert rc == 0
@@ -686,7 +715,8 @@ def test_dry_run_against_the_real_repo_never_plans_a_full_suite(gate, monkeypatc
     marker -- would break the invariant.
     """
     monkeypatch.setattr(
-        gate, "changed_files",
+        gate,
+        "changed_files",
         lambda base: ["src/aj_crew/gateway.py", "website/src/App.tsx"],
     )
     rc = gate.main(["--dry-run"])
@@ -715,3 +745,10 @@ def test_the_reference_scan_reads_each_test_file_once_and_drops_it(gate) -> None
         "run_scoped_tests._read_text is memoised again; the reference scan must "
         "read each file once and drop it, not retain the test tree's text"
     )
+
+
+def test_resolve_default_base_prefers_pre_task_tag_on_local_main(gate, monkeypatch) -> None:
+    monkeypatch.setattr(gate, "latest_pre_task_tag", lambda cwd=None: "pre-task-4")
+    assert gate.resolve_default_base() == "pre-task-4"
+    monkeypatch.setattr(gate, "latest_pre_task_tag", lambda cwd=None: None)
+    assert gate.resolve_default_base() == "origin/main"

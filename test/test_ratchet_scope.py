@@ -1048,3 +1048,43 @@ class TestChangeFilesAndShowAt:
     def test_show_each_at_of_an_unknown_base_is_all_absent(self, repo: _RepoHelper) -> None:
         asked = ["a.txt", "b.txt"]
         assert list(scope.show_each_at("no-such-ref", asked, cwd=repo.root)) == [None, None]
+
+
+class TestPreTaskTagOnLocalMain:
+    """Direct-on-``main`` local mode scopes against the highest ancestor ``pre-task-N`` tag."""
+
+    def test_selects_highest_numeric_ancestor_pre_task_tag_on_main(
+        self, repo: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+        _git(repo, "checkout", "main")
+        _set_origin_main(repo)
+        _git(repo, "tag", "pre-task-2")
+        _commit_file(repo, "older_task.py", "task 2 work")
+        _git(repo, "tag", "pre-task-10")
+        _commit_file(repo, "current_task.py", "task 10 work")
+        (repo / "uncommitted.py").write_text("x = 1\n", encoding="utf-8")
+        _git(repo, "add", "uncommitted.py")
+
+        assert scope.latest_pre_task_tag(cwd=repo) == "pre-task-10"
+        paths, label = scope.changed_paths()
+        assert label == "pre-task-10...HEAD"
+        assert paths == {"current_task.py", "uncommitted.py"}
+        added = scope.added_lines(label)
+        assert added is not None
+        assert added["current_task.py"] == {1}
+        assert added["uncommitted.py"] == {1}
+
+    def test_disabled_under_github_actions_or_off_main(
+        self, repo: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _git(repo, "checkout", "main")
+        _git(repo, "tag", "pre-task-1")
+        _commit_file(repo, "task1.py", "task 1")
+
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+        assert scope.latest_pre_task_tag(cwd=repo) is None
+
+        monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+        _git(repo, "checkout", "feature")
+        assert scope.latest_pre_task_tag(cwd=repo) is None
