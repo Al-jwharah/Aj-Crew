@@ -44,40 +44,64 @@ def _resolved_model_of(client: object) -> str:
 
 
 def _subagent_default_model(cfg: Any = None) -> str:
-    """Explicit sub-agent model pin (``agent.role_models['subagent']``), or ``""``.
+    """Explicit executor or sub-agent model pin, or ``""`` ("auto" inherit).
 
-    Returns ``""`` when the sub-agent role is unpinned so the caller OMITS the
-    model kwarg and keeps deferring to the provider's configured default —
-    rather than forcing the chat default on as an explicit override (which also
-    breaks callers/mocks that don't expect the kwarg). Only a deliberate pin
-    overrides. Never raises. *cfg* is a config the caller already loaded, so a
-    caller holding one does not load it again here.
+    Checks ``agent.role_models['executor']`` first and falls back to
+    ``agent.role_models['subagent']``. Returns ``""`` when unpinned so the caller
+    OMITS the model kwarg and defers to the provider's configured default.
     """
     try:
         from aj_crew.config.loader import AjCrewConfig, normalize_agent_model
 
         cfg = cfg if cfg is not None else AjCrewConfig.load()
-        model = normalize_agent_model(cfg.agent.role_models.get("subagent", ""))
+        model = normalize_agent_model(
+            cfg.agent.role_models.get("executor", "") or cfg.agent.role_models.get("subagent", "")
+        )
         return model if isinstance(model, str) else ""
     except Exception:
         return ""
 
 
 def _subagent_default_effort(cfg: Any = None) -> str:
-    """Explicit sub-agent effort pin (``agent.role_efforts['subagent']``), or ``""``.
+    """Explicit executor or sub-agent effort pin, or ``""``.
 
-    Returns ``""`` when unpinned so the caller omits ``reasoning_effort_override``
-    and the factory's default effort applies. Only a deliberate pin overrides.
-    Never raises. *cfg* as for :func:`_subagent_default_model`.
+    Checks ``agent.role_efforts['executor']`` first and falls back to
+    ``agent.role_efforts['subagent']``. Returns ``""`` when unpinned so the caller
+    omits ``reasoning_effort_override`` and the factory's default effort applies.
     """
     try:
         from aj_crew.config.loader import AjCrewConfig
 
         cfg = cfg if cfg is not None else AjCrewConfig.load()
-        val = cfg.agent.role_efforts.get("subagent", "")
+        val = cfg.agent.role_efforts.get("executor", "") or cfg.agent.role_efforts.get(
+            "subagent", ""
+        )
         return val if isinstance(val, str) else ""
     except Exception:
         return ""
+
+
+def resolve_compound_role_model(
+    role: str,
+    advertised: Any = None,
+    *,
+    backend: str = "",
+    cfg: Any = None,
+) -> str:
+    """Resolve ``agent.role_models[role]`` safely via ``acp.client.resolve_usable_model``.
+
+    Never hardcodes a model ID: an unpinned role reads as ``"auto"`` and resolves
+    to a served model or ``""`` (inherit the session's served backend default).
+    """
+    from aj_crew.acp.client import resolve_usable_model
+    from aj_crew.config.loader import AjCrewConfig, normalize_agent_model
+
+    loaded = cfg if cfg is not None else AjCrewConfig.load()
+    raw_pin = normalize_agent_model(loaded.agent.role_models.get(role, ""))
+    if not raw_pin and role == "executor":
+        raw_pin = normalize_agent_model(loaded.agent.role_models.get("subagent", ""))
+    preferred = raw_pin or "auto"
+    return resolve_usable_model(preferred, advertised, backend=backend)
 
 
 async def _route_unpinned_start(info: "SubagentInfo", kind: str, sessions: Any) -> None:

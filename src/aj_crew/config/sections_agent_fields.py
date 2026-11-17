@@ -88,7 +88,7 @@ def normalize_agent_model(model: object) -> str:
 # entitlement-safe on every subscription tier (the provider picks a served
 # model). An operator who deliberately wants a cheaper model for background /
 # sub-agent work pins it here without changing the interactive chat default.
-ROLE_MODEL_KEYS: tuple[str, ...] = ("background", "subagent")
+ROLE_MODEL_KEYS: tuple[str, ...] = ("background", "subagent", "planner", "executor")
 
 # The kiro agents that run the "background" role: auto-titles, memory
 # consolidation, heartbeat polls. Named here rather than inline at the one place
@@ -96,6 +96,18 @@ ROLE_MODEL_KEYS: tuple[str, ...] = ("background", "subagent")
 # provider factory and the crews API's readout) and a second copy of the pair
 # would let them disagree about which agents take the role default.
 BACKGROUND_WORKER_AGENTS: tuple[str, ...] = ("ajcrew-lite", "ajcrew-heartbeat")
+
+PLANNER_WORKER_AGENTS: tuple[str, ...] = (
+    "ajcrew-conductor",
+    "ajcrew-pipeline-conductor",
+    "ajcrew-ledger-conductor",
+    "ajcrew-security-conductor",
+)
+
+EXECUTOR_WORKER_AGENTS: tuple[str, ...] = (
+    "ajcrew-worker",
+    "ajcrew-mate-worker",
+)
 
 
 def coerce_role_models(raw: object) -> dict[str, str]:

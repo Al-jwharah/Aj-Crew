@@ -618,6 +618,64 @@ async def _turn_ending_chain(turn: _ChatTurn) -> None:
             "msg msg-info",
             meta=gn.gateway_notice_meta(gn.GATEWAY_NOTICE_DEFERRED_FOLLOWUP),
         )
+    elif (
+        _prompt_depth == 0
+        and not _agent_started
+        and _stop_reason == STOP_REASON_END_TURN
+        and not _refusal_reasons
+        and not state.is_yolo_active()
+        and not _slot_is_trusted(slot)
+        and not _should_suppress_requeue(slot)
+        and not _stop_pressed(turn)
+        and not _has_user_queued_followup(slot)
+        and not getattr(slot, "_pending_steers", None)
+        and getattr(slot, "_file_changes", None)
+    ):
+        from aj_crew.compound_verify import (
+            MAX_SELF_CORRECTION_ATTEMPTS,
+            build_self_correction_prompt,
+            verify_modified_files,
+        )
+
+        _modified_paths = [
+            str(h.get("canonical_path") or h.get("path") or "")
+            for h in (getattr(slot, "_file_changes", None) or ())
+            if isinstance(h, dict) and not h.get("unverified_write")
+        ]
+        _verify_issues = verify_modified_files(_modified_paths)
+        if (
+            _verify_issues
+            and getattr(slot, "_compound_verify_retries", 0) < MAX_SELF_CORRECTION_ATTEMPTS
+        ):
+            _attempt = int(getattr(slot, "_compound_verify_retries", 0)) + 1
+            setattr(slot, "_compound_verify_retries", _attempt)
+            _fix_prompt = build_self_correction_prompt(_verify_issues, attempt=_attempt)
+            if _fix_prompt:
+                logger.info(
+                    "Compound self-correction for slot %s (attempt %d/%d): %d syntax issue(s)",
+                    slot.key,
+                    _attempt,
+                    MAX_SELF_CORRECTION_ATTEMPTS,
+                    len(_verify_issues),
+                )
+                _queue_recovery(
+                    turn,
+                    0,
+                    _fix_prompt,
+                    kind=SYNTHETIC_RECOVERY_KIND,
+                    payload=RecoveryPayload.CONTINUATION,
+                )
+                replays_of(slot).arm(
+                    ReplayFamily.CONTINUATION,
+                    entry_id="",
+                    session_key=effective_session_key(slot),
+                    stop_gen=getattr(slot, "_stop_generation", 0),
+                    session_stop_gen=_session_stop_generation(turn),
+                )
+                _recovering_promise = True
+                turn._recovering_promise = _recovering_promise
+        elif not _verify_issues:
+            setattr(slot, "_compound_verify_retries", 0)
     # OUTSIDE the chain above, deliberately. Every arm in it owns the turn's
     # outcome -- it un-lands, re-drives or re-queues -- and two of them are
     # RECOVERIES (the L1 infrastructure retry and the promise-only guard).

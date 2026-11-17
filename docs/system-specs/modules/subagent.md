@@ -2,7 +2,7 @@
 
 ## Overview
 
-The subagent module (`aj_crew/subagent.py`) spawns isolated background agents for parallel task execution. Each subagent gets its own LLM session via `SessionManager`, runs a focused task, and announces the result via callback.
+The subagent module (`aj_crew/subagent.py`) spawns isolated background agents for parallel task execution. Each subagent gets its own LLM session via `SessionManager`, runs a focused task, and announces the result via callback. Under the Compound Harness role routing (`subagent_parts/model_choice.py`), worker/subagent spawns check `agent.role_models['executor']` before falling back to `agent.role_models['subagent']` and `"auto"` (via `resolve_compound_role_model` / `acp.client.resolve_usable_model`, never a hardcoded model id).
 
 Supports `on_tool_approval` callback for interactive tool approval (routed through gateway's approval system in Normal/Trust modes).
 

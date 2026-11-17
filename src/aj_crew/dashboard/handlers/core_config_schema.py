@@ -177,6 +177,18 @@ _EDITABLE_CONFIG: dict[str, dict] = {
         "pattern": _MODEL_PIN_PATTERN,
         "validate_fn": _validate_role_model,
     },
+    "agent.role_models.planner": {
+        "type": "str",
+        "max_len": 64,
+        "pattern": _MODEL_PIN_PATTERN,
+        "validate_fn": _validate_role_model,
+    },
+    "agent.role_models.executor": {
+        "type": "str",
+        "max_len": 64,
+        "pattern": _MODEL_PIN_PATTERN,
+        "validate_fn": _validate_role_model,
+    },
     # Throttle-exhaustion fallback model. Single value: "auto" (default) defers
     # to the backend's availability-aware routing; a concrete id is tried first
     # with "auto" as the final fallthrough; "" disables the feature. Same
@@ -204,6 +216,8 @@ _EDITABLE_CONFIG: dict[str, dict] = {
     # default; "" = inherit. Applies only on reasoning-capable models.
     "agent.role_efforts.background": {"type": "enum", "values": ["", *EFFORT_LEVELS]},
     "agent.role_efforts.subagent": {"type": "enum", "values": ["", *EFFORT_LEVELS]},
+    "agent.role_efforts.planner": {"type": "enum", "values": ["", *EFFORT_LEVELS]},
+    "agent.role_efforts.executor": {"type": "enum", "values": ["", *EFFORT_LEVELS]},
     "agent.approval_mode": {"type": "enum", "values": ["auto", "interactive"]},
     # How long an AD-HOC auto-approve grant lasts. Editable from Settings because
     # every value here still ends: the timed ones are capped at the SafetyOverride

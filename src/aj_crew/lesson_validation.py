@@ -326,9 +326,20 @@ def order_by_request_relevance(
     wanted = _relevance_tokens(query_text)
     if not wanted:
         return entries
-    # ``sorted`` is stable, so equal-scoring rows keep the caller's newest-first
-    # order and a zero-overlap store renders byte-identically to an unordered one.
-    return sorted(entries, key=lambda e: -len(wanted & _relevance_tokens(e[1])))
+    from aj_crew.compound_fts import fts5_bm25_scores
+
+    overlaps = [len(wanted & _relevance_tokens(e[1])) for e in entries]
+    if not any(overlaps):
+        return entries
+    bm25 = fts5_bm25_scores([e[1] for e in entries], query_text)
+    # ``sorted`` is stable: higher token overlap leads, SQLite FTS5 BM25 breaks
+    # equal-overlap ties in favour of rare domain tokens, and zero-overlap rows
+    # keep the caller's newest-first order byte-identically.
+    order = sorted(
+        range(len(entries)),
+        key=lambda idx: (-overlaps[idx], bm25[idx] if overlaps[idx] > 0 else 0.0),
+    )
+    return [entries[idx] for idx in order]
 
 
 def any_request_overlap(entries: Sequence[tuple[object, str]], query_text: str) -> bool:

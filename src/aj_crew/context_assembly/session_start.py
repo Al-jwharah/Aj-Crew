@@ -170,6 +170,10 @@ def build_session_context(
     # the value as given.
     is_cc = ctx.is_claude_code(provider_type)
     caps = ctx._resolve_caps(model_window)
+    from aj_crew.compound_fts import compact_executor_caps, is_compact_executor_turn
+
+    if is_compact_executor_turn(agent, session_key=session_key):
+        caps = compact_executor_caps(caps)
     blocks = _budgets.ContextParts()
     parts = blocks.parts
     append_required = blocks.append_required

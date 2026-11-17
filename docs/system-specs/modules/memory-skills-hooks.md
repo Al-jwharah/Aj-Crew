@@ -102,6 +102,11 @@ an edited or shortened prefix refuses acknowledgement. Receipts are not pruned.
   `memory_record_metadata.py` maintains revisions, proposals and provenance.
 - `memory.py` is the facade for manual documents and learned history. V2 learned
   operations delegate to its admitted SQLite handle; V1 keeps its file layout.
+  `compound_fts.py` supplies zero-embedding thread-local `:memory:` SQLite `FTS5`
+  BM25 ranking for cold/JSONL lesson and playbook lookup plus compact background
+  budget pruning on executor worker sessions (`compact_executor_caps`), and
+  `compound_verify.py` provides bounded (`MAX_SELF_CORRECTION_ATTEMPTS = 2`)
+  post-turn AST/JSON syntax verification for deterministic self-correction.
 - `history_consolidation_pass.py` (`HistoryConsolidator._consolidate`, bound
   through the `history_consolidation.py` facade) publishes a member span
   atomically and recovers its receipt. `context.py` and `member_essential_context.py` assemble manual context

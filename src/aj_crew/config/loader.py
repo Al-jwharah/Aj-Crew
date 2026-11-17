@@ -507,6 +507,19 @@ def _agent_tier_model(
         pinned = normalize_agent_model(config._resolve_named_agent_model(kiro_agent))
         if in_scope(pinned):
             return pinned
+        from aj_crew.config import sections_agent_fields as _agent_fields
+
+        if kiro_agent in _agent_fields.PLANNER_WORKER_AGENTS:
+            role_pin = normalize_agent_model(config.agent.role_models.get("planner", ""))
+            if in_scope(role_pin):
+                return role_pin
+        elif kiro_agent in _agent_fields.EXECUTOR_WORKER_AGENTS:
+            role_pin = normalize_agent_model(
+                config.agent.role_models.get("executor", "")
+                or config.agent.role_models.get("subagent", "")
+            )
+            if in_scope(role_pin):
+                return role_pin
     return ""
 
 
