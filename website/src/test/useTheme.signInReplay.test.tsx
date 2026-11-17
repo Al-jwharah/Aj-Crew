@@ -606,7 +606,7 @@ describe('useTheme: installed-theme catalog after token sign-in and boot races',
       expect(result.current.customThemes).toHaveLength(1)
       expect(result.current.customThemeDataMap.has(SLUG)).toBe(false)
       expect(result.current.colorTheme).toBe(`custom-${SLUG}`)
-      expect(localStorage.getItem('mc-color-theme')).not.toBe('aj')
+      expect(localStorage.getItem('mc-color-theme')).not.toBe('jewel')
       // ... and the failed state is reportable: the active pack is flagged.
       expect(result.current.installedThemeLoadFailed).toBe(true)
       expect(result.current.customThemesLoadError).toBeNull()
@@ -620,7 +620,7 @@ describe('useTheme: installed-theme catalog after token sign-in and boot races',
       const { result } = renderHook(() => useTheme(), { wrapper })
       await settle()
       await settle()
-      expect(result.current.colorTheme).toBe('aj')
+      expect(result.current.colorTheme).toBe('jewel')
     })
 
     it('exposes whether a catalog has loaded, so a surface can word a failure correctly', async () => {

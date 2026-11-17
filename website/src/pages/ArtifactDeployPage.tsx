@@ -469,7 +469,7 @@ export default function ArtifactDeployPage() {
                 <CmdRow text="aws configure sso        # recommended — short-lived, auto-refreshing" />
                 <CmdRow text="aws configure --profile myweb   # or a long-lived named profile" />
               </div>
-              <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 6, border: '1px solid var(--warn-border, #fde68a)', background: 'var(--warn-subtle, #fffbeb)', color: 'var(--warn)', fontSize: 11.5, lineHeight: 1.5 }}>
+              <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 6, border: '1px solid color-mix(in srgb, var(--warn) 35%, var(--border))', background: 'var(--warn-subtle)', color: 'var(--warn)', fontSize: 11.5, lineHeight: 1.5 }}>
                 <b>{i18nT('pages.artifactDeployPage.two_things_that_trip_people_up')}</b>
                 <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
                   <li><Trans i18nKey="pages.artifactDeployPage.configure_profile_on_gateway_host" components={{ b: <b />, aws: <code>{i18nT('pages.artifactDeployPage.aws')}</code> }} /></li>

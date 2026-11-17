@@ -432,5 +432,28 @@
   .liquid-glass:focus-visible{ outline:2px solid var(--accent) !important; outline-offset:2px !important }
   :root{ --glass-edge:var(--text) }
   .liquid-glass>[data-liquid-glass-layer]{ display:none !important }
+  .sidebar-inner,.focus-chrome-rail,.side-panel-glass{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; background-color:var(--panel) !important }
+  .modal-glass{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; background-color:var(--card) !important }
 }
+
+/* ── Jewel frosted glass surfaces for sidebar rails & modal dialogs ── */
+.sidebar-inner,
+.focus-chrome-rail,
+.side-panel-glass {
+  background-color: color-mix(in srgb, var(--panel) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+.modal-glass {
+  background-color: color-mix(in srgb, var(--card) 84%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-lg);
+}
+[data-mode="light"] .modal-glass {
+  background-color: color-mix(in srgb, var(--card) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), var(--shadow-lg);
+}
+@media (prefers-reduced-transparency:reduce){.sidebar-inner,.focus-chrome-rail,.side-panel-glass{backdrop-filter:none;-webkit-backdrop-filter:none;background-color:var(--panel)}.modal-glass{backdrop-filter:none;-webkit-backdrop-filter:none;background-color:var(--card)}}
+
 

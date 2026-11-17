@@ -96,7 +96,7 @@ export const Btn = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttribute
       onClick={(e) => { if (busy) { e.preventDefault(); return } onClick?.(e) }}
       className={twMerge(`busy-cue inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[13px] cursor-pointer font-body transition-all active:scale-[0.97] active:duration-75 disabled:cursor-not-allowed ${
         primary
-          ? 'busy-cue-primary bg-accent text-accent-fg border-accent hover:bg-accent-hover hover:shadow-[0_0_12px_var(--accent-glow)] disabled:bg-bg-hover disabled:text-muted disabled:border-transparent disabled:shadow-none disabled:opacity-60'
+          ? 'primary btn-sweep busy-cue-primary bg-accent text-accent-fg border-accent hover:bg-accent-hover hover:shadow-[0_0_12px_var(--accent-glow)] disabled:bg-bg-hover disabled:text-muted disabled:border-transparent disabled:shadow-none disabled:after:hidden disabled:opacity-60 aria-disabled:after:hidden'
           : danger
             ? 'busy-cue-danger border-border bg-transparent text-danger hover:text-danger-text hover:border-danger hover:bg-danger-subtle disabled:opacity-30'
             : 'border-border bg-transparent text-text hover:border-border-strong hover:bg-bg-hover disabled:opacity-30'
@@ -127,7 +127,7 @@ export const SendBtn = React.forwardRef<HTMLButtonElement, { children: React.Rea
       // reads as the same greyed, borderless muted surface, not a faded accent.
       aria-disabled={busy || undefined}
       aria-busy={busy || undefined}
-      className={twMerge("btn-sweep bg-accent text-accent-fg border-none rounded-lg px-4 min-h-9 text-sm font-semibold cursor-pointer hover:bg-accent-hover hover:shadow-[0_0_20px_var(--accent-glow)] disabled:bg-bg-hover disabled:text-muted disabled:shadow-none disabled:after:hidden disabled:opacity-60 disabled:cursor-not-allowed aria-disabled:bg-bg-hover aria-disabled:text-muted aria-disabled:shadow-none aria-disabled:after:hidden aria-disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:hover:bg-bg-hover aria-disabled:hover:shadow-none transition-all font-body", className)}
+      className={twMerge("primary btn-sweep bg-accent text-accent-fg border-none rounded-lg px-4 min-h-9 text-sm font-semibold cursor-pointer hover:bg-accent-hover hover:shadow-[0_0_20px_var(--accent-glow)] disabled:bg-bg-hover disabled:text-muted disabled:shadow-none disabled:after:hidden disabled:opacity-60 disabled:cursor-not-allowed aria-disabled:bg-bg-hover aria-disabled:text-muted aria-disabled:shadow-none aria-disabled:after:hidden aria-disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:hover:bg-bg-hover aria-disabled:hover:shadow-none transition-all font-body", className)}
       onClick={(e) => { if (busy) { e.preventDefault(); return } onClick?.(e) }}
       disabled={disabled}
       style={style}

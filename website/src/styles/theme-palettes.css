@@ -985,7 +985,7 @@
    gold accent for approvals and warnings needing action, layered obsidian surfaces. */
 [data-theme="jewel-dark"]{
   --bg:#0B0F14;--bg-accent:#10161e;--bg-elevated:#121923;--bg-hover:#1A2330;
-  --card:#10161e;--card-fg:#E6EDF3;--card-hl:rgba(37,99,235,.06);
+  --card:#121923;--card-fg:#E6EDF3;--card-hl:rgba(37,99,235,.06);
   --panel:#0B0F14;--panel-strong:#121923;
   --chrome:rgba(11,15,20,.95);
   --text:#C8D6E5;--text-strong:#E6EDF3;--muted:#8B98A9;--muted-fg:#0B0F14;--muted-strong:#6B7A8D;

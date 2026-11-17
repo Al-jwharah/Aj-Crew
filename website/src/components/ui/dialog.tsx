@@ -103,7 +103,7 @@ const DialogContent = React.forwardRef<
       style={{ maxWidth, maxHeight: '90vh', ...style }}
       className={cn(
         'fixed left-1/2 top-1/2 z-[101] flex w-[calc(100%-max(4rem,var(--safe-area-x)+var(--safe-area-x)))] -translate-x-1/2 -translate-y-1/2',
-        'flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl outline-hidden',
+        'modal-glass flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl outline-hidden',
         // The centering is the `translate` property (from `-translate-x-1/2
         // -translate-y-1/2` above) and the enter/exit keyframe animates
         // `transform`, so the zoom plays around the centred position. Do NOT add

@@ -347,7 +347,7 @@ export default function InfoTip({ text, placement = 'auto' }: {
           onPointerEnter={(e) => { if (e.pointerType === 'mouse') { cancelLeave(); cancelReleaseClose(); setHovered(true) } }}
           onPointerLeave={(e) => { if (e.buttons === 0) scheduleLeave(); else scheduleLeaveOnRelease() }}
           className="fixed z-[9999] rounded-lg border border-border p-2.5 text-[12px] text-muted leading-relaxed max-w-[300px] max-h-[min(60vh,480px)] overflow-y-auto whitespace-normal"
-          style={{ ...at.bubble, backgroundColor: 'var(--card)', boxShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+          style={{ ...at.bubble, backgroundColor: 'var(--card)', boxShadow: 'var(--shadow-lg)' }}
         >
           {text}
         </div>

@@ -171,9 +171,9 @@ function ThreadChip(
       title={label}
       style={{
         ...chipBaseStyle,
-        border: '1px solid var(--accent, #5a8cff)',
-        background: filled ? 'var(--accent, #5a8cff)' : 'transparent',
-        color: filled ? 'var(--accent-fg, #fff)' : 'var(--accent, #5a8cff)',
+        border: '1px solid var(--accent)',
+        background: filled ? 'var(--accent)' : 'transparent',
+        color: filled ? 'var(--accent-fg)' : 'var(--accent)',
       }}
       onClick={() => onActivate(meta.id)}
     >
@@ -238,8 +238,8 @@ function GutterButton(
         height: 18,
         border: 'none',
         borderRadius: 4,
-        background: 'var(--accent, #5a8cff)',
-        color: 'var(--accent-fg, #fff)',
+        background: 'var(--accent)',
+        color: 'var(--accent-fg)',
         cursor: 'pointer',
         padding: 0,
         // Pierre's own utility button sits at z-index 4 over the line-number

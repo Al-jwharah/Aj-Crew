@@ -70,9 +70,9 @@ export default function WorldsPage() {
               style={{
                 padding: '5px 12px',
                 borderRadius: 6,
-                border: scene === s.key ? '1.5px solid var(--accent, #f90)' : '1.5px solid var(--border, #333)',
-                background: scene === s.key ? 'var(--accent, #f90)' : 'var(--bg-elevated, #1a1a2e)',
-                color: scene === s.key ? '#000' : 'var(--text-muted, #999)',
+                border: scene === s.key ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
+                background: scene === s.key ? 'var(--accent)' : 'var(--bg-elevated)',
+                color: scene === s.key ? 'var(--accent-fg)' : 'var(--muted)',
                 cursor: 'pointer',
                 fontSize: 13,
                 fontFamily: 'var(--font-body, inherit)',
@@ -102,9 +102,9 @@ export default function WorldsPage() {
               aria-label={collapsed ? i18nT('pages.worldsPage.show_controls') : i18nT('pages.worldsPage.hide_controls')}
               className="bg-black/55 hover:bg-black/75 transition-colors"
               style={{
-                border: '1px solid var(--border, #333)',
+                border: '1px solid var(--border)',
                 borderRadius: 6, padding: '3px 8px', cursor: 'pointer',
-                color: 'var(--text-muted, #999)', fontSize: 16, lineHeight: 1,
+                color: 'var(--muted)', fontSize: 16, lineHeight: 1,
               }}
             >
               {collapsed ? '▼' : '▲'}
@@ -115,9 +115,9 @@ export default function WorldsPage() {
               aria-label={i18nT('pages.worldsPage.pop_out_to_separate_window')}
               className="bg-black/55 hover:bg-black/75 transition-colors"
               style={{
-                border: '1px solid var(--border, #333)',
+                border: '1px solid var(--border)',
                 borderRadius: 6, padding: '3px 6px', cursor: 'pointer',
-                color: 'var(--text-muted, #999)', lineHeight: 1, display: 'flex', alignItems: 'center',
+                color: 'var(--muted)', lineHeight: 1, display: 'flex', alignItems: 'center',
               }}
             >
               <PictureInPicture2 size={14} />
@@ -128,16 +128,16 @@ export default function WorldsPage() {
             <div style={{
               position: 'absolute', inset: 0, zIndex: 15,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--bg, #0a0a1a)', borderRadius: 8, gap: 12,
+              background: 'var(--bg)', borderRadius: 8, gap: 12,
             }}>
-              <PictureInPicture2 size={32} style={{ color: 'var(--accent, #f90)', opacity: 0.7 }} />
-              <div style={{ color: 'var(--text-muted, #999)', fontSize: 14 }}>{i18nT('pages.worldsPage.playing_in_popout_window')}</div>
+              <PictureInPicture2 size={32} style={{ color: 'var(--accent)', opacity: 0.7 }} />
+              <div style={{ color: 'var(--muted)', fontSize: 14 }}>{i18nT('pages.worldsPage.playing_in_popout_window')}</div>
               <button
                 onClick={openPopout}
                 style={{
                   padding: '6px 16px', borderRadius: 6, fontSize: 13, cursor: 'pointer',
-                  border: '1px solid var(--border, #333)', background: 'var(--bg-elevated, #1a1a2e)',
-                  color: 'var(--text, #eee)', fontFamily: 'var(--font-body, inherit)',
+                  border: '1px solid var(--border)', background: 'var(--bg-elevated)',
+                  color: 'var(--text)', fontFamily: 'var(--font-body, inherit)',
                 }}
               >
                 {i18nT('pages.worldsPage.focus_popout')}

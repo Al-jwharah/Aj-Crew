@@ -275,10 +275,10 @@ export default function ProjectDetailPage({ run, onRetry, onRefresh }: Props) {
           if (!pendingTasks.length) return null;
           const t = pendingTasks[0]!;
           return (
-            <div className="mx-4 mt-2 px-4 py-2.5 bg-[#eab308]/10 border border-[#eab308]/40 rounded-md flex items-center gap-3 text-[13px] shrink-0">
-              <span className="text-[#eab308]"><AlertTriangle size={16} /></span>
-              <span className="text-[#eab308]/90 flex-1"><strong>{i18nT('pages.projectDetailPage.approval_required')}</strong> {i18nT('pages.projectDetailPage.task_is_waiting_for_your_decision', { index: t.index, title: t.title })}</span>
-              <button onClick={() => setSelectedTask(t.index)} className="px-3 py-1 bg-[#eab308] hover:bg-[#ca8a04] text-black text-[13px] rounded font-medium cursor-pointer border-none transition-all">{i18nT('pages.projectDetailPage.go_to_task')}</button>
+            <div className="mx-4 mt-2 px-4 py-2.5 bg-warn-subtle border border-warn/40 rounded-md flex items-center gap-3 text-[13px] shrink-0">
+              <span className="text-warn"><AlertTriangle size={16} /></span>
+              <span className="text-warn/90 flex-1"><strong>{i18nT('pages.projectDetailPage.approval_required')}</strong> {i18nT('pages.projectDetailPage.task_is_waiting_for_your_decision', { index: t.index, title: t.title })}</span>
+              <button onClick={() => setSelectedTask(t.index)} className="px-3 py-1 bg-warn hover:opacity-90 text-warn-fg text-[13px] rounded font-medium cursor-pointer border-none transition-all">{i18nT('pages.projectDetailPage.go_to_task')}</button>
             </div>
           );
         })()}

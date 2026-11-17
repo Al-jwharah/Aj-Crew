@@ -153,7 +153,7 @@ type ProfileConfig = {
   dashboard?: { user_role?: string; user_role_other?: string; user_technical_level?: string }
 }
 
-const RING_SHADOW = '0 20px 50px rgba(0,0,0,.42), 0 0 0 4px var(--accent-subtle)'
+const RING_SHADOW = 'var(--shadow-lg), 0 0 0 4px var(--accent-subtle)'
 // 20% opacity tint of the active theme accent — used for selected states.
 const ACCENT_20 = 'color-mix(in srgb, var(--accent) 20%, transparent)'
 

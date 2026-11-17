@@ -424,7 +424,7 @@ export const THEMES: ThemeEntry[] = [
   { value: 'amoled', label: '🖤 AMOLED' },
   { value: 'aj', label: '💎 Aj' },
   // Catalog-keyed like `amethyst-oled`: glyph-only fallback, full name in
-  // `hooks.theme.jewel`. Selectable only; `DEFAULT_COLOR_THEME` is still `aj`.
+  // `hooks.theme.jewel`. Default color theme (`DEFAULT_COLOR_THEME`).
   { value: 'jewel', label: '💠' },
   { value: 'intellij', label: '😶‍🌫️ IntelliJ' },
   // A catalog-keyed entry (see `THEME_LABEL_KEY`): `label` holds the glyph alone
@@ -468,7 +468,7 @@ function builtinThemes(): ThemeEntry[] {
 }
 
 /** Default color theme applied on first run when no preference is persisted. */
-export const DEFAULT_COLOR_THEME: ColorTheme = 'aj'
+export const DEFAULT_COLOR_THEME: ColorTheme = 'jewel'
 
 /**
  * Downstream-registered built-in themes.

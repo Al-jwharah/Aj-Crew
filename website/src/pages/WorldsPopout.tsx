@@ -38,7 +38,7 @@ export default function WorldsPopout() {
   const changeScene = (key: SceneKey) => { setScene(key); broadcastScene(key) }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg, #0a0a1a)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
       <div
         id="popout-collapse-panel"
         style={{
@@ -60,9 +60,9 @@ export default function WorldsPopout() {
                 {...radioChip(scene === s.key)}
                 style={{
                   padding: '4px 10px', borderRadius: 6, fontSize: 12,
-                  border: scene === s.key ? '1.5px solid var(--accent, #f90)' : '1.5px solid var(--border, #333)',
-                  background: scene === s.key ? 'var(--accent, #f90)' : 'var(--bg-elevated, #1a1a2e)',
-                  color: scene === s.key ? '#000' : 'var(--text-muted, #999)',
+                  border: scene === s.key ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
+                  background: scene === s.key ? 'var(--accent)' : 'var(--bg-elevated)',
+                  color: scene === s.key ? 'var(--accent-fg)' : 'var(--muted)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
                   fontFamily: 'var(--font-body, inherit)', transition: 'all 0.15s ease',
                 }}
@@ -85,9 +85,9 @@ export default function WorldsPopout() {
             className="bg-black/55 hover:bg-black/75 transition-colors"
             style={{
               position: 'absolute', top: 8, right: 8, zIndex: 20,
-              border: '1px solid var(--border, #333)', borderRadius: 6,
+              border: '1px solid var(--border)', borderRadius: 6,
               padding: '3px 8px', cursor: 'pointer',
-              color: 'var(--text-muted, #999)', fontSize: 16, lineHeight: 1,
+              color: 'var(--muted)', fontSize: 16, lineHeight: 1,
             }}
           >
             {collapsed ? '▼' : '▲'}

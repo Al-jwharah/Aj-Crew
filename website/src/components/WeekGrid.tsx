@@ -145,7 +145,7 @@ function range(a: number, b: number): number[] {
 
 const COLORS = [
   'bg-accent', 'bg-ok', 'bg-warn', 'bg-[var(--aim)]',
-  'bg-[#6366f1]', 'bg-[#ec4899]', 'bg-[#14b8a6]', 'bg-[#f97316]',
+  'bg-[var(--info)]', 'bg-[var(--tile-pink)]', 'bg-[var(--tile-teal)]', 'bg-[var(--tile-orange)]',
 ]
 
 interface Props {

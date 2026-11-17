@@ -516,7 +516,7 @@ describe('useTheme: active-theme render cache (themed first paint)', () => {
     expect(themeDetailFn.mock.calls.filter(([slug]) => slug === SLUG)).toHaveLength(2)
     expect(result.current.colorTheme).toBe(`custom-${SLUG}`)
     expect(localStorage.getItem('mc-color-theme')).toBe(`custom-${SLUG}`)
-    expect(updateThemeConfigFn).not.toHaveBeenCalledWith({ color: 'aj' })
+    expect(updateThemeConfigFn).not.toHaveBeenCalledWith({ color: 'jewel' })
 
     themeDetailFn.mockImplementation((slug: string) =>
       Promise.resolve(slug === SLUG ? detail : otherDetail),
@@ -725,7 +725,7 @@ describe('useTheme: active-theme render cache (themed first paint)', () => {
     const { result } = renderHook(() => useTheme(), { wrapper })
     expect(styleFor(SLUG)).not.toBeNull() // painted from the cache first
 
-    await waitFor(() => expect(result.current.colorTheme).toBe('aj'))
+    await waitFor(() => expect(result.current.colorTheme).toBe('jewel'))
     expect(result.current.installedThemeLoadFailed).toBe(false)
     expect(localStorage.getItem(KEY)).toBeNull()
     expect(styleFor(SLUG)).toBeNull()

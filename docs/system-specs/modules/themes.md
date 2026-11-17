@@ -402,7 +402,7 @@ dashboard load into header-only round trips.
 
 | Surface | File | Role |
 |---|---|---|
-| Loader | `website/src/hooks/useTheme.tsx` | Applies CSS vars; `applyThemeOverrides` → `scopeOverridesCss` + `rewriteOverridesUrls` (`themeCss.ts`); `injectThemeFonts`; pre-apply self-repair; `themeSwitching` state |
+| Loader | `website/src/hooks/useTheme.tsx` | Applies CSS vars (`DEFAULT_COLOR_THEME = 'jewel'`); `applyThemeOverrides` → `scopeOverridesCss` + `rewriteOverridesUrls` (`themeCss.ts`); `injectThemeFonts`; pre-apply self-repair; `themeSwitching` state |
 | Render cache | `website/src/hooks/themeRenderCache.ts` | Persists the active pack's detail under `localStorage["mc-theme-data"]` and reads it back synchronously at `ThemeProvider` mount so the first paint is themed |
 | Experience layer | `website/src/components/ThemeExperienceLayer.tsx` | Mounts sandboxed overlay/topbar iframes + audio; enforces the postMessage allowlist |
 | Settings UI | `website/src/pages/settings/DisplayPanel.tsx` | Single Theme dropdown + install-from-GitHub/local folder/uploaded `.zip` + remove + "Applying…" status indicator; the Experience section listing the active Level-2 pack's parts (Sounds, Overlays, Persona), or a registered theme's Overlays alone, as toggles (`ThemeExperienceSettings.tsx`); the catalog-failure and unstyled-theme notices with Retry (see *Catalog failure* below) |

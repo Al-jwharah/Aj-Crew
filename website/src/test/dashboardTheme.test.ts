@@ -102,11 +102,11 @@ describe('applyThemeId — copies the dashboard theme selection onto <html>', ()
     expect(document.documentElement.dataset.mode).toBe('dark')
   })
 
-  it('falls back to the kiro default when nothing is persisted', () => {
+  it('falls back to the jewel default when nothing is persisted', () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof window.matchMedia
     applyThemeId()
-    // kiro + system(light) → aj-light
-    expect(document.documentElement.dataset.theme).toBe('aj-light')
+    // jewel + system(light) → jewel-light
+    expect(document.documentElement.dataset.theme).toBe('jewel-light')
   })
 })
 
