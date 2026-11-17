@@ -171,8 +171,18 @@ EOF
 }
 
 # Directory holding the unofficial glibc-217 Node install, under the data home.
+_resolve_ajcrew_data_home() {
+    if [ -n "${AJCREW_HOME:-}" ]; then
+        echo "$AJCREW_HOME"
+    elif [ -d "$HOME/.ajcrew" ] || [ ! -d "$HOME/.kiro/crew" ]; then
+        echo "$HOME/.ajcrew"
+    else
+        echo "$HOME/.kiro/crew"
+    fi
+}
+
 _glibc217_node_dir() {
-    echo "${AJCREW_HOME:-$HOME/.kiro/crew}/node-glibc217"
+    echo "$(_resolve_ajcrew_data_home)/node-glibc217"
 }
 
 # Put a previously-installed glibc-217 node on PATH (if present). Called LAST in
@@ -285,7 +295,8 @@ _install_glibc217_node() {
 # ~/.ajcrew (see header).
 _record_node_bin() {
     if command -v node >/dev/null 2>&1; then
-        local home="${AJCREW_HOME:-$HOME/.kiro/crew}"
+        local home
+        home="$(_resolve_ajcrew_data_home)"
         mkdir -p "$home"
         dirname "$(command -v node)" > "$home/node-bin-dir" 2>/dev/null || true
     fi

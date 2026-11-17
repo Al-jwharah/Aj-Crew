@@ -275,8 +275,12 @@ def is_default_home() -> bool:
     if not raw:
         return True
     try:
-        default = Path.home() / KIRO_BASE_DIR_NAME / CONFIG_DIR_LEAF
-        return Path(raw).expanduser().resolve() == default.resolve()
+        resolved = Path(raw).expanduser().resolve()
+        candidates = (
+            Path.home() / ".ajcrew",
+            Path.home() / KIRO_BASE_DIR_NAME / CONFIG_DIR_LEAF,
+        )
+        return any(resolved == cand.resolve() for cand in candidates)
     except (OSError, RuntimeError):
         # RuntimeError as well as OSError: Path.home() raises RuntimeError (not
         # OSError) when the UID has no passwd entry, which is normal in a
@@ -686,9 +690,7 @@ REASONS = (
 )
 
 
-def telemetry_permitted(
-    *, enabled: bool, acked: bool, audit_tool: str = ""
-) -> Verdict:
+def telemetry_permitted(*, enabled: bool, acked: bool, audit_tool: str = "") -> Verdict:
     """Return the send verdict for ANY outbound telemetry from this install.
 
     The consent gate, factored out of :func:`should_send` so a SECOND outbound
@@ -787,9 +789,7 @@ def should_send(*, enabled: bool, acked: bool, audit: bool = True) -> Verdict:
     if not verdict.ok:
         return verdict
     if already_sent_today():
-        return Verdict(
-            False, f"already sent today ({_today()})", "already_sent_today"
-        )
+        return Verdict(False, f"already sent today ({_today()})", "already_sent_today")
     return Verdict(True, "ready", "ready")
 
 
@@ -865,9 +865,7 @@ def send(endpoint: str, app_version: str, *, enabled: bool, acked: bool) -> bool
         return False
 
 
-def status(
-    endpoint: str, *, enabled: bool, app_version: str, acked: bool
-) -> dict[str, object]:
+def status(endpoint: str, *, enabled: bool, app_version: str, acked: bool) -> dict[str, object]:
     """Return the exact state for ``ajcrew telemetry status``.
 
     Uses ``create=False`` so inspecting status never materializes an id.

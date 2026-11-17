@@ -194,11 +194,12 @@ class KiroPrerequisiteService:
             self._data_home = data_home
         elif home is not None:
             configured_home = self._environ.get("AJCREW_HOME", "")
-            self._data_home = (
-                Path(configured_home).expanduser()
-                if configured_home
-                else self._home / ".kiro" / "crew"
-            )
+            if configured_home:
+                self._data_home = Path(configured_home).expanduser()
+            else:
+                _cand = self._home / ".ajcrew"
+                _legacy = self._home / ".kiro" / "crew"
+                self._data_home = _cand if (_cand.is_dir() or not _legacy.is_dir()) else _legacy
         else:
             self._data_home = config_dir()
         self._auth_staging_parent = _ensure_auth_staging_parent(self._home)

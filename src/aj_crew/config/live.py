@@ -81,9 +81,9 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle with the loader at runtime
 logger = logging.getLogger(__name__)
 
 #: Default seconds between fingerprint checks. Two ``stat`` calls per tick on a
-#: worker thread; low enough that a CLI write lands before the operator has
-#: switched windows, high enough to be invisible in CPU profiles.
-DEFAULT_POLL_INTERVAL_SECS = 2.0
+#: worker thread; tuned for low idle CPU/wakeups on 24/7 hosts while in-process
+#: ``notify_config_written`` dispatches dashboard/CLI edits immediately.
+DEFAULT_POLL_INTERVAL_SECS = 5.0
 
 #: Floor for the interval so a misconfigured test or embedder cannot spin the
 #: worker pool on stats.

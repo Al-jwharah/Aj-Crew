@@ -77,6 +77,14 @@ def _doctor_data_home() -> None:
     legacy = Path.home() / cli_doctor.LEGACY_CONFIG_DIR_NAME
     if not legacy.is_dir():
         return
+    try:
+        if (
+            os.path.realpath(legacy) == os.path.realpath(home)
+            and cli_doctor._valid_override_home() is None
+        ):
+            return
+    except OSError:
+        pass
     override_home = cli_doctor._valid_override_home()
     if override_home is not None:
         try:

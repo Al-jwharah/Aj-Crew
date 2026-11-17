@@ -5,23 +5,59 @@
 //      (/usr, /System, /etc) -- are rejected (paths.py _valid_override_home)
 //      and fall through to the default, so both sides agree on which overrides
 //      are honored.
-//   2. Otherwise the default home ~/.kiro/crew.
-//
-// Electron consumes this in two ways:
-//   - resolveHome(): the data home whose config.json content governs this
-//     launch.
-//   - secretCandidates(): the .local_secret location, re-resolved at call time.
-//     The backend reads .local_secret only from config_dir() (the override or
-//     the default home), so this returns that single location.
-//
-// Boot-time side effects (mkdir pre-create, PYTHONPYCACHEPREFIX) use
-// canonicalHome() directly.
+//   2. Guarded ~/.kiro/crew -> ~/.ajcrew state machine:
+//      ~/.ajcrew is the canonical standalone home. When ~/.kiro/crew exists
+//      with real state and ~/.ajcrew does not yet carry a completed/fresh
+//      .home_migration_state.json marker (or config.json), fall back cleanly to
+//      ~/.kiro/crew until the backend's guarded migration completes.
 
+const nodeFs = require("fs");
 const nodeOs = require("os");
 const nodePath = require("path");
 
+const MIGRATION_STATE_FILE = ".home_migration_state.json";
+
 function canonicalHome(os = nodeOs, path = nodePath) {
+  return path.join(os.homedir(), ".ajcrew");
+}
+
+function legacyKiroHome(os = nodeOs, path = nodePath) {
   return path.join(os.homedir(), ".kiro", "crew");
+}
+
+function defaultHome({ os = nodeOs, path = nodePath, fs = nodeFs } = {}) {
+  const target = canonicalHome(os, path);
+  const legacy = legacyKiroHome(os, path);
+  try {
+    if (fs && typeof fs.readFileSync === "function") {
+      const markerPath = path.join(target, MIGRATION_STATE_FILE);
+      if (fs.existsSync(markerPath)) {
+        const parsed = JSON.parse(fs.readFileSync(markerPath, "utf8"));
+        if (parsed && (parsed.state === "completed" || parsed.state === "fresh")) {
+          return target;
+        }
+        if (parsed && parsed.state === "migrating" && fs.existsSync(legacy)) {
+          return legacy;
+        }
+      }
+      if (fs.existsSync(path.join(target, "config.json"))) {
+        return target;
+      }
+      if (fs.existsSync(legacy)) {
+        const entries = typeof fs.readdirSync === "function" ? fs.readdirSync(legacy) : ["x"];
+        if (entries.length > 0) return legacy;
+      }
+    }
+  } catch {
+    try {
+      if (fs && typeof fs.existsSync === "function" && fs.existsSync(legacy)) {
+        return legacy;
+      }
+    } catch {
+      // Fall back to canonical ~/.ajcrew when probing is unavailable.
+    }
+  }
+  return target;
 }
 
 /**
@@ -56,8 +92,8 @@ function validOverride(env, os, path) {
  * @param {{env?: object, os?: object, path?: object}} deps
  * @returns {string}
  */
-function resolveHome({ env = process.env, os = nodeOs, path = nodePath } = {}) {
-  return validOverride(env, os, path) || canonicalHome(os, path);
+function resolveHome({ env = process.env, os = nodeOs, path = nodePath, fs = nodeFs } = {}) {
+  return validOverride(env, os, path) || defaultHome({ os, path, fs });
 }
 
 /**
@@ -66,10 +102,10 @@ function resolveHome({ env = process.env, os = nodeOs, path = nodePath } = {}) {
  * the default home.
  * @returns {string[]}
  */
-function secretCandidates({ env = process.env, os = nodeOs, path = nodePath } = {}) {
+function secretCandidates({ env = process.env, os = nodeOs, path = nodePath, fs = nodeFs } = {}) {
   const override = validOverride(env, os, path);
-  const home = override || canonicalHome(os, path);
+  const home = override || defaultHome({ os, path, fs });
   return [path.join(home, ".local_secret")];
 }
 
-module.exports = { resolveHome, secretCandidates, canonicalHome };
+module.exports = { resolveHome, secretCandidates, canonicalHome, legacyKiroHome, defaultHome };

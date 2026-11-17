@@ -117,7 +117,13 @@ _resolve() {
 }
 
 _record() {
-    home="${AJCREW_HOME:-$HOME/.kiro/crew}"
+    if [ -n "${AJCREW_HOME:-}" ]; then
+        home="$AJCREW_HOME"
+    elif [ -d "$HOME/.ajcrew" ] || [ ! -d "$HOME/.kiro/crew" ]; then
+        home="$HOME/.ajcrew"
+    else
+        home="$HOME/.kiro/crew"
+    fi
     mkdir -p "$home"
     printf '%s\n' "$1" > "$home/python-bin" 2>/dev/null || true
 }

@@ -37,7 +37,7 @@ class TestConfigDir:
         monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         result = paths.config_dir()
-        assert result == tmp_path / ".kiro" / "crew"
+        assert result == tmp_path / ".ajcrew"
         assert result.is_dir()  # created on access
 
     def test_ajcrew_home_override(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -81,7 +81,7 @@ class TestConfigDir:
         monkeypatch.setenv("AJCREW_HOME", system_dir)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         result = paths.config_dir()
-        assert result == tmp_path / ".kiro" / "crew"
+        assert result == tmp_path / ".ajcrew"
 
 
 class TestScratchRootOverride:
@@ -238,7 +238,12 @@ class TestScratchRootOverride:
         monkeypatch.setattr(sys, "platform", "win32")
         monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "active" / ".kiro" / "crew"))
         legacy = paths._legacy_home()
-        for inside in (legacy / "scratch" / "moved", legacy, paths._default_home() / "x"):
+        for inside in (
+            legacy / "scratch" / "moved",
+            legacy,
+            paths._default_home() / "x",
+            paths._kiro_legacy_home() / "x",
+        ):
             monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(inside))
             paths._scratch_root_override_pin = paths._UNSET
             assert paths.valid_scratch_root_override() is None, inside

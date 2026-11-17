@@ -122,7 +122,9 @@ _has_provisioner() {
 if [ -z "$PY" ] && [ -f "$REPO_ROOT/ensure-python.sh" ] && _has_provisioner; then
     info "No system Python 3.12+; provisioning one via ensure-python.sh…"
     bash "$REPO_ROOT/ensure-python.sh" >/dev/null 2>&1 || true
-    _recorded="$(cat "${AJCREW_HOME:-$HOME/.kiro/crew}/python-bin" 2>/dev/null || true)"
+    _ajcrew_home="${AJCREW_HOME:-$HOME/.ajcrew}"
+    [ ! -f "$_ajcrew_home/python-bin" ] && [ -z "${AJCREW_HOME:-}" ] && _ajcrew_home="$HOME/.kiro/crew"
+    _recorded="$(cat "$_ajcrew_home/python-bin" 2>/dev/null || true)"
     if [ -n "$_recorded" ] && [ -x "$_recorded" ] \
         && "$_recorded" -c 'import sys; assert sys.version_info>=(3,12)' 2>/dev/null; then
         PY="$_recorded"

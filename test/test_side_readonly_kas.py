@@ -386,7 +386,14 @@ def test_every_live_kas_side_call_raised_a_permission_request():
     [
         ("read_file", True),
         ("grep_search", True),
-        ("run_command", True),
+        pytest.param(
+            "run_command",
+            True,
+            marks=pytest.mark.skipif(
+                platform_compat.IS_WINDOWS,
+                reason="the live capture's `ls` is vouched through a POSIX PATH lookup",
+            ),
+        ),
         ("fs_write", False),
     ],
 )

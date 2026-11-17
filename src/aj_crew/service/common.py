@@ -98,7 +98,10 @@ def launchd_live_program() -> "os.PathLike[str]":
     drop-in does); a symlink would leave PATH-resolved subprocesses on the OLD install.
     """
     return (
-        Path.home() / "Library" / "Application Support" / "AjCrew"  # brand-ok: on-disk directory name
+        Path.home()
+        / "Library"
+        / "Application Support"
+        / "AjCrew"  # brand-ok: on-disk directory name
         / "live-gateway"
     )
 
@@ -148,9 +151,7 @@ def _running_install_bin() -> str | None:
     """
     from aj_crew.config.paths import _in_ephemeral_tree, _in_linked_git_worktree
 
-    sibling = Path(sys.executable).parent / (
-        "ajcrew.exe" if os.name == "nt" else "ajcrew"
-    )
+    sibling = Path(sys.executable).parent / ("ajcrew.exe" if os.name == "nt" else "ajcrew")
     try:
         if not (sibling.is_file() and os.access(sibling, os.X_OK)):
             return None
@@ -241,7 +242,11 @@ def service_dotenv(
         return loader.env_path(), ""
     from aj_crew.service import linux  # circular import: linux imports this module at load
 
-    return Path(linux._home_for_user(account), CONFIG_DIR_NAME, ".env"), account
+    user_home = Path(linux._home_for_user(account))
+    cand = user_home / ".ajcrew"
+    legacy = user_home / CONFIG_DIR_NAME
+    base = cand if (cand.is_dir() or not legacy.is_dir()) else legacy
+    return base / ".env", account
 
 
 def api_key_will_be_dropped(environ: "Mapping[str, str] | None" = None) -> bool:
@@ -354,9 +359,7 @@ def _with_crew_home_caveat(
         ]
     if _home_override_is_set(environ):
         lines.append("")
-        lines.append(
-            "   AJCREW_HOME is set here but is also not inherited, so confirm"
-        )
+        lines.append("   AJCREW_HOME is set here but is also not inherited, so confirm")
         lines.append("   that path is the home the service actually starts with.")
     return "\n".join(lines)
 
@@ -462,8 +465,12 @@ def _nvm_bin_dirs(env_path: list[str]) -> list[str]:
     for p in env_path:
         path = PurePosixPath(p)
         parts = path.parts
-        if not (p.startswith("/") and len(parts) >= 6
-                and parts[-4:-2] == ("versions", "node") and parts[-1] == "bin"):
+        if not (
+            p.startswith("/")
+            and len(parts) >= 6
+            and parts[-4:-2] == ("versions", "node")
+            and parts[-1] == "bin"
+        ):
             continue
         root = path.parents[3]
         if root.name in (".nvm", "nvm") or root == nvm_root:

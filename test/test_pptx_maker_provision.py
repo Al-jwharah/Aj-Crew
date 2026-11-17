@@ -249,42 +249,46 @@ class TestResolveUv:
     def test_falls_back_to_path_when_the_locator_raises(self, tmp_path: Path):
         """`find_uv_bin` raises UvNotFound (a FileNotFoundError) on an odd
         repackaging — a user's own newer uv must still work."""
+        uv_bin = os.path.abspath("/usr/local/bin/uv")
         fake_uv = mock.Mock(
             find_uv_bin=mock.Mock(side_effect=FileNotFoundError("no uv in any location"))
         )
         with (
             mock.patch.object(env_mod, "_uv_package", fake_uv),
-            mock.patch.object(env_mod.shutil, "which", return_value="/usr/local/bin/uv"),
+            mock.patch.object(env_mod.shutil, "which", return_value=uv_bin),
         ):
-            assert provision.resolve_uv() == "/usr/local/bin/uv"
+            assert provision.resolve_uv() == uv_bin
 
     def test_falls_back_to_path_when_the_package_is_absent(self):
         """An install without the uv wheel at all must not raise ImportError."""
+        uv_bin = os.path.abspath("/usr/bin/uv")
         with (
             mock.patch.object(env_mod, "_uv_package", None),
-            mock.patch.object(env_mod.shutil, "which", return_value="/usr/bin/uv"),
+            mock.patch.object(env_mod.shutil, "which", return_value=uv_bin),
         ):
-            assert provision.resolve_uv() == "/usr/bin/uv"
+            assert provision.resolve_uv() == uv_bin
 
     def test_a_locator_pointing_at_a_missing_file_is_not_trusted(self, tmp_path: Path):
         """A path that does not exist is not a usable uv — fall through rather
         than hand an absolute nonexistent path to `subprocess.run`."""
+        uv_bin = os.path.abspath("/usr/bin/uv")
         fake_uv = mock.Mock(find_uv_bin=mock.Mock(return_value=str(tmp_path / "gone")))
         with (
             mock.patch.object(env_mod, "_uv_package", fake_uv),
-            mock.patch.object(env_mod.shutil, "which", return_value="/usr/bin/uv"),
+            mock.patch.object(env_mod.shutil, "which", return_value=uv_bin),
         ):
-            assert provision.resolve_uv() == "/usr/bin/uv"
+            assert provision.resolve_uv() == uv_bin
 
     def test_falls_through_to_path_when_find_uv_bin_raises(self, tmp_path: Path):
         """`find_uv_bin()` raises `UvNotFound` on an install repackaged without the
         binary — a system uv must still be used rather than reporting none."""
+        uv_bin = os.path.abspath("/opt/homebrew/bin/uv")
         fake_uv = mock.Mock(find_uv_bin=mock.Mock(side_effect=FileNotFoundError("no binary")))
         with (
             mock.patch.object(env_mod, "_uv_package", fake_uv),
-            mock.patch.object(env_mod.shutil, "which", return_value="/opt/homebrew/bin/uv"),
+            mock.patch.object(env_mod.shutil, "which", return_value=uv_bin),
         ):
-            assert provision.resolve_uv() == "/opt/homebrew/bin/uv"
+            assert provision.resolve_uv() == uv_bin
 
     def test_returns_none_when_uv_is_absent_everywhere_and_never_raises(self):
         """The contract `provision()` depends on: an absent uv is a reportable

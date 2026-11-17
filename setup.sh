@@ -66,7 +66,9 @@ if [ -z "$_py" ] && [ -f "$_ajcrew_dir/ensure-python.sh" ] && _has_provisioner; 
     # 3.12 rather than stopping on a distro whose archive cannot supply it.
     echo "  → No system Python 3.12+; provisioning one via ensure-python.sh…"
     bash "$_ajcrew_dir/ensure-python.sh" >/dev/null 2>&1 || true
-    _recorded="$(cat "${AJCREW_HOME:-$HOME/.kiro/crew}/python-bin" 2>/dev/null || true)"
+    _ajcrew_home="${AJCREW_HOME:-$HOME/.ajcrew}"
+    [ ! -f "$_ajcrew_home/python-bin" ] && [ -z "${AJCREW_HOME:-}" ] && _ajcrew_home="$HOME/.kiro/crew"
+    _recorded="$(cat "$_ajcrew_home/python-bin" 2>/dev/null || true)"
     if [ -n "$_recorded" ] && [ -x "$_recorded" ] \
         && "$_recorded" -c "import sys; assert sys.version_info >= (3,12)" 2>/dev/null; then
         _py="$_recorded"
@@ -105,7 +107,10 @@ if [ -x "$_ajcrew_dir/ensure-node.sh" ]; then
     # consume that marker the way the Makefile and aj_crew.env.node_bin_dirs()
     # already do. Without this the checks below miss the node just installed and
     # the frontend build plus the agent-backend install are skipped.
-    _nbd="$(cat "${AJCREW_HOME:-$HOME/.kiro/crew}/node-bin-dir" 2>/dev/null || true)"
+    _nbd_home="${AJCREW_HOME:-$HOME/.ajcrew}"
+    [ ! -f "$_nbd_home/node-bin-dir" ] && [ -z "${AJCREW_HOME:-}" ] && _nbd_home="$HOME/.kiro/crew"
+    _nbd="$(cat "$_nbd_home/node-bin-dir" 2>/dev/null || true)"
+    unset _nbd_home
     if [ -n "$_nbd" ] && [ -x "$_nbd/node" ]; then
         export PATH="$_nbd:$PATH"
     fi

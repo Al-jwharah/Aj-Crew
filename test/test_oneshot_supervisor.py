@@ -412,13 +412,14 @@ def test_unsupervised_spawns_are_noted_once_at_info(
 
 @pytest.mark.usefixtures("reap_capable")
 def test_spawn_supervised_oneshot_wraps_the_command_in_its_own_session() -> None:
+    target = os.path.abspath("/usr/bin/env")
     spawn = _spawn_capture()
     with patch.object(kiro_prerequisite, "create_subprocess_limited", spawn):
-        asyncio.run(kiro_prerequisite.spawn_supervised_oneshot(["/usr/bin/env", "x"], env={}))
+        asyncio.run(kiro_prerequisite.spawn_supervised_oneshot([target, "x"], env={}))
     args = list(spawn.await_args.args)
     assert args[:3] == [sys.executable, "-I", "-c"]
     assert args[3] == kiro_prerequisite._PROCESS_GROUP_SUPERVISOR_CODE
-    assert args[4:] == ["--reap-survivors", "/usr/bin/env", "x"]
+    assert args[4:] == ["--reap-survivors", target, "x"]
     assert spawn.await_args.kwargs == {
         "start_new_session": True,
         "env": {},

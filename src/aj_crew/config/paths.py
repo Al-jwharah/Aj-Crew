@@ -28,8 +28,10 @@ backward compatibility, so existing callers continue to work unchanged.
 from __future__ import annotations
 
 import errno
+import json
 import logging
 import os
+import shutil
 import stat
 import sys
 import tempfile
@@ -38,16 +40,19 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# The data root nests under kiro-cli's own home ``~/.kiro/`` so all Kiro-family
-# apps share one base for a user to secure; ``config_dir()`` defaults to
-# ``~/.kiro/crew``. ``CONFIG_DIR_NAME`` stays a POSIX-style relative literal so
-# string checks (e.g. the security keystone) can match it uniformly.
+# Canonical standalone data home (``~/.ajcrew``) and guarded migration state file.
+# ``CONFIG_DIR_NAME`` (``.kiro/crew``) and ``LEGACY_CONFIG_DIR_NAME`` (``.ajcrew``)
+# keep their historical string constants for callers that check BOTH home spellings
+# (sandbox masks, security path lists, remote instance token discovery).
+CANONICAL_DATA_HOME_NAME = ".ajcrew"
+HOME_MIGRATION_STATE_FILE = ".home_migration_state.json"
+_VOLATILE_MIGRATION_SKIP_NAMES = frozenset({"run", "scratch", "__pycache__"})
+
 KIRO_BASE_DIR_NAME = ".kiro"
 CONFIG_DIR_LEAF = "crew"
 CONFIG_DIR_NAME = f"{KIRO_BASE_DIR_NAME}/{CONFIG_DIR_LEAF}"  # ".kiro/crew"
 
-# The pre-move top-level home (``~/.ajcrew``). One constant so the security
-# keystone, autonudge, seed and other legacy-path readers share it.
+# Historical symbol kept for compatibility across security/session/doctor callers.
 LEGACY_CONFIG_DIR_NAME = ".ajcrew"
 
 # Recovery-pointer breadcrumb at ``~/.ajcrew.breadcrumb``, deliberately OUTSIDE
@@ -95,37 +100,188 @@ _HOME_CREATE_MODE = 0o777 if sys.platform == "win32" else 0o700
 
 
 def _default_home() -> Path:
-    """Resolve the default (non-override) data root: ``~/.kiro/crew``."""
+    """Resolve the canonical standalone default data root: ``~/.ajcrew``."""
+    return Path.home() / CANONICAL_DATA_HOME_NAME
+
+
+def _kiro_legacy_home() -> Path:
+    """Resolve the legacy Kiro-nested data root: ``~/.kiro/crew``."""
     return Path.home() / KIRO_BASE_DIR_NAME / CONFIG_DIR_LEAF
 
 
 def _legacy_home() -> Path:
-    """Resolve the pre-move top-level home: ``~/.ajcrew``."""
+    """Resolve the top-level ``~/.ajcrew`` spelling."""
     return Path.home() / LEGACY_CONFIG_DIR_NAME
 
 
 def legacy_home() -> Path:
-    """Public alias for the pre-move top-level home (``~/.ajcrew``).
-
-    Exported so modules that legitimately need to recognise a legacy-rooted
-    path — e.g. ``autonudge.repair_sentinel_path`` re-homing a persisted
-    kill-switch path — can do so without reaching into the private
-    ``_legacy_home``.
-    """
+    """Public alias for ``~/.ajcrew``."""
     return _legacy_home()
 
 
-def _resolve_default_home() -> Path:
-    """Resolve the default data root (``~/.kiro/crew``), caching it for the process.
+def _is_link_or_reparse(path: Path) -> bool:
+    """Stdlib-only check for POSIX symlinks and Windows junctions/reparse points."""
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return False
+    if stat.S_ISLNK(st.st_mode):
+        return True
+    if sys.platform == "win32":
+        if getattr(st, "st_reparse_tag", 0) != 0:
+            return True
+        reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        if getattr(st, "st_file_attributes", 0) & reparse_flag:
+            return True
+    return False
 
-    The resolved home is memoized in :data:`_resolved_home` so every later
-    ``config_dir()`` / ``data_home()`` call returns the same directory without
-    re-probing the filesystem. ``None`` in the cache means "not yet resolved this
-    process".
-    """
+
+def _read_migration_marker(target: Path) -> str:
+    marker = target / HOME_MIGRATION_STATE_FILE
+    if _is_link_or_reparse(marker):
+        return "invalid"
+    no_follow = getattr(os, "O_NOFOLLOW", 0)
+    try:
+        fd = os.open(marker, os.O_RDONLY | no_follow)
+        try:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                return "invalid"
+            raw = os.read(fd, 16384).decode("utf-8", errors="strict")
+        finally:
+            os.close(fd)
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict) and isinstance(parsed.get("state"), str):
+            return str(parsed["state"])
+    except (OSError, ValueError):
+        return ""
+    return ""
+
+
+def _write_migration_marker(target: Path, payload: dict[str, object]) -> None:
+    dest = target / HOME_MIGRATION_STATE_FILE
+    if _is_link_or_reparse(dest):
+        raise OSError(errno.ELOOP, "migration marker is a symlink or reparse point", str(dest))
+    fd, tmp_name = tempfile.mkstemp(prefix=".home_mig_", dir=str(target))
+    try:
+        if sys.platform != "win32" and hasattr(os, "fchmod"):
+            os.fchmod(fd, 0o600)
+        os.write(fd, (json.dumps(payload, sort_keys=True) + "\n").encode("utf-8"))
+        os.close(fd)
+        fd = -1
+        os.replace(tmp_name, dest)
+    except BaseException:
+        if fd >= 0:
+            os.close(fd)
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+
+
+def _copy_tree_nondestructive(src: Path, dst: Path, *, top_level: bool = True) -> None:
+    for entry in os.scandir(src):
+        if top_level and entry.name in _VOLATILE_MIGRATION_SKIP_NAMES:
+            continue
+        src_entry = Path(entry.path)
+        if _is_link_or_reparse(src_entry):
+            continue
+        dst_entry = dst / entry.name
+        if _is_link_or_reparse(dst_entry):
+            raise OSError(errno.ELOOP, "refusing link inside target home", str(dst_entry))
+        if entry.is_dir(follow_symlinks=False):
+            dst_entry.mkdir(parents=True, exist_ok=True, mode=_HOME_CREATE_MODE)
+            _copy_tree_nondestructive(src_entry, dst_entry, top_level=False)
+        elif entry.is_file(follow_symlinks=False) and not dst_entry.exists():
+            shutil.copy2(src_entry, dst_entry, follow_symlinks=False)
+
+
+def _peek_default_home() -> Path:
+    """Pure read-only inspection of the guarded ``~/.kiro/crew`` -> ``~/.ajcrew`` state."""
+    target = _default_home()
+    legacy = _kiro_legacy_home()
+    if _is_link_or_reparse(target):
+        return legacy if (legacy.exists() and not _is_link_or_reparse(legacy)) else target
+    state = _read_migration_marker(target)
+    if state in ("completed", "fresh"):
+        return target
+    if state in ("migrating", "invalid"):
+        return legacy if (legacy.is_dir() and not _is_link_or_reparse(legacy)) else target
+    if (target / "config.json").is_file():
+        return target
+    try:
+        if legacy.is_dir() and not _is_link_or_reparse(legacy):
+            if any(e.name not in _VOLATILE_MIGRATION_SKIP_NAMES for e in legacy.iterdir()):
+                return legacy
+    except OSError:
+        pass
+    return target
+
+
+def _migrate_or_resolve_default_home() -> Path:
+    """Guarded non-destructive ``~/.kiro/crew`` -> ``~/.ajcrew`` state machine."""
+    target = _default_home()
+    legacy = _kiro_legacy_home()
+    if _is_link_or_reparse(target):
+        logger.warning(
+            "Refusing symlink/reparse data home %s; falling back to %s",
+            target,
+            legacy,
+        )
+        return legacy if (legacy.exists() and not _is_link_or_reparse(legacy)) else target
+    state = _read_migration_marker(target)
+    if state in ("completed", "fresh"):
+        return target
+    if state in ("migrating", "invalid"):
+        logger.warning(
+            "Data-home migration marker at %s is incomplete (%s); falling back to %s",
+            target,
+            state,
+            legacy,
+        )
+        return legacy if (legacy.is_dir() and not _is_link_or_reparse(legacy)) else target
+    if (target / "config.json").is_file():
+        return target
+    if _is_link_or_reparse(legacy):
+        logger.warning(
+            "Refusing symlink/reparse legacy home %s; using %s",
+            legacy,
+            target,
+        )
+        return target
+    try:
+        has_legacy_data = legacy.is_dir() and any(
+            e.name not in _VOLATILE_MIGRATION_SKIP_NAMES for e in legacy.iterdir()
+        )
+    except OSError:
+        has_legacy_data = False
+    if has_legacy_data:
+        try:
+            target.mkdir(parents=True, exist_ok=True, mode=_HOME_CREATE_MODE)
+            _write_migration_marker(target, {"state": "migrating", "version": 1})
+            _copy_tree_nondestructive(legacy, target, top_level=True)
+            _write_migration_marker(
+                target,
+                {"state": "completed", "version": 1, "source": str(legacy)},
+            )
+            return target
+        except OSError:
+            logger.warning(
+                "Guarded data-home migration from %s to %s failed; falling back to %s",
+                legacy,
+                target,
+                legacy,
+                exc_info=True,
+            )
+            return legacy
+    return target
+
+
+def _resolve_default_home() -> Path:
+    """Resolve the default data root (``~/.ajcrew`` via guarded migration), cached per process."""
     global _resolved_home
     if _resolved_home is None:
-        _resolved_home = _default_home()
+        _resolved_home = _migrate_or_resolve_default_home()
     return _resolved_home
 
 
@@ -650,7 +806,7 @@ def _validate_scratch_root_override() -> tuple[Path | None, str | None]:
     # Refusing an override at, under, or above any of these homes closes that at the source
     # (the module that owns the override) and falls back to the safe default.
     crew_homes: list[Path] = []
-    for home_fn in (config_dir, _default_home, _legacy_home):
+    for home_fn in (config_dir, _default_home, _legacy_home, _kiro_legacy_home):
         try:
             crew_homes.append(home_fn().resolve())
         except Exception:  # pragma: no cover - defensive; never block resolution on this
@@ -775,6 +931,15 @@ def config_dir() -> Path:
         )
     d = _resolve_default_home()
     d.mkdir(parents=True, exist_ok=True, mode=_HOME_CREATE_MODE)  # as above
+    if (
+        d == _default_home()
+        and not (d / HOME_MIGRATION_STATE_FILE).exists()
+        and not _is_link_or_reparse(d)
+    ):
+        try:
+            _write_migration_marker(d, {"state": "fresh", "version": 1})
+        except OSError:
+            logger.debug("could not write fresh home marker", exc_info=True)
     # Drop the recovery-pointer breadcrumb outside ~/.kiro/ (default path only).
     # Best-effort + idempotent; guarded so a breadcrumb failure never blocks the
     # data-home resolution the whole app depends on.
@@ -834,7 +999,7 @@ def peek_data_home() -> Path:
     resolution (and refresh the recovery breadcrumb). A caller that only wants
     to know whether a file *would* be there -- an import-time cache load, a
     read-only inspector -- must not turn "import the package" into "mkdir
-    ``~/.kiro/crew``": a test collector imports before any isolation runs, and a
+    ``~/.ajcrew``": a test collector imports before any isolation runs, and a
     tool that reports state should not create it. Applies the SAME override
     predicate :func:`config_dir` gates on, so a valid ``AJCREW_HOME`` and the
     default home agree between reader and writer, and reads nothing else.
@@ -848,7 +1013,7 @@ def peek_data_home() -> Path:
     override = _valid_override_home()
     if override is not None:
         return override
-    return _resolved_home if _resolved_home is not None else _default_home()
+    return _resolved_home if _resolved_home is not None else _peek_default_home()
 
 
 def ensure_data_home() -> Path:

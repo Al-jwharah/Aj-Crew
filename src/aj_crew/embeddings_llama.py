@@ -67,8 +67,11 @@ logger = logging.getLogger("aj_crew.embeddings")
 def _trim_native_heap() -> None:
     """Return freed heap pages to the OS after an unload. Best effort, no-op off glibc."""
     try:
+        import gc
+
         from aj_crew.platform_compat import _malloc_trim
 
+        gc.collect()
         _malloc_trim()
     except Exception:  # noqa: BLE001 - trimming is an optimisation only
         logger.debug("malloc_trim after the embedding unload failed", exc_info=True)

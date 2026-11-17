@@ -583,9 +583,13 @@ def _breadcrumb_guard(real):
 
 
 def _is_the_operators_default_home(path) -> bool:
-    """Whether *path* is the real ``~/.kiro/crew`` (not a tmp stand-in for it)."""
+    """Whether *path* is the real ``~/.ajcrew`` or ``~/.kiro/crew`` (not a tmp stand-in)."""
     try:
-        return pathlib.Path(path).resolve() == (_REAL_USER_HOME / ".kiro" / "crew").resolve()
+        resolved = pathlib.Path(path).resolve()
+        return resolved in {
+            (_REAL_USER_HOME / ".ajcrew").resolve(),
+            (_REAL_USER_HOME / ".kiro" / "crew").resolve(),
+        }
     except OSError:
         return False
 

@@ -63,9 +63,15 @@ done
 # ── Constants ──
 # Repo root = directory containing this script (run from a local clone).
 AJCREW_APP_DIR="$(cd "$(dirname "$0")" && pwd)"
-# Data home: honor AJCREW_HOME, else the current default ~/.kiro/crew (NOT the
-# pre-move ~/.ajcrew, which is not the data home).
-AJCREW_DATA_DIR="${AJCREW_HOME:-$HOME/.kiro/crew}"
+# Data home: honor AJCREW_HOME, else ~/.ajcrew (falling back to an unmigrated
+# ~/.kiro/crew if present before first Python startup completes migration).
+if [ -n "${AJCREW_HOME:-}" ]; then
+    AJCREW_DATA_DIR="$AJCREW_HOME"
+elif [ -d "$HOME/.ajcrew" ] || [ ! -d "$HOME/.kiro/crew" ]; then
+    AJCREW_DATA_DIR="$HOME/.ajcrew"
+else
+    AJCREW_DATA_DIR="$HOME/.kiro/crew"
+fi
 NODE_VERSION="24"
 # Minimum Node version (major.minor.patch) Aj Crew supports -- the same
 # floor as MIN_NODE_VERSION in src/aj_crew/constants.py and ensure-node.sh.

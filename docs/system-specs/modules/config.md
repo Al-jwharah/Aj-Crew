@@ -2,7 +2,11 @@
 
 ## Overview
 
-The config package loads runtime configuration from `~/.kiro/crew/config.json`
+The config package loads runtime configuration from `~/.ajcrew/config.json`
+(migrating existing `~/.kiro/crew` installations non-destructively through the
+guarded state machine in `config/paths.py`, with fail-safe fallback to
+`~/.kiro/crew` if migration is incomplete or encounters a symlink/I/O error, and
+always honoring `AJCREW_HOME` first)
 using stdlib dataclasses with sensible defaults. `config/sections.py` and
 `config/loader.py` are the two facades callers import. Each composes the owner
 modules below and re-exports their names as the same objects, so an existing

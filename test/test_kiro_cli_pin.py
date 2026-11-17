@@ -19,6 +19,7 @@ here rather than in a review lane.
 from __future__ import annotations
 
 import ast
+import os
 import stat
 import subprocess
 import sys
@@ -41,6 +42,7 @@ _SRC_ROOT = src_root()
 # Captured at import, before any fixture rebinds the module attribute: the
 # end-to-end tests below want the REAL resolver against a fake home and PATH.
 _REAL_RESOLVE = kiro_cli.resolve_kiro_cli
+_PINNED_KIRO = os.path.abspath("/opt/pinned/bin/kiro-cli")
 
 
 # --------------------------------------------------------------------------- #
@@ -155,10 +157,10 @@ class TestPinKiroCli:
 
         def _resolve(**kw):
             calls.append(kw)
-            return "/opt/pinned/bin/kiro-cli"
+            return _PINNED_KIRO
 
         monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", _resolve)
-        assert kiro_cli.pin_kiro_cli() == ("/opt/pinned/bin/kiro-cli", False)
+        assert kiro_cli.pin_kiro_cli() == (_PINNED_KIRO, False)
         # One lookup, with the inherited PATH excluded.
         assert calls == [{"include_inherited_path": False}]
 
@@ -250,9 +252,9 @@ class TestUpdateKiroCliPin:
         that decides which file runs happens inside ``exec`` against the
         inherited ``PATH``.
         """
-        monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: "/opt/pinned/bin/kiro-cli")
+        monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: _PINNED_KIRO)
         cli_server._update()
-        assert update_checkout.kiro_argvs() == [["/opt/pinned/bin/kiro-cli", "update"]]
+        assert update_checkout.kiro_argvs() == [[_PINNED_KIRO, "update"]]
 
     def test_update_pins_without_the_inherited_path(self, monkeypatch, update_checkout) -> None:
         """The first (deciding) lookup excludes the inherited ``PATH``."""
@@ -260,7 +262,7 @@ class TestUpdateKiroCliPin:
 
         def _resolve(**kw):
             calls.append(kw)
-            return "/opt/pinned/bin/kiro-cli"
+            return _PINNED_KIRO
 
         monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", _resolve)
         cli_server._update()
@@ -336,9 +338,9 @@ class TestDiagnosticsKiroCliPin:
     def test_probe_execs_the_pinned_absolute_path(self, monkeypatch) -> None:
         """RED-BEFORE: the base spawns ``["kiro-cli", "--version"]`` bare."""
         argvs = self._capture(monkeypatch)
-        monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: "/opt/pinned/bin/kiro-cli")
+        monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: _PINNED_KIRO)
         assert diagnostics._kiro_cli_version() == "kiro-cli 9.9.9"
-        assert argvs == [["/opt/pinned/bin/kiro-cli", "--version"]]
+        assert argvs == [[_PINNED_KIRO, "--version"]]
 
     def test_probe_pins_without_the_inherited_path(self, monkeypatch) -> None:
         self._capture(monkeypatch)
@@ -346,7 +348,7 @@ class TestDiagnosticsKiroCliPin:
 
         def _resolve(**kw):
             calls.append(kw)
-            return "/opt/pinned/bin/kiro-cli"
+            return _PINNED_KIRO
 
         monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", _resolve)
         diagnostics._kiro_cli_version()
@@ -376,7 +378,7 @@ class TestDiagnosticsKiroCliPin:
         assert "PATH" in line and "AJCREW_KIRO_BIN" in line
 
     def test_probe_failure_still_reads_unavailable(self, monkeypatch) -> None:
-        monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: "/opt/pinned/bin/kiro-cli")
+        monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: _PINNED_KIRO)
 
         def _run(argv, **kw):
             raise OSError("boom")

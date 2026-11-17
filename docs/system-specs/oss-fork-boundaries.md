@@ -85,11 +85,12 @@ disk.
 ## The gate
 
 `.github/workflows/internal-content-scan-gate.yml` invokes the reusable
-`.github/workflows/internal-content-scan.yml` for same-repository `pull_request`,
-`merge_group`, and pushes to `main`. It checks **only the lines a change adds**,
-against a marker list that
-is deliberately **not in this repo** — it lives in a private bucket and is fetched
-per run over GitHub's OIDC identity, with no long-lived AWS keys anywhere.
+`.github/workflows/internal-content-scan.yml` for `pull_request` (both same-repo
+and fork PRs), `merge_group`, and pushes to `main`. It checks **only the lines a
+change adds** via the self-contained offline scanner
+`scripts/check_oss_fork_boundaries.py`, with no AWS OIDC role assumption or
+private S3 bucket dependency so every contributor and CI run reaches a real
+verdict directly.
 
 Three things follow from that, and they are the point rather than side effects:
 
