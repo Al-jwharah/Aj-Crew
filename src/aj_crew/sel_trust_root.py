@@ -264,8 +264,15 @@ def _load_or_create_hmac_key(self: SecurityEventLog) -> bytes:
     # reports THIS resolved path (normally trust/sel_hmac.key; the legacy
     # path only on a failed migration above).
     self._hmac_key_file = key_path
+    setattr(self, "_sandbox_loopback_relay", False)
     if key_path.exists():
-        existing = key_path.read_bytes()
+        try:
+            existing = key_path.read_bytes()
+        except PermissionError:
+            if os.environ.get("AJCREW_SANDBOX_ACTIVE") == "1":
+                setattr(self, "_sandbox_loopback_relay", True)
+                return os.urandom(32)
+            raise
         # Validate the key BEFORE it ever signs the chain. A
         # 0-byte or too-short key is accepted silently by hmac.new(),
         # producing a predictable, forgeable MAC that disables the audit

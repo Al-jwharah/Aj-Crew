@@ -58,11 +58,17 @@ _INSTALL_WAIT_SECS = 30.0
 #: Keyed by owner, so a re-registration (a second ``start_dashboard`` in one
 #: process) replaces the old callback instead of keeping its state alive.
 _deny_hooks: dict[str, Callable[[frozenset[str]], None]] = {}
+_reset_hooks: dict[str, Callable[[], None]] = {}
 
 
 def register_deny_hook(owner: str, cb: Callable[[frozenset[str]], None]) -> None:
     """Call ``cb(denied)`` after each install that resolves a deny; one per *owner*."""
     _deny_hooks[owner] = cb
+
+
+def register_reset_hook(owner: str, cb: Callable[[], None]) -> None:
+    """Call ``cb()`` on :func:`reset_state` so ephemeral in-memory grants clear cleanly."""
+    _reset_hooks[owner] = cb
 
 
 def _run_deny_hooks(denied: frozenset[str]) -> None:
@@ -268,6 +274,11 @@ def reset_state() -> None:
     global _denied, _resolved, _installing
     _denied, _resolved, _installing = frozenset(SESSION_TRUST_MODES), False, False
     _install_done.set()
+    for cb in list(_reset_hooks.values()):
+        try:
+            cb()
+        except Exception:
+            logger.debug("an approval-mode reset hook raised", exc_info=True)
 
 
 def register_hooks() -> None:

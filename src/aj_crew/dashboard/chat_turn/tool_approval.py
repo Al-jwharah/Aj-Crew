@@ -767,6 +767,16 @@ async def _decide_permission_request(turn: _ChatTurn, event) -> Literal[_Flow.CO
                 # The rules a person overrode for this session on the deny card,
                 # passed only when there are any (``deny_override``).
                 **_deny_waiver_kwargs(turn),
+                **(
+                    {"task_epoch_id": str(getattr(slot, "_task_epoch_id", ""))}
+                    if getattr(slot, "_task_epoch_id", "")
+                    else {}
+                ),
+                **(
+                    {"workspace_cwd": str(getattr(slot, "_cwd", ""))}
+                    if getattr(slot, "_cwd", "")
+                    else {}
+                ),
             )
         if tool_result.action == TOOL_DENY:
             # Surface WHY: carry the deny reason into the pill so

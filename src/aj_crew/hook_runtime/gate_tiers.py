@@ -106,6 +106,8 @@ class GateFacts:
         classifier_only: bool,
         trust_reads: bool = False,
         deny_waivers: frozenset[str] = frozenset(),
+        task_epoch_id: str = "",
+        workspace_cwd: str = "",
     ) -> None:
         self.manager = manager
         self.call = call
@@ -113,6 +115,8 @@ class GateFacts:
         self.agent = agent
         self.app = app
         self.classifier_only = classifier_only
+        self.task_epoch_id = task_epoch_id
+        self.workspace_cwd = workspace_cwd
         #: Refusal keys a person overrode on the dashboard approval card, for this
         #: call or this session. Read by the deny-rules tier alone
         #: (:func:`_tier_deny_rules`), which drops any key a governance policy
@@ -1638,6 +1642,60 @@ def _tier_batch_guard_grant(facts: GateFacts, tier: GateTier) -> ToolHookResult 
     if _operator_confirms(facts, (ref,)):
         return None
     return ToolHookResult.auto_approve()
+
+
+def _tier_scoped_grants(facts: GateFacts, tier: GateTier) -> ToolHookResult | None:
+    """Task-scoped ``(session_key, task_epoch_id)`` grants and safe read-only pattern grants.
+
+    Runs strictly AFTER every security deny tier and ``POLICY ∩ PROFILE`` governance,
+    and steps aside under ``classifier_only`` or an operator ``confirm_tools`` match.
+    Shell program-name verification runs off-loop in the surface dispatcher.
+    """
+    if facts.classifier_only:
+        return None
+    call = facts.call
+    ref = mcp_identity_ref(call.mcp_server, call.mcp_tool) if call.mcp_server else ""
+    confirm_names = tuple(x for x in (call.title, facts.normalized, call.mcp_tool, ref) if x)
+    if confirm_names and _operator_confirms(facts, confirm_names):
+        return None
+    from aj_crew.safe_pattern_grants import (
+        SAFE_ELIGIBLE_CAPABILITIES,
+        default_safe_pattern_grant_store,
+    )
+    from aj_crew.task_scoped_grants import (
+        default_task_grant_store,
+        derive_scoped_grant_subject,
+    )
+
+    subject = derive_scoped_grant_subject(call, workspace_cwd=facts.workspace_cwd)
+    if subject is None:
+        return None
+    tool_id, cap, target_scope, safe_target = subject
+    if facts.session_key and facts.task_epoch_id and target_scope:
+        if (
+            default_task_grant_store().matches(
+                session_key=facts.session_key,
+                task_epoch_id=facts.task_epoch_id,
+                canonical_tool_id=tool_id,
+                capability_class=cap,
+                target_scope=target_scope,
+            )
+            is not None
+        ):
+            return ToolHookResult.auto_approve()
+    if safe_target and cap in SAFE_ELIGIBLE_CAPABILITIES:
+        if (
+            default_safe_pattern_grant_store().matches_grant(
+                canonical_tool_id=tool_id,
+                capability_class=cap,
+                target=safe_target,
+                workspace=facts.workspace_cwd or call.spec_write_cwd,
+                check_shell_binary=False,
+            )
+            is not None
+        ):
+            return ToolHookResult.auto_approve()
+    return None
 
 
 # ── the classifier ────────────────────────────────────────────────────────────

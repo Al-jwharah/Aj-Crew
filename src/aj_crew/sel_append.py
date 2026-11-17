@@ -158,6 +158,36 @@ def _append_chained_locked(self: SecurityEventLog, events: list[SecurityEvent]) 
     to audit, and the background writer treats it exactly as it already treats
     a full disk.
     """
+    if getattr(self, "_sandbox_loopback_relay", False):
+        import urllib.request
+
+        from aj_crew.config.loader import read_local_secret
+
+        port = os.environ.get("AJCREW_INTERNAL_PORT", "").strip()
+        if not port.isdigit():
+            raise OSError("sandboxed SEL relay missing numeric AJCREW_INTERNAL_PORT")
+        secret = read_local_secret(int(port))
+        if not secret:
+            raise OSError("sandboxed SEL relay missing local secret")
+        payload = json.dumps({"events": [asdict(ev) for ev in events]}).encode("utf-8")
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{port}/api/internal/sel/record",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "X-Internal-Secret": secret,
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(
+                req, timeout=5.0
+            ) as resp:  # nosec B310 - fixed 127.0.0.1 loopback
+                if resp.status >= 400:
+                    raise OSError(f"gateway SEL relay refused with HTTP {resp.status}")
+        except Exception as exc:
+            raise OSError(f"sandboxed SEL loopback relay failed: {exc}") from exc
+        return
     if self._tip_unknown:
         self._reanchor_now()  # construction could not read the tip; raises if it still cannot
     for attempt in range(_APPEND_RETRIES + 1):

@@ -150,6 +150,9 @@ _HMAC_KEY_MIN_BYTES = 32
 # The raw root key is used ONLY as the derivation input, never to sign a
 # sidecar directly.
 _SUBKEY_DOMAIN = b"ajcrew.session_pid.sig.v1"
+_ED25519_SUBKEY_DOMAIN = b"ajcrew.session_pid.ed25519.v1"
+_VERIFY_DIR_LEAF = "session-pid-verify"
+_VERIFY_PUB_FILE = "ed25519.pub"
 
 #: Tenant-section line prefixes. Both end in ``=``, which a session key and a
 #: start token never contain at position 0, so a body's plain lines and its
@@ -164,6 +167,70 @@ def _txt_path(pid: int | str, cfg: Path) -> Path:
 
 def _sig_path(pid: int | str, cfg: Path) -> Path:
     return cfg / f"session_pid_{pid}.sig"
+
+
+def _verify_dir(cfg: Path) -> Path:
+    return cfg / _VERIFY_DIR_LEAF
+
+
+def _ed25519_pub_path(cfg: Path) -> Path:
+    return _verify_dir(cfg) / _VERIFY_PUB_FILE
+
+
+def _ed25519_sig_path(pid: int | str, cfg: Path) -> Path:
+    return _verify_dir(cfg) / f"session_pid_{pid}.ed25519"
+
+
+def _sel_key_read_denied() -> bool:
+    """True when the SEL trust-root key file is kernel-masked (PermissionError)."""
+    try:
+        sel_hmac_key_path().read_bytes()
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return False
+
+
+def _publish_ed25519_sidecar(key: bytes, pid: int | str, payload: str, cfg: Path) -> None:
+    """Publish deterministic Ed25519 public key and per-pid signature inside ``session-pid-verify/``."""
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+    seed = hmac.new(key, _ED25519_SUBKEY_DOMAIN, hashlib.sha256).digest()
+    priv = Ed25519PrivateKey.from_private_bytes(seed)
+    pub_hex = priv.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
+    vdir = _verify_dir(cfg)
+    vdir.mkdir(parents=True, exist_ok=True)
+    pub_path = _ed25519_pub_path(cfg)
+    current_pub = _read_regular_nofollow(pub_path)
+    if current_pub is None or current_pub.strip() != pub_hex:
+        atomic_write(pub_path, pub_hex + "\n")
+    message = f"{pid}:{payload}".encode("utf-8", "surrogatepass")
+    sig_hex = priv.sign(message).hex()
+    atomic_write(_ed25519_sig_path(pid, cfg), sig_hex)
+
+
+def _verify_ed25519_sidecar(pid: int | str, payload: str, cfg: Path) -> bool:
+    """Verify ``session_pid_<pid>`` using ONLY ``session-pid-verify/ed25519.pub`` (no secret key)."""
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+    pub_raw = _read_regular_nofollow(_ed25519_pub_path(cfg))
+    sig_raw = _read_regular_nofollow(_ed25519_sig_path(pid, cfg))
+    if pub_raw is None or sig_raw is None:
+        return False
+    try:
+        pub_bytes = bytes.fromhex(pub_raw.strip())
+        sig_bytes = bytes.fromhex(sig_raw.strip())
+        if len(pub_bytes) != 32 or len(sig_bytes) != 64:
+            return False
+        pub = Ed25519PublicKey.from_public_bytes(pub_bytes)
+        message = f"{pid}:{payload}".encode("utf-8", "surrogatepass")
+        pub.verify(sig_bytes, message)
+        return True
+    except (ValueError, InvalidSignature):
+        return False
 
 
 def _load_hmac_key() -> bytes | None:
@@ -487,12 +554,17 @@ def publish_session_pid(
     atomic_write(_txt_path(pid, cfg), body)
     if key is None:
         _report_signing_unavailable()
-        try:
-            _sig_path(pid, cfg).unlink(missing_ok=True)
-        except OSError:
-            pass
+        for stale in (_sig_path(pid, cfg), _ed25519_sig_path(pid, cfg)):
+            try:
+                stale.unlink(missing_ok=True)
+            except OSError:
+                pass
         return
     atomic_write(_sig_path(pid, cfg), _compute_sig(key, pid, body))
+    try:
+        _publish_ed25519_sidecar(key, pid, body, cfg)
+    except OSError:
+        logger.debug("Ed25519 sidecar publish skipped for pid=%s", pid, exc_info=True)
 
 
 def _canonical_body(session_key: str, token: str | None, tenants: Sequence[str], count: int) -> str:
@@ -856,8 +928,26 @@ def verify_session_pid_mapping(pid: int | str, cfg: Path | None = None) -> PidMa
     if parsed is None or not sig:
         return PidMapping(refusal=REFUSAL_MALFORMED)
     session_key, token, tenants, count = parsed
+    canonical = _canonical_body(session_key, token, tenants, count)
     key = _load_hmac_key()
     if key is None:
+        if _sel_key_read_denied():
+            if not (len(sig) == 64 and all(c in "0123456789abcdef" for c in sig)):
+                return PidMapping(refusal=REFUSAL_MALFORMED)
+            if not _verify_ed25519_sidecar(pid, canonical, cfg):
+                logger.warning(
+                    "session_pid_%s Ed25519 signature mismatch under masked SEL key — refusing identity",
+                    pid,
+                )
+                return PidMapping(refusal=REFUSAL_MALFORMED)
+            mapping = _mapping_from_body(pid, txt)
+            if mapping.refusal == REFUSAL_RECYCLED:
+                logger.warning(
+                    "session_pid_%s start-token mismatch — pid was recycled; "
+                    "refusing the previous owner's session identity",
+                    pid,
+                )
+            return mapping
         # Distinguishable from the MAC-mismatch warning below: this branch
         # means the trust root itself is absent/short ON THE VERIFY SIDE —
         # the signature of a publisher/verifier trust-root split (e.g. SEL

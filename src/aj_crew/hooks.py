@@ -119,6 +119,7 @@ from aj_crew.hook_runtime.gate_tiers import (  # noqa: F401
     _tier_operator_grants,
     _tier_param_paths,
     _tier_read_only,
+    _tier_scoped_grants,
     _tier_search_target,
     _tier_spec_builtin_grant,
     _tier_spec_denies,
@@ -758,6 +759,8 @@ class HookManager:
         classifier_only: bool = False,
         trust_reads: bool = False,
         deny_waivers: frozenset[str] = frozenset(),
+        task_epoch_id: str = "",
+        workspace_cwd: str = "",
     ) -> ToolHookResult:
         """Whether *call* is auto-approved, denied, or handled normally.
 
@@ -830,6 +833,8 @@ class HookManager:
             classifier_only=classifier_only,
             trust_reads=trust_reads,
             deny_waivers=frozenset(deny_waivers),
+            task_epoch_id=task_epoch_id,
+            workspace_cwd=workspace_cwd,
         )
         for tier in GATE_TIERS:
             verdict = tier.judge(facts, tier)
@@ -873,6 +878,8 @@ class HookManager:
         classifier_only: bool = False,
         trust_reads: bool = False,
         deny_waivers: frozenset[str] = frozenset(),
+        task_epoch_id: str = "",
+        workspace_cwd: str = "",
     ) -> ToolHookResult:
         """:meth:`judge`, for a caller that holds the call as keywords.
 
@@ -926,6 +933,8 @@ class HookManager:
             classifier_only=classifier_only,
             trust_reads=trust_reads,
             deny_waivers=deny_waivers,
+            task_epoch_id=task_epoch_id,
+            workspace_cwd=workspace_cwd,
         )
 
     def _effective_denied(self, ctx: object) -> list[str]:
@@ -1945,6 +1954,7 @@ GATE_TIERS: tuple[GateTier, ...] = (
     GateTier("operator-grants", "grant", _tier_operator_grants),
     GateTier("spec-builtin-grant", "grant", _tier_spec_builtin_grant),
     GateTier("batch-guard-grant", "grant", _tier_batch_guard_grant),
+    GateTier("scoped-grants", "grant", _tier_scoped_grants),
     GateTier("read-only", "classify", _tier_read_only),
 )
 

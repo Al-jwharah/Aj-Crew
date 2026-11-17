@@ -107,6 +107,32 @@ carries no trust: `autoApprove`, `allowedTools` and every key outside
 `ENTRY_KEYS` are refused on write and skipped on read, so a merged server's tools
 still reach the PreToolUse gate and POLICY ∩ PROFILE is unchanged.
 
+### Scoped approval grants and SEL / session-PID sealing
+
+Task-scoped grants (`task_scoped_grants.py`) and persistent safe read-only
+pattern grants (`safe_pattern_grants.py`) are evaluated in the `scoped-grants`
+tier of `hooks.GATE_TIERS` strictly **after** every security deny tier
+(`unverifiable-shell`, `targets`, `param-paths`, `write-protected`,
+`deny-rules`, `mcp-auto-deny`, `search-target`) and `POLICY ∩ PROFILE`
+governance (`governance`, `spec-shell-allowlist`, `spec-write-allowlist`,
+`spec-denies`). Task-scoped grants live exclusively in gateway memory keyed by
+`(session_key, task_epoch_id)` with non-wildcard `(canonical_tool_id,
+capability_class, scope_prefix)` bounds and a 2-hour monotonic ceiling, and
+immediately purge on enterprise `approval_modes` denial or a switch to `normal`.
+Persistent safe-pattern grants (`approval-grants/grants.json`) admit only
+read-only capabilities (`SAFE_ELIGIBLE_CAPABILITIES`), never mutating writes,
+computer use, or shell redirection, and `approval-grants` is registered in
+`_CREW_HIDDEN_LEAVES`, `_CREW_SECRET_LEAVES`, and `_CREW_CHILD_WITHHELD_LEAVES`
+so no sandboxed agent or foreign child can read or forge stored grants.
+
+`sel_hmac.key` and `trust/sel_hmac.key` carry the `HIDDEN` sandbox disposition
+(unreadable mask in every sandbox mode, precreated so fresh homes are masked at
+first spawn). In-sandbox `session_pid` verification verifies Ed25519 signatures
+published by the gateway under the read-only, no-follow `session-pid-verify/`
+directory (`ed25519.pub`), while sandboxed SEL writers relay audit entries over
+the strict loopback SEL append channel (`sel_append.py`) when the HMAC key is
+masked.
+
 ### Member memory boundaries
 
 Cold subagent continuation restores app ownership from the canonical

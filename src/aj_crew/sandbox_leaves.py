@@ -425,6 +425,17 @@ _CREW_HIDDEN_LEAVES: tuple[str, ...] = (
     # No producer and no consumer left in the tree; masked so a backup restore that
     # resurrects a stale file cannot make it readable either.
     ".kiro_cli_binary_trust.json",
+    # Persistent read-only approval grants (``aj_crew.safe_pattern_grants``).
+    # Gateway-owned only: masking prevents any sandboxed process from minting or
+    # inspecting stored approval rules on disk.
+    "approval-grants",
+    # The SEL HMAC signing key at both its legacy root location and its live
+    # ``trust/`` location. In-sandbox session-PID verification now verifies an
+    # asymmetric Ed25519 signature via ``session-pid-verify/ed25519.pub``, and
+    # sandboxed SEL writes relay over strict loopback, so no sandboxed reader
+    # ever needs the secret signing key.
+    "sel_hmac.key",
+    "trust/sel_hmac.key",
     # The identity/auth SQLite store and its WAL/SHM/journal sidecars, whose bytes
     # are a live bearer token. Nothing inside the sandbox opens the crew home's copy:
     # the in-sandbox CLI reads the STAGED store under ``.kiro/crew-auth-staging``, and
@@ -449,7 +460,9 @@ _CREW_HIDDEN_LEAVES: tuple[str, ...] = (
 #: key untouched and exits 23. The macOS backend already denies this read, so this is
 #: the same answer on Linux. Nothing in a sandbox reads the key; the gateway, which
 #: does, runs outside it.
-_CREW_UNREADABLE_MASK_LEAVES: frozenset[str] = frozenset({"token_signing.key"})
+_CREW_UNREADABLE_MASK_LEAVES: frozenset[str] = frozenset(
+    {"token_signing.key", "sel_hmac.key", "trust/sel_hmac.key"}
+)
 assert _CREW_UNREADABLE_MASK_LEAVES <= set(_CREW_HIDDEN_LEAVES)
 
 #: Crew-home leaves masked at a RELOCATED data home on top of ``_CREW_HIDDEN_LEAVES``:
@@ -818,6 +831,9 @@ _CREW_READONLY_LEAVES: tuple[str, ...] = (
     # absent until the first spawn prepares a view, and a link at the name would seal
     # the referent and leave the name replaceable.
     "skill-projection",
+    # Asymmetric Ed25519 public key and per-pid signatures for strict in-sandbox
+    # ``verify_session_pid`` verification without exposing ``sel_hmac.key``.
+    "session-pid-verify",
 )
 
 #: Crew-home leaves that MUST stay read-write for a sandboxed process. Every entry is
@@ -827,13 +843,9 @@ _CREW_SANDBOX_VISIBLE_LEAVES: tuple[str, ...] = (
     # child cannot exec if it is masked. Already sealed READ-ONLY through
     # ``_voice_runtime_parent_paths()``, with only the ``run/voice-runtime`` leaf hidden.
     "run",
-    # The SEL trust root and its append targets. ``verify_session_pid`` reads
-    # ``trust/sel_hmac.key`` inside the sandbox to resolve the strict session identity,
-    # ``skill_search`` reads ``trust/project-skills.json``, and the in-sandbox MCP
-    # servers append to the log directly — a masked log turns an audit-or-deny write
-    # into a denial of the action it was auditing.
+    # ``skill_search`` reads ``trust/project-skills.json``; ``trust/sel_hmac.key``
+    # inside it and legacy ``sel_hmac.key`` are kernel-masked via ``_CREW_HIDDEN_LEAVES``.
     "trust",
-    "sel_hmac.key",
     "security_events.jsonl",
     "security_events.d",
     # How an in-sandbox MCP server authenticates back to the dashboard. Masking it
@@ -904,9 +916,8 @@ _CREW_CHILD_WITHHELD_LEAVES: tuple[str, ...] = (
     # Approved per-template MCP server entries: an entry's ``env`` or ``headers`` can
     # carry a credential, and no foreign child reads the record.
     "template-mcp-additions",
-    # The SEL trust root and the audit key inside it.
+    # The SEL trust root directory.
     "trust",
-    "sel_hmac.key",
     # The dashboard internal-API bearer secret.
     ".local_secret",
     # Capability-bearing job state: a cron entry carries the session key its run
@@ -1125,6 +1136,7 @@ _CREW_CHILD_READABLE_LEAVES: tuple[str, ...] = (
     # mapping, answered by the read-only seal. Off the read-gate floor, so the mask
     # never covered it.
     "skill-projection",
+    "session-pid-verify",
 )
 
 

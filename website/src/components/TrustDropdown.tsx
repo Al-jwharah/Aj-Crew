@@ -62,6 +62,10 @@ interface TrustDropdownProps {
       not render, because a label naming a lifetime the backend never records
       would be consent to a grant that is not the one made. */
   timedGrants?: boolean
+  /** Offers task-scoped grant (`approve_task`) bounded to the active task epoch. */
+  showTaskGrant?: boolean
+  /** Offers persistent read-only safe-pattern grant (`allow_safe_pattern`). */
+  showSafePattern?: boolean
   /** `ttlSeconds` is present only for a timed row, and is the grant's
       lifetime in whole seconds. */
   onAction: (action: string, pattern?: string, ttlSeconds?: number) => void
@@ -77,7 +81,7 @@ const BASE_TIMED_KEYS: Record<GrantDuration, string> = {
   today: 'components.trustDropdown.trust_all_base_today',
 }
 
-export default function TrustDropdown({ fullCommand, baseCommand, isShell, hasCommand = true, disabled, className, trustAllLabelKey, trustReadsLabelKey, showTrustAll = true, showTrustBase = true, trustCommandLabelKey, trustBaseLabelKey, labelValues, timedGrants = false, onAction }: TrustDropdownProps) {
+export default function TrustDropdown({ fullCommand, baseCommand, isShell, hasCommand = true, disabled, className, trustAllLabelKey, trustReadsLabelKey, showTrustAll = true, showTrustBase = true, trustCommandLabelKey, trustBaseLabelKey, labelValues, timedGrants = false, showTaskGrant = false, showSafePattern = false, onAction }: TrustDropdownProps) {
   const [open, setOpen] = useState(false)
 
   // Pattern shaping lives in utils/trustPatterns so every surface that offers
@@ -206,6 +210,24 @@ export default function TrustDropdown({ fullCommand, baseCommand, isShell, hasCo
         })
       }
     }
+  }
+  if (hasCommand && showTaskGrant) {
+    tiers.push({
+      id: 'approve_task',
+      action: 'approve_task',
+      fire: () => onAction('approve_task', fullCommand),
+      icon: <Clock size={12} className="shrink-0 text-accent" />,
+      body: commandBody('components.trustDropdown.trust_this_command_session'),
+    })
+  }
+  if (hasCommand && showSafePattern) {
+    tiers.push({
+      id: 'allow_safe_pattern',
+      action: 'allow_safe_pattern',
+      fire: () => onAction('allow_safe_pattern', fullCommand),
+      icon: <BookOpen size={12} className="shrink-0 text-ok" />,
+      body: <span className="min-w-0">{i18nT('components.chatInput.trust_reads')}</span>,
+    })
   }
   if (trustReadsLabelKey) {
     tiers.push({

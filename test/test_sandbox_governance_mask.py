@@ -221,6 +221,7 @@ class TestKeystonesAreSealedInEveryMode:
         # here could swap the bytes in between. The file-edit gate refuses the edit;
         # only the kernel denial asserted here refuses the shell's.
         "models",
+        "session-pid-verify",
     )
 
     @_POSIX_ONLY
@@ -391,6 +392,9 @@ class TestSecretsAreMaskedInEveryMode:
 
     MASKED = (
         "token_signing.key",
+        "sel_hmac.key",
+        "trust/sel_hmac.key",
+        "approval-grants",
         "refresh_chains.json",
         "kas",
         "mcp-apps",

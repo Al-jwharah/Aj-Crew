@@ -500,6 +500,7 @@ _CREW_SECRET_LEAVES: list[str] = [
     # the OS-sandbox counterpart is ``sandbox._CREW_HIDDEN_LEAVES``. Only the
     # gateway opens the path.
     "tag-grants",
+    "approval-grants",  # gateway-owned safe read-only approval grants; mirror: sandbox._CREW_HIDDEN_LEAVES
     "pinned-order",  # person-only sidebar order; mirror: sandbox._CREW_HIDDEN_LEAVES
     # Crewmate teams (``crew_teams.py``): the owner's grouping of the roster. Not
     # a secret, but it decides which team view a crewmate's questions and work
@@ -992,7 +993,13 @@ _WRITE_PROTECTED_HOME_PATHS += [
     # are written by the gateway, and reading them decides nothing inside the sandbox.
     f"{prefix}/{leaf}"
     for prefix in _CREW_HOME_PREFIXES
-    for leaf in ("mcp-launch-approvals", "mcp/resolved", "gateway_id", "skill-projection")
+    for leaf in (
+        "mcp-launch-approvals",
+        "mcp/resolved",
+        "gateway_id",
+        "skill-projection",
+        "session-pid-verify",
+    )
 ]
 
 

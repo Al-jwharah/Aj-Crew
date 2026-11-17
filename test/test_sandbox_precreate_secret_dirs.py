@@ -172,6 +172,7 @@ _FILE_LEAVES: frozenset[str] = frozenset(
         "ops_mission_control_policy.json",
         "ops_mission_control_secrets.json",
         "refresh_chains.json",
+        "sel_hmac.key",
         "token_signing.key",
         sandbox._LIVE_TARGET_LEAF,
         sandbox.AUTH_SQLITE_DB,

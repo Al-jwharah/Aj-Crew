@@ -37,10 +37,12 @@ type ApprovalCardProps = {
       scope the reader just granted instead of one sentence for all three.
       A tier without a key keeps the generic confirmation. A `trust_command`
       key shows the command through a `<mono/>` slot, never `{{cmd}}`. */
-  trustedLabelKeys?: Partial<Record<'trust' | 'trust_command' | 'trust_base', string>>
+  trustedLabelKeys?: Partial<Record<'trust' | 'trust_command' | 'trust_base' | 'approve_task' | 'allow_safe_pattern', string>>
   /** Extra interpolation values for the keys above (e.g. the agent role),
       beside the `cmd` / `base` the card supplies itself. */
   labelValues?: Record<string, string>
+  showTaskGrant?: boolean
+  showSafePattern?: boolean
   /** MUST return the request's promise: it feeds the optimistic-state rollback
    *  below (rejection restores the buttons). No `void` arm, so a fire-and-forget
    *  handler — the shape behind #5524 — cannot compile here. */
@@ -52,7 +54,7 @@ export default function ApprovalCard(props: ApprovalCardProps) {
   return <GuideTrustRootProvider><ApprovalCardBody {...props} /></GuideTrustRootProvider>
 }
 
-function ApprovalCardBody({ title, toolInput, showButtons, showTrust = true, hasCommand = true, baseCommand, baseDerivable, trustAllLabelKey, trustCommandLabelKey, trustBaseLabelKey, trustedLabelKeys, labelValues, onApprove }: ApprovalCardProps) {
+function ApprovalCardBody({ title, toolInput, showButtons, showTrust = true, hasCommand = true, baseCommand, baseDerivable, trustAllLabelKey, trustCommandLabelKey, trustBaseLabelKey, trustedLabelKeys, labelValues, showTaskGrant = false, showSafePattern = false, onApprove }: ApprovalCardProps) {
   const [decided, setDecided] = useState<string | null>(null)
   // null = no failure. `terminal` marks a refusal that retrying can never
   // clear; `message` is the server's own refusal text ('' = a response-less
@@ -102,7 +104,7 @@ function ApprovalCardBody({ title, toolInput, showButtons, showTrust = true, has
         : buttons.length > 2 ? buttons[1] : buttons[0]
     target.focus()
   }, [failure])
-  const borderColor = decided === 'approved' || decided === 'trust' || decided === 'trust_command' || decided === 'trust_base' ? 'border-l-ok' : decided === 'rejected' || failure?.terminal ? 'border-l-danger' : 'border-l-warn'
+  const borderColor = decided === 'approved' || decided === 'trust' || decided === 'trust_command' || decided === 'trust_base' || decided === 'approve_task' || decided === 'allow_safe_pattern' ? 'border-l-ok' : decided === 'rejected' || failure?.terminal ? 'border-l-danger' : 'border-l-warn'
 
   const isShell = title.startsWith('Running: ')
   const normalized = title.replace(/^(Running: |Reading )/, '')
@@ -115,7 +117,7 @@ function ApprovalCardBody({ title, toolInput, showButtons, showTrust = true, has
   // Only the exact-command tier goes through Trans, with the command as the
   // <mono/> chip's child, so it is never parsed as markup. The other tiers stay
   // on i18nT, which shows every value as plain text.
-  const trustedLabel = (tier: 'trust' | 'trust_command' | 'trust_base') => tier === 'trust_command'
+  const trustedLabel = (tier: 'trust' | 'trust_command' | 'trust_base' | 'approve_task' | 'allow_safe_pattern') => tier === 'trust_command'
     ? <Trans i18nKey={trustedLabelKeys?.trust_command ?? 'components.approvalCard.trusted_auto_approving_future_calls'} values={trustValues}
       components={{ mono: <span className="bg-bg-elevated px-1.5 py-0.5 rounded font-mono break-all border border-border">{trustValues.cmd}</span> }} />
     : i18nT(trustedLabelKeys?.[tier] ?? 'components.approvalCard.trusted_auto_approving_future_calls', trustValues)
@@ -144,7 +146,7 @@ function ApprovalCardBody({ title, toolInput, showButtons, showTrust = true, has
         // otherwise-unnamed group gets an explicit label.
         <div ref={buttonsRef} role="group" aria-label={i18nT('components.approvalCard.actions_group')} className="mt-1.5 flex gap-1.5 flex-wrap">
           <button className={btnClass} onClick={() => handle('approved')}><CheckCircle className="lucide-inline" /> {i18nT('components.approvalCard.approve')}</button>
-          {showTrust && <TrustDropdown fullCommand={hasCommand ? normalized : ''} baseCommand={baseCmd} isShell={hasCommand && isShell} hasCommand={hasCommand} showTrustBase={baseDerivable !== false} trustAllLabelKey={trustAllLabelKey} trustCommandLabelKey={trustCommandLabelKey} trustBaseLabelKey={trustBaseLabelKey} labelValues={labelValues} className={btnClass} onAction={(action, pattern) => handle(action, pattern)} />}
+          {showTrust && <TrustDropdown fullCommand={hasCommand ? normalized : ''} baseCommand={baseCmd} isShell={hasCommand && isShell} hasCommand={hasCommand} showTrustBase={baseDerivable !== false} showTaskGrant={showTaskGrant} showSafePattern={showSafePattern} trustAllLabelKey={trustAllLabelKey} trustCommandLabelKey={trustCommandLabelKey} trustBaseLabelKey={trustBaseLabelKey} labelValues={labelValues} className={btnClass} onAction={(action, pattern) => handle(action, pattern)} />}
           <button className={btnClass + ' hover:!text-danger hover:!border-danger'} onClick={() => handle('rejected')}><Ban className="lucide-inline" /> {i18nT('components.approvalCard.reject')}</button>
         </div>
       )}
@@ -160,7 +162,7 @@ function ApprovalCardBody({ title, toolInput, showButtons, showTrust = true, has
       {decided && (
         <div className="mt-1.5 text-[13px] text-muted">
           {decided === 'approved' && <><CheckCircle className="lucide-inline" /> {i18nT('components.approvalCard.approved')}</>}
-          {(decided === 'trust' || decided === 'trust_command' || decided === 'trust_base') && <><Handshake className="lucide-inline" /> {trustedLabel(decided)}</>}
+          {(decided === 'trust' || decided === 'trust_command' || decided === 'trust_base' || decided === 'approve_task' || decided === 'allow_safe_pattern') && <><Handshake className="lucide-inline" /> {trustedLabel(decided)}</>}
           {decided === 'rejected' && <><Ban className="lucide-inline" /> {i18nT('components.approvalCard.rejected')}</>}
         </div>
       )}

@@ -119,12 +119,12 @@ Detail and rationale: [security](docs/system-specs/modules/security.md),
   `pushd`) narrows an unbounded set by exactly one. `test_sandbox_governance_mask.py`
   pins the union of the three dispositions equal to the crew-home half of
   `security.sensitive_home_dirs()`, so a new leaf cannot land in none of them — that
-  pin, not a regex, is what keeps the ceiling un-disableable. One residual worth
-  carrying: `sel_hmac.key` is `VISIBLE`, so the SEL audit key has no OS fence; closing
-  that means moving its in-sandbox reader behind the gateway, never another matcher.
-  An ENFORCED harness is the one exception — `tool_gate`'s credential mask keeps that
-  leaf, and the other credential-bearing crew leaves, from a foreign child
-  (`sandbox._CREW_CHILD_WITHHELD_LEAVES`), which is why the features whose
+  pin, not a regex, is what keeps the ceiling un-disableable. `sel_hmac.key` and
+  `trust/sel_hmac.key` are `HIDDEN` (unreadable mask), with in-sandbox `session_pid`
+  verification using sealed `session-pid-verify/ed25519.pub` and sandboxed SEL appends
+  relaying over strict loopback.
+  An ENFORCED harness's `tool_gate` credential mask keeps every credential-bearing crew leaf
+  from a foreign child (`sandbox._CREW_CHILD_WITHHELD_LEAVES`), which is why the features whose
   in-sandbox readers need them do not work there.
 - **Governance is `POLICY ∩ PROFILE`, tightest-wins**, enforced at Aj Crew's OWN
   PreToolUse gate even when the kiro agent config granted the call. The evaluator
@@ -250,16 +250,20 @@ seams: [app-kit-platform](docs/system-specs/modules/app-kit-platform.md).
 
 ## Git
 
-- Do NOT proactively `git commit`. Commit only when asked.
-- Do NOT `git push` unless the user explicitly says to push. Being asked to commit
-  is NOT permission to push.
-- **Owner workflow (overrides the PR flow in CONTRIBUTING.md):** work lands on `main`
-  directly, from the main project folder only. No feature branches, no pull requests.
-  Before each task, create and push a lightweight tag `pre-task-N` on the current
-  `main`. Ask the owner for explicit approval before any execution step.
+- **STRICT LOCAL-ONLY MODE — NEVER PUSH TO GITHUB (`git push` IS PERMANENTLY FORBIDDEN):**
+  Never run `git push` (not for commits, not for branches, and not for `pre-task-N`
+  tags), and never run `gh pr create` or any remote GitHub write command. All commits,
+  tags, and history are saved **100% locally** in `D:\Aj-Crew` (`main`) to save time
+  and eliminate remote conflicts.
+- **Owner workflow (overrides the PR flow in CONTRIBUTING.md):** work lands on local
+  `main` directly, from the main project folder (`D:\Aj-Crew`) only. No feature
+  branches, no new worktrees, no pull requests. Before each task, create a
+  **local-only** lightweight tag `pre-task-N` on the current `main`
+  (`git tag pre-task-N` — NEVER push the tag). Ask the owner for explicit approval
+  before any execution step.
+- Do NOT proactively `git commit`. Commit locally only when asked.
 - Never `git stash` (every worktree shares one stash list) and never overlay a
-  whole tree with `git checkout <ref> -- .`. To bring the main clone current,
-  follow the `ajcrew-worktree-dev` skill.
+  whole tree with `git checkout <ref> -- .`.
 
 ```
 <type>: <summary — max 72 chars, imperative, lowercase, no period>

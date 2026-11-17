@@ -577,6 +577,8 @@ async def apply_approval_mode(
             logger.warning("SEL audit failed for trust mode activation", exc_info=True)
     else:  # normal
         mgr = getattr(state, "channel_manager", None)
+        from aj_crew.task_scoped_grants import default_task_grant_store
+
         if slot is not None:
             # Several slots can address ONE session (a rehydrated owner slot and
             # the alias its turns run under both resolve to the same effective
@@ -585,6 +587,7 @@ async def apply_approval_mode(
             # session back to "auto" from it. The policy is per SESSION; the flag
             # is per slot; so the revoke has to clear every slot that shares it.
             _revoked_key = effective_session_key(slot)
+            default_task_grant_store().revoke_session(_revoked_key)
             _revoked = [
                 s for s in list(state._slots.values()) if effective_session_key(s) == _revoked_key
             ]
@@ -594,6 +597,7 @@ async def apply_approval_mode(
                 _sharing._trust = False
                 _sharing._trust_reads = False
                 _sharing._trust_scope = ""
+                setattr(_sharing, "_task_epoch_id", "")
             if _revoked_live:
                 state.sessions.set_approval_policy(_revoked_key, "")
             linked_ch = getattr(slot, "_slack_channel", None)
@@ -607,11 +611,13 @@ async def apply_approval_mode(
                 mgr._channels[linked_ch].trusted = False
                 mgr._channels[linked_ch]._save()
         else:
+            default_task_grant_store().clear()
             await _end_trust_scopes(list(state._slots.values()), audit_caller)
             for s in state._slots.values():
                 s._trust = False
                 s._trust_reads = False
                 s._trust_scope = ""
+                setattr(s, "_task_epoch_id", "")
                 state.sessions.set_approval_policy(effective_session_key(s), "")
             if mgr:
                 for ch in mgr._channels.values():
@@ -1218,7 +1224,13 @@ async def api_chat_slot_approve(request: web.Request) -> web.Response:
     # that would approve the tool after skipping every scope check.  Truly
     # missing IDs retain the 404 from the common fallback below; this explicit
     # denial covers a live state owner.
-    if original_action in ("trust", "trust_command", "trust_base") and (not fut or fut.done()):
+    if original_action in (
+        "trust",
+        "trust_command",
+        "trust_base",
+        "approve_task",
+        "allow_safe_pattern",
+    ) and (not fut or fut.done()):
         state_fut = state._approval_futures.get(request_id) if request_id else None
         if state_fut and not state_fut.done():
             return _deny_trust_pattern(name, request_id, original_action, "approval_not_slot_owned")
@@ -1330,6 +1342,101 @@ async def api_chat_slot_approve(request: web.Request) -> web.Response:
                 base_trust_patterns(base),
                 _grant_deadline(grant_ttl),
             )
+        action = "approved"
+    elif action in ("approve_task", "allow_safe_pattern"):
+        if fut and not fut.done():
+            from types import SimpleNamespace
+
+            from aj_crew.safe_pattern_grants import (
+                GrantNotSafeEligibleError,
+                default_safe_pattern_grant_store,
+            )
+            from aj_crew.task_scoped_grants import (
+                InvalidTaskGrantError,
+                default_task_grant_store,
+                derive_scoped_grant_subject,
+            )
+
+            _is_shell = _get_pattern_from_pending(owner, request_id, "is_shell") == "1"
+            _full_cmd = _get_pattern_from_pending(owner, request_id, "full_command")
+            _mcp_srv = _get_pattern_from_pending(owner, request_id, "mcp_server")
+            _tool_nm = _get_pattern_from_pending(owner, request_id, "tool_name")
+            _tool_kind = _get_pattern_from_pending(owner, request_id, "tool_kind")
+            _raw_in = _get_pattern_from_pending(owner, request_id, "tool_input")
+            _ws = str(getattr(owner, "_cwd", "") or "")
+            try:
+                _parsed_in = json.loads(_raw_in) if _raw_in else None
+            except (json.JSONDecodeError, TypeError):
+                _parsed_in = None
+            _probe = SimpleNamespace(
+                title=_get_pattern_from_pending(owner, request_id, "tool_title"),
+                is_shell=_is_shell,
+                command=_full_cmd if _is_shell else None,
+                mcp_server=_mcp_srv,
+                mcp_tool=_tool_nm,
+                identity_trusted=bool(_mcp_srv or _tool_nm),
+                kind=_tool_kind,
+                raw_params=_parsed_in if isinstance(_parsed_in, dict) else None,
+                diff_path="",
+                harness_builtin_tool="",
+                spec_write_cwd=_ws,
+            )
+            _subject = derive_scoped_grant_subject(_probe, workspace_cwd=_ws)
+            if _subject is None:
+                return _deny_trust_pattern(name, request_id, original_action, "pattern_underivable")
+            _tool_id, _cap, _target_scope, _safe_target = _subject
+            if original_action == "approve_task":
+                _req_mode = "trust_reads" if _safe_target else "trust"
+                if not session_mode_permitted(_req_mode):
+                    return _deny_approval_mode(
+                        caller=audit_caller(),
+                        operation="tool_approval:approve_task",
+                        mode=_req_mode,
+                        resource=request_id,
+                    )
+                _epoch = str(getattr(owner, "_task_epoch_id", "") or "")
+                if not _epoch:
+                    import uuid as _uuid_mod
+
+                    _epoch = f"task-{_uuid_mod.uuid4().hex[:12]}"
+                    setattr(owner, "_task_epoch_id", _epoch)
+                try:
+                    default_task_grant_store().mint(
+                        session_key=effective_session_key(owner),
+                        task_epoch_id=_epoch,
+                        canonical_tool_id=_tool_id,
+                        capability_class=_cap,
+                        scope_prefix=_target_scope,
+                    )
+                except InvalidTaskGrantError:
+                    return _deny_trust_pattern(
+                        name, request_id, original_action, "pattern_underivable"
+                    )
+            else:
+                if not session_mode_permitted("trust_reads"):
+                    return _deny_approval_mode(
+                        caller=audit_caller(),
+                        operation="tool_approval:allow_safe_pattern",
+                        mode="trust_reads",
+                        resource=request_id,
+                    )
+                if not _safe_target:
+                    return _deny_trust_pattern(
+                        name, request_id, original_action, "pattern_underivable"
+                    )
+                try:
+                    await asyncio.to_thread(
+                        default_safe_pattern_grant_store().mint_grant,
+                        canonical_tool_id=_tool_id,
+                        capability_class=_cap,
+                        pattern=_safe_target,
+                        workspace_prefix=_ws,
+                        sample_command=_full_cmd if _is_shell else "",
+                    )
+                except GrantNotSafeEligibleError:
+                    return _deny_trust_pattern(
+                        name, request_id, original_action, "pattern_underivable"
+                    )
         action = "approved"
     # YOLO: auto-approve all tools globally (all slots)
     elif action == "yolo":
@@ -1455,7 +1562,7 @@ async def api_chat_slot_approve(request: web.Request) -> web.Response:
             request_id,
             (
                 original_action
-                if original_action in ("trust", "trust_reads")
+                if original_action in ("trust", "trust_reads", "approve_task", "allow_safe_pattern")
                 else "approved" if resolved in DENY_OVERRIDE_ACTIONS else resolved
             ),
         ):

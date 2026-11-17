@@ -231,6 +231,18 @@ TIER_SCENARIOS: tuple[Scenario, ...] = (
         ),
     ),
     Scenario(
+        "scoped-grants",
+        TOOL_AUTO_APPROVE,
+        ToolCall(
+            title="Write",
+            kind="edit",
+            raw_params={"path": "/repo/scoped/notes.txt"},
+            mcp_tool="fs_write",
+            identity_trusted=True,
+        ),
+        surface={"session_key": "scoped_grant_sess", "task_epoch_id": "ep1"},
+    ),
+    Scenario(
         "read-only",
         TOOL_AUTO_APPROVE,
         ToolCall(title="Running: ls -la", is_shell=True, command="ls -la"),
@@ -370,12 +382,30 @@ def gate_world(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     hooks.set_builtin_app_names([_APP])
     hooks.set_builtin_app_mcp_servers([_APP_SERVER])
     hooks.set_builtin_app_agents({})
+    from aj_crew.task_scoped_grants import default_task_grant_store
+
+    monkeypatch.setattr("aj_crew.task_scoped_grants.session_mode_permitted", lambda _m: True)
+    _seed_scoped_grant()
     yield
+    default_task_grant_store().clear()
     gp.reset_store()
     ctx_mod.reset_context()
 
 
 pytestmark = pytest.mark.usefixtures("gate_world")
+
+
+def _seed_scoped_grant() -> None:
+    from aj_crew.task_scoped_grants import default_task_grant_store
+
+    default_task_grant_store().clear()
+    default_task_grant_store().mint(
+        session_key="scoped_grant_sess",
+        task_epoch_id="ep1",
+        canonical_tool_id="fs_write",
+        capability_class="write",
+        scope_prefix="/repo/scoped",
+    )
 
 
 def _install_governance(body: dict[str, Any] | None) -> None:
@@ -385,9 +415,11 @@ def _install_governance(body: dict[str, Any] | None) -> None:
         # A scenario with no policy runs on the default context, never on a
         # ceiling an earlier scenario judged in the same test installed.
         ctx_mod.reset_context()
+        _seed_scoped_grant()
         return
     base = build_default_context(AjCrewConfig.load())
     ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(body)))
+    _seed_scoped_grant()
 
 
 def judge_scenario(scenario: Scenario, *, grants: dict[str, Any] | None = None, **surface: Any):
@@ -420,6 +452,7 @@ def test_the_table_is_the_gate_order() -> None:
         ("operator-grants", "grant"),
         ("spec-builtin-grant", "grant"),
         ("batch-guard-grant", "grant"),
+        ("scoped-grants", "grant"),
         ("read-only", "classify"),
     ]
     targets = next(t for t in GATE_TIERS if t.name == "targets")
@@ -665,7 +698,13 @@ def test_classifier_only_drops_every_grant_tier() -> None:
     to the classifier (not read-only, so allow) and the app's own server is not
     auto-approved -- while a provable read still is."""
     by_tier = {s.tier: s for s in TIER_SCENARIOS}
-    grant_tiers = ("operator-grants", "app-own-server", "spec-builtin-grant", "batch-guard-grant")
+    grant_tiers = (
+        "operator-grants",
+        "app-own-server",
+        "spec-builtin-grant",
+        "batch-guard-grant",
+        "scoped-grants",
+    )
     for tier in grant_tiers:
         verdict = judge_scenario(by_tier[tier], classifier_only=True)
         assert verdict.action == TOOL_ALLOW, tier

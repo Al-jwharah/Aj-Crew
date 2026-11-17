@@ -188,6 +188,7 @@ _CREW_PRECREATE_READONLY_DIR_LEAVES: tuple[str, ...] = (
     # Without this entry the name is one an agent could create to forge the record that
     # lets a changed config.json pass the pin.
     "config-provenance",
+    "session-pid-verify",
 )
 #: Read-only directory leaves whose NAME must remain the mounted name. A resolving
 #: symlink is unsafe here: the mount follows its target and leaves the lexical name
@@ -215,6 +216,7 @@ _CREW_NOFOLLOW_READONLY_DIR_LEAVES: tuple[str, ...] = (
     "skill-projection",
     "seed-provenance",
     "config-provenance",
+    "session-pid-verify",
 )
 assert set(_CREW_NOFOLLOW_READONLY_DIR_LEAVES) <= set(_CREW_PRECREATE_READONLY_DIR_LEAVES)
 #: Read-only FILE leaves whose NAME must remain the sealed name, for the same reason
@@ -333,6 +335,10 @@ _DELEGATED_OVERLAP_LEAF_REASONS: "dict[str, tuple[str, str]]" = {
     "app-agent-launch": (
         "sealed app-agent launch directory",
         "the agent could plant the agent spec kiro-cli runs for an app's own agent",
+    ),
+    "session-pid-verify": (
+        "sealed session-pid verification keys",
+        "the agent could plant its own Ed25519 public key and forge strict session-pid identities",
     ),
 }
 assert set(_DELEGATED_OVERLAP_LEAF_REASONS) == set(_CREW_NOFOLLOW_READONLY_FILE_LEAVES) | set(
@@ -551,6 +557,7 @@ _CREW_PRECREATE_HIDDEN_DIR_LEAVES: tuple[str, ...] = (
     # otherwise the first sandbox spawned before the first grant write sees an
     # unmasked leaf appear later.
     "tag-grants",
+    "approval-grants",
     # The pinned-order store is created on the first reorder, so it is
     # materialised here for the same reason as tag-grants.
     "pinned-order",
