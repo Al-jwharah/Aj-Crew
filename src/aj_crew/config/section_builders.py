@@ -102,6 +102,7 @@ from aj_crew.config.sections import (
     _threshold_pct,
     _validate_allowed_users,
     _validate_telegram_activation,
+    _validate_telegram_mode,
     _validate_tracking_channels,
     _validated_stt_model,
     _validated_stt_provider,
@@ -821,6 +822,9 @@ def _build_telegram_config(telegram_data: dict) -> TelegramConfig:
         ),
         allowed_forum_chat_ids=_coerce_int_ids(section.get("allowed_forum_chat_ids")),
         max_text_inject_kb=section.read("max_text_inject_kb", _safe_int, 1),
+        mode=_validate_telegram_mode(str(section.get("mode") or section.default("mode"))),
+        webhook_url=str(section.get("webhook_url") or "").strip(),
+        webhook_secret=str(section.get("webhook_secret") or "").strip(),
         # The parser reads raw JSON entries, so it is handed only a stored value;
         # an omitted key is the field default as built.
         accounts=(

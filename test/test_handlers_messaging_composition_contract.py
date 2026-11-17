@@ -147,6 +147,7 @@ _OWNER_MODULES = (
     "slack_settings",
     "discord_settings",
     "telegram_settings",
+    "telegram_webhook",
     "teams_settings",
     "webex_settings",
     "imessage_settings",
@@ -244,6 +245,7 @@ _BASE_OWNERS: dict[str, tuple[str, ...]] = {
         """.split()),
     "channel_folder_backfill": ("api_channel_folder_backfill",),
     "agent_push": ("api_notification_agent_push",),
+    "telegram_webhook": (),
 }
 
 #: SHA-256 of the sorted ``"<name> <kind> <signature>"`` lines of every name in
@@ -412,7 +414,7 @@ def test_the_routes_and_the_package_reach_the_facade_objects() -> None:
     assert len({id(h) for h in served}) >= 28
     assert [h.__name__ for h in served if getattr(msg, h.__name__) is not h] == []
     reexports = _package_reexports()
-    assert len(reexports) == 52
+    assert len(reexports) == 53
     assert [n for n in reexports if getattr(handlers_pkg, n) is not getattr(msg, n)] == []
     server_names = _server_handler_names()
     assert {"api_spawn", "api_send_message"} <= server_names
@@ -1332,7 +1334,7 @@ def test_the_whole_census_holds_the_known_rebinds_and_an_owner_s_definitions() -
 #: by function -- the Teams activity route's in the facade, the agent push's in
 #: ``agent_push``, a row the register names by that path. An owner that grew one would
 #: move it out of the guard's sight, so each stays in exactly these files.
-_STAYS_IN_THE_FACADE = ((r"await read_bounded_json\(", ("agent_push",)),)
+_STAYS_IN_THE_FACADE = ((r"await read_bounded_json\(", ("agent_push", "telegram_webhook")),)
 
 
 @pytest.mark.parametrize(

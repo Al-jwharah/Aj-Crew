@@ -14,9 +14,13 @@ tool-approval ladder + SEL audit) via the dispatcher -- no hand-rolled loop.
 
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import TYPE_CHECKING
+from collections import OrderedDict
+from typing import TYPE_CHECKING, Any
 
+from aj_crew.config.loader import CRED_TELEGRAM_WEBHOOK_SECRET
+from aj_crew.config.sections import TELEGRAM_MODE_WEBHOOK
 from aj_crew.messaging.driver import APPROVAL_AUTO, APPROVAL_INTERACTIVE
 from aj_crew.messaging.queue_drain import unregister_drain
 from aj_crew.messaging.spawn_approval_delivery import (
@@ -24,7 +28,14 @@ from aj_crew.messaging.spawn_approval_delivery import (
     register_channel_delivery,
     unregister_channel_delivery,
 )
-from aj_crew.telegram.client import TelegramAuthError, TelegramClient
+from aj_crew.telegram.client import (
+    TelegramAuthError,
+    TelegramClient,
+    record_webhook_update_id,
+    set_telegram_webhook,
+    validate_webhook_secret,
+    validate_webhook_url,
+)
 from aj_crew.telegram.commands import bot_command_payload
 from aj_crew.telegram.transport import TelegramTransport
 from aj_crew.telegram.transport_dispatch import _CHANNEL, TelegramDispatcher
@@ -38,7 +49,9 @@ logger = logging.getLogger(__name__)
 
 
 def _client_close_hook(
-    dispatcher: TelegramDispatcher, delivery_hook: SpawnApprovalDeliveryHook
+    dispatcher: TelegramDispatcher,
+    delivery_hook: SpawnApprovalDeliveryHook,
+    transport: TelegramTransport | None = None,
 ) -> "Callable[[], None]":
     """What the client runs when it closes: retire this dispatcher's two registrations.
 
@@ -56,6 +69,9 @@ def _client_close_hook(
     drain_hook = dispatcher._drain_queue
 
     def _on_close() -> None:
+        if transport is not None:
+            setattr(transport, "_webhook_mode", False)
+            setattr(transport, "_webhook_secret", "")
         unregister_channel_delivery("telegram", delivery_hook)
         unregister_drain(_CHANNEL, drain_hook)
 
@@ -92,6 +108,34 @@ async def maybe_start_telegram(orch: "GatewayOrchestrator") -> "TelegramClient |
     client: "TelegramClient | None" = None
     try:
         assert orch.sessions is not None and orch.ctx_builder is not None
+
+        tg_cfg = getattr(getattr(orch, "_cfg", None), "telegram", None)
+        mode = str(
+            getattr(orch, "_telegram_mode", "") or getattr(tg_cfg, "mode", "polling") or "polling"
+        ).strip()
+        webhook_url = ""
+        webhook_secret = ""
+        if mode == TELEGRAM_MODE_WEBHOOK:
+            webhook_url = str(
+                getattr(orch, "_telegram_webhook_url", "")
+                or getattr(tg_cfg, "webhook_url", "")
+                or ""
+            ).strip()
+            webhook_secret = str(getattr(orch, "_telegram_webhook_secret", "") or "").strip()
+            if not webhook_secret:
+                load_creds = getattr(getattr(orch, "_cfg", None), "load_credentials", None)
+                if callable(load_creds):
+                    creds = await asyncio.to_thread(load_creds, propagate=False)
+                    webhook_secret = str(creds.get(CRED_TELEGRAM_WEBHOOK_SECRET, "") or "").strip()
+                if not webhook_secret:
+                    webhook_secret = str(getattr(tg_cfg, "webhook_secret", "") or "").strip()
+            cfg_err = validate_webhook_url(webhook_url) or validate_webhook_secret(webhook_secret)
+            if cfg_err is not None:
+                logger.error("Telegram webhook mode refused (%s); skipping Telegram.", cfg_err)
+                if orch.dashboard_state is not None:
+                    orch.dashboard_state.telegram_connected = False
+                    orch.dashboard_state.telegram_connect_error = cfg_err[:120]
+                return None
 
         allowed_ids: set[int] = set(getattr(orch, "_telegram_allowed_user_ids", []) or [])
         if not allowed_ids:
@@ -149,7 +193,8 @@ async def maybe_start_telegram(orch: "GatewayOrchestrator") -> "TelegramClient |
         # the slot is not unregistered by this (older) client's close.
         delivery_hook = dispatcher.deliver_spawn_approval
         register_channel_delivery("telegram", delivery_hook)
-        client.on_close = _client_close_hook(dispatcher, delivery_hook)
+        setattr(transport, "dispatcher", dispatcher)
+        client.on_close = _client_close_hook(dispatcher, delivery_hook, transport)
 
         # Prove the token with an authenticated call BEFORE reporting the
         # channel as connected — transport.connect() only schedules the
@@ -189,7 +234,38 @@ async def maybe_start_telegram(orch: "GatewayOrchestrator") -> "TelegramClient |
             except Exception:
                 logger.warning("Telegram: setMyCommands failed", exc_info=True)
 
-        await transport.connect()  # starts the long-polling loop
+        if mode == TELEGRAM_MODE_WEBHOOK:
+            seen_ids: OrderedDict[int, None] = OrderedDict()
+
+            def _handle_webhook_update(update: dict[str, Any]) -> bool:
+                uid = int(update.get("update_id", 0) or 0)
+                if not record_webhook_update_id(seen_ids, uid):
+                    return False
+                assert client is not None
+                client._dispatch(update)
+                return True
+
+            setattr(transport, "_webhook_mode", True)
+            setattr(transport, "_webhook_secret", webhook_secret)
+            setattr(transport, "_webhook_seen_ids", seen_ids)
+            setattr(transport, "handle_webhook_update", _handle_webhook_update)
+            setattr(client, "handle_webhook_update", _handle_webhook_update)
+            if token_ok:
+                try:
+                    wh_ok = await set_telegram_webhook(
+                        client, url=webhook_url, secret_token=webhook_secret
+                    )
+                    if not wh_ok:
+                        token_ok = False
+                        startup_error = "Telegram rejected setWebhook"
+                except TelegramAuthError:
+                    raise
+                except Exception as exc:
+                    token_ok = False
+                    startup_error = f"Telegram setWebhook unreachable ({type(exc).__name__})"
+                    logger.warning("%s — webhook listener remains armed.", startup_error)
+        else:
+            await transport.connect()  # starts the long-polling loop
         assert client is not None  # constructed above; narrows the Optional for mypy
         if orch.dashboard_state is not None:
             orch.dashboard_state.register_channel_transport(transport)
@@ -207,7 +283,10 @@ async def maybe_start_telegram(orch: "GatewayOrchestrator") -> "TelegramClient |
 
             client._last_status = token_ok  # transitions relative to boot state
             client.on_status = _on_status
-        logger.info("Telegram channel started (transport path, long-polling).")
+        logger.info(
+            "Telegram channel started (transport path, %s).",
+            "webhook" if mode == TELEGRAM_MODE_WEBHOOK else "long-polling",
+        )
         return client
     except Exception as exc:
         if orch.dashboard_state is not None:

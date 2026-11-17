@@ -369,6 +369,8 @@ def render_unit(*, user_scope: bool = False) -> str:
         # No core file: with core_pattern piped to systemd-coredump, a crashed
         # multi-GB gateway cannot exit, or restart, until its core has streamed,
         # which can take that service's whole 5-minute cap.
+        # Low-RAM 24/7 VPS hosts (~1 GB RAM) layer MemoryHigh=640M, MemoryMax=768M
+        # and MALLOC_ARENA_MAX=2 via deploy/vps/ajcrew-vps.conf drop-in override.
         "LimitCORE=0\n"
         f"{env_lines}"
         "\n"

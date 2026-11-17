@@ -130,6 +130,12 @@ _BYPASS_EXACT = {
 #: ends up pointed at a route the other is not.
 TEAMS_WEBHOOK_PATH = "/api/messaging/teams"
 
+#: The Telegram Bot API inbound webhook route (optional ``mode="webhook"``).
+#: Named once for the same reason :data:`TEAMS_WEBHOOK_PATH` is: Telegram's
+#: Bot API servers post server-to-server without ``Origin``/``Referer`` or a
+#: dashboard cookie, carrying ``X-Telegram-Bot-Api-Secret-Token`` instead.
+TELEGRAM_WEBHOOK_PATH = "/api/messaging/telegram/webhook"
+
 #: The inbound agent webhook route, named once for exactly the same reason
 #: :data:`TEAMS_WEBHOOK_PATH` is: the same two independent middleware exemptions
 #: target it, and one of them keying off a re-typed literal is how a route ends
@@ -174,6 +180,7 @@ _BYPASS_EXACT_METHODS: dict[str, frozenset[str]] = {
     CREW_OAUTH_CALLBACK_PATH: frozenset({"GET"}),
     RELAY_VIEWER_TOKEN_PATH: frozenset({"POST"}),
     TEAMS_WEBHOOK_PATH: _SELF_AUTH_WEBHOOK_METHODS,
+    TELEGRAM_WEBHOOK_PATH: _SELF_AUTH_WEBHOOK_METHODS,
     UPDATE_REVALIDATE_PATH: _SELF_AUTH_WEBHOOK_METHODS,
 }
 
@@ -213,6 +220,7 @@ _BYPASS_EXACT_METHODS: dict[str, frozenset[str]] = {
 # their wildcard.
 CSRF_EXEMPT_EXACT_METHODS: dict[str, frozenset[str]] = {
     TEAMS_WEBHOOK_PATH: _SELF_AUTH_WEBHOOK_METHODS,
+    TELEGRAM_WEBHOOK_PATH: _SELF_AUTH_WEBHOOK_METHODS,
 }
 
 

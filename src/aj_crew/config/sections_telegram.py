@@ -25,6 +25,23 @@ logger = logging.getLogger("aj_crew.config.loader")
 #: silently behaves like a different one.
 TELEGRAM_ACTIVATIONS = frozenset({ACTIVATION_ALWAYS, ACTIVATION_MENTION, ACTIVATION_OFF})
 
+TELEGRAM_MODE_POLLING = "polling"
+TELEGRAM_MODE_WEBHOOK = "webhook"
+TELEGRAM_MODES = frozenset({TELEGRAM_MODE_POLLING, TELEGRAM_MODE_WEBHOOK})
+
+
+def _validate_telegram_mode(value: str) -> str:
+    """*value* if it names a supported Telegram transport mode, else ``polling``."""
+    if value in TELEGRAM_MODES:
+        return value
+    logger.warning(
+        "telegram.mode=%r is not one of %s; using %r.",
+        value,
+        ", ".join(repr(m) for m in sorted(TELEGRAM_MODES)),
+        TELEGRAM_MODE_POLLING,
+    )
+    return TELEGRAM_MODE_POLLING
+
 
 def _validate_telegram_activation(value: str) -> str:
     """*value* if Telegram can express it, else ``mention``.
@@ -276,6 +293,37 @@ class TelegramConfig:
             "How much of an attached text file or document reaches the model, in "
             "KiB of characters (at least 1); the rest is cut with a truncation marker.",
             tags=["telegram"],
+        ),
+    )
+    mode: str = field(
+        default=TELEGRAM_MODE_POLLING,
+        metadata=_meta(
+            "Mode",
+            "Inbound transport mode: 'polling' (default, outbound getUpdates long-poll; "
+            "needs no public URL) or 'webhook' (Telegram posts updates to "
+            "POST /api/messaging/telegram/webhook, authenticated via "
+            "X-Telegram-Bot-Api-Secret-Token).",
+            enum=[TELEGRAM_MODE_POLLING, TELEGRAM_MODE_WEBHOOK],
+            tags=["telegram"],
+        ),
+    )
+    webhook_url: str = field(
+        default="",
+        metadata=_meta(
+            "Webhook URL",
+            "Public https:// URL Telegram posts updates to when mode is 'webhook' "
+            "(e.g. https://bot.example.com/api/messaging/telegram/webhook).",
+            tags=["telegram"],
+        ),
+    )
+    webhook_secret: str = field(
+        default="",
+        metadata=_meta(
+            "Webhook Secret",
+            "Secret token verified against X-Telegram-Bot-Api-Secret-Token in webhook "
+            "mode (16-256 characters of [A-Za-z0-9_-]; prefer TELEGRAM_WEBHOOK_SECRET in .env).",
+            tags=["telegram"],
+            sensitive=True,
         ),
     )
 

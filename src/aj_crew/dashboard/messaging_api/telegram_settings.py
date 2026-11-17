@@ -79,6 +79,7 @@ async def api_telegram_config_get(request: web.Request) -> web.Response:
     """GET /api/telegram/config — read Telegram config + masked secret status."""
     from aj_crew.config.loader import (  # noqa: F811
         CRED_TELEGRAM_BOT_TOKEN,
+        CRED_TELEGRAM_WEBHOOK_SECRET,
         AjCrewConfig,
     )
 
@@ -89,6 +90,7 @@ async def api_telegram_config_get(request: web.Request) -> web.Response:
     # just popped. Boot owns the one propagation.
     creds = await asyncio.to_thread(cfg.load_credentials, propagate=False)
     token = creds.get(CRED_TELEGRAM_BOT_TOKEN, "") or cfg.telegram.bot_token
+    webhook_secret = creds.get(CRED_TELEGRAM_WEBHOOK_SECRET, "") or cfg.telegram.webhook_secret
     tg = cfg.telegram
     state: DashboardState = request.app["state"]
     return web.json_response(
@@ -119,6 +121,10 @@ async def api_telegram_config_get(request: web.Request) -> web.Response:
             "allow_forum": bool(tg.allow_forum),
             "allowed_forum_chat_ids": [str(c) for c in tg.allowed_forum_chat_ids],
             "forum_activation": tg.forum_activation,
+            "mode": tg.mode,
+            "webhook_url": tg.webhook_url,
+            "webhook_secret_set": bool(webhook_secret),
+            "webhook_secret_preview": _mask_secret(webhook_secret),
         }
     )
 
@@ -150,10 +156,13 @@ async def _telegram_config_save_locked(request: web.Request) -> web.Response:
     """Body of the Telegram save; caller holds ``_get_config_lock()``."""
     from aj_crew.config.loader import (  # noqa: F811
         CRED_TELEGRAM_BOT_TOKEN,
+        CRED_TELEGRAM_WEBHOOK_SECRET,
         ConfigReadError,
         coerce_config_field,
         config_path,
     )
+    from aj_crew.config.sections import TELEGRAM_MODE_WEBHOOK, TELEGRAM_MODES
+    from aj_crew.telegram.client import validate_webhook_secret, validate_webhook_url
 
     caller = request.get("user", "dashboard")
 
@@ -213,6 +222,25 @@ async def _telegram_config_save_locked(request: web.Request) -> web.Response:
                 if not _TELEGRAM_TOKEN_RE.match(tok):
                     return _deny("bot_token must look like <bot_id>:<secret> from @BotFather")
                 env_updates[CRED_TELEGRAM_BOT_TOKEN] = tok
+
+    wh_clear = body.get("webhook_secret_clear")
+    if wh_clear is not None and not isinstance(wh_clear, bool):
+        return _deny("webhook_secret_clear must be a boolean")
+    if wh_clear is True:
+        env_updates[CRED_TELEGRAM_WEBHOOK_SECRET] = None
+    else:
+        raw_wh_sec = body.get("webhook_secret")
+        if raw_wh_sec is not None and not isinstance(raw_wh_sec, str):
+            return _deny("webhook_secret must be a string", code="invalid_webhook_secret")
+        if isinstance(raw_wh_sec, str):
+            sec = raw_wh_sec.strip()
+            if sec.startswith(f"{CRED_TELEGRAM_WEBHOOK_SECRET}="):
+                sec = sec[len(CRED_TELEGRAM_WEBHOOK_SECRET) + 1 :].strip()
+            if sec:
+                sec_err = validate_webhook_secret(sec)
+                if sec_err is not None:
+                    return _deny(sec_err, code="invalid_webhook_secret")
+                env_updates[CRED_TELEGRAM_WEBHOOK_SECRET] = sec
 
     # Config → config.json under "telegram" (staged, applied only after Phase 1).
     # Off-loop read: a large or slow config.json must not stall the gateway
@@ -351,6 +379,41 @@ async def _telegram_config_save_locked(request: web.Request) -> web.Response:
             staged["allowed_forum_chat_ids"] = new_chat_ids
             applied.append("allowed_forum_chat_ids")
 
+    if "mode" in body:
+        val = body.get("mode")
+        if not isinstance(val, str) or val not in TELEGRAM_MODES:
+            return _deny(
+                "mode must be one of " + ", ".join(sorted(TELEGRAM_MODES)),
+                code="invalid_mode",
+            )
+        if val != str(tg_cfg.get("mode", "polling") or "polling"):
+            staged["mode"] = val
+            applied.append("mode")
+
+    if "webhook_url" in body:
+        raw_url = body.get("webhook_url")
+        if not isinstance(raw_url, str):
+            return _deny("webhook_url must be a string", code="invalid_webhook_url")
+        cleaned_url = raw_url.strip()
+        if cleaned_url:
+            url_err = validate_webhook_url(cleaned_url)
+            if url_err is not None:
+                return _deny(url_err, code="invalid_webhook_url")
+        if cleaned_url != str(tg_cfg.get("webhook_url", "") or ""):
+            staged["webhook_url"] = cleaned_url
+            applied.append("webhook_url")
+
+    effective_mode = str(staged.get("mode", tg_cfg.get("mode", "polling")) or "polling")
+    effective_url = str(staged.get("webhook_url", tg_cfg.get("webhook_url", "")) or "")
+    if effective_mode == TELEGRAM_MODE_WEBHOOK:
+        url_err = validate_webhook_url(effective_url)
+        if url_err is not None:
+            return _deny(url_err, code="invalid_webhook_url")
+
+    if CRED_TELEGRAM_WEBHOOK_SECRET in env_updates and tg_cfg.get("webhook_secret"):
+        tg_cfg.pop("webhook_secret", None)
+        applied.append("legacy_webhook_secret_removed")
+
     # Whenever the .env token is set or cleared, also drop the legacy
     # config.json ``telegram.bot_token`` fallback. The gateway (and GET above)
     # fall back to that field when .env is empty, so leaving it behind would
@@ -392,12 +455,21 @@ async def _telegram_config_save_locked(request: web.Request) -> web.Response:
     # ``.env`` slot cannot leave a fallback behind. Absent, the drop is a no-op
     # and the write is skipped.
     purge_legacy_token = CRED_TELEGRAM_BOT_TOKEN in env_updates
+    purge_legacy_wh_secret = CRED_TELEGRAM_WEBHOOK_SECRET in env_updates
+    drop_keys = tuple(
+        k
+        for k, purge in (
+            ("bot_token", purge_legacy_token),
+            ("webhook_secret", purge_legacy_wh_secret),
+        )
+        if purge
+    )
     cfg_write: _LockedSectionWrite | None = None
     # Hold the live-config watcher across the config+credential pair: a failed
     # .env write rolls the config back, so nothing in between may be applied
     # to the running gateway.
     with live.hold():
-        if staged or purge_legacy_token:
+        if staged or drop_keys:
             tg_cfg.update(staged)
             # Through ``update_config_locked``: it holds the advisory lock on the
             # sidecar ``<path>.lock`` across the whole read-modify-write, so a writer
@@ -405,9 +477,7 @@ async def _telegram_config_save_locked(request: web.Request) -> web.Response:
             # staged keys (plus the legacy ``bot_token`` purge) are merged into the
             # file as re-read inside that lock. Off-loop: file IO, and it may wait on
             # another holder of the lock.
-            cfg_write = _LockedSectionWrite(
-                path, "telegram", staged, drop_keys=("bot_token",) if purge_legacy_token else ()
-            )
+            cfg_write = _LockedSectionWrite(path, "telegram", staged, drop_keys=drop_keys)
             try:
                 await cfg_write.commit()
             except ConfigReadError:

@@ -104,6 +104,7 @@ _ASYNC_CHECKED_FILES = [
     "dashboard/messaging_api/spawn.py",
     "dashboard/messaging_api/teams_settings.py",
     "dashboard/messaging_api/telegram_settings.py",
+    "dashboard/messaging_api/telegram_webhook.py",
     "dashboard/messaging_api/webex_settings.py",
     "dashboard/messaging_api/wecom_settings.py",
     "dashboard/server.py",
@@ -202,10 +203,7 @@ class TestNoConfigDirInAsync:
             if isinstance(n, ast.Call)
         }
         imported = {
-            alias.name
-            for n in ast.walk(tree)
-            if isinstance(n, ast.ImportFrom)
-            for alias in n.names
+            alias.name for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) for alias in n.names
         }
         assert "config_dir" not in called and "config_dir" not in imported, (
             "update_layout.py must resolve the data home with data_home(); "
@@ -226,13 +224,9 @@ class TestNoConfigDirInAsync:
                     continue
                 for sub in ast.walk(node):
                     if isinstance(sub, ast.Call):
-                        name = getattr(sub.func, "id", None) or getattr(
-                            sub.func, "attr", None
-                        )
+                        name = getattr(sub.func, "id", None) or getattr(sub.func, "attr", None)
                         if name == "config_dir":
-                            offenders.append(
-                                f"{fname}:{sub.lineno} in async {node.name}()"
-                            )
+                            offenders.append(f"{fname}:{sub.lineno} in async {node.name}()")
         assert not offenders, (
             "config_dir() called inside async function (issue #1057). "
             "Use data_home() instead:\n  " + "\n  ".join(offenders)

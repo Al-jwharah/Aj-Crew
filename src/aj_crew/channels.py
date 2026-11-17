@@ -45,6 +45,7 @@ from aj_crew.config.loader import (
     CRED_SLACK_APP_TOKEN,
     CRED_SLACK_BOT_TOKEN,
     CRED_TELEGRAM_BOT_TOKEN,
+    CRED_TELEGRAM_WEBHOOK_SECRET,
     CRED_WEBEX_BOT_TOKEN,
     CRED_WECOM_BOT_ID,
     CRED_WECOM_SECRET,
@@ -81,9 +82,13 @@ def builtin_channel_descriptors() -> tuple[ChannelDescriptor, ...]:
             channel_type="telegram",
             start=maybe_start_telegram,
             # `accounts` is inert but is a STOP condition for the channel, so a change
-            # to it changes whether the bot runs at all.
-            boot_keys=frozenset({"enabled", "bot_token", "accounts"}),
+            # to it changes whether the bot runs at all. `mode`, `webhook_url` and
+            # `webhook_secret` decide whether the bot long-polls or registers a webhook.
+            boot_keys=frozenset(
+                {"enabled", "bot_token", "accounts", "mode", "webhook_url", "webhook_secret"}
+            ),
             credentials=(CRED_TELEGRAM_BOT_TOKEN,),
+            restart_credentials=(CRED_TELEGRAM_WEBHOOK_SECRET,),
             credential_fallbacks=((CRED_TELEGRAM_BOT_TOKEN, "bot_token"),),
         ),
         ChannelDescriptor(

@@ -47,6 +47,7 @@ from aj_crew.dashboard.handlers import messaging
 from aj_crew.dashboard.token_auth import (
     AGENT_HOOK_PATH,
     TEAMS_WEBHOOK_PATH,
+    TELEGRAM_WEBHOOK_PATH,
     is_csrf_exempt,
 )
 from aj_crew.teams.client import TEAMS_ACTIVITY_REQUEST_KEY, TEAMS_MAX_ACTIVITY_BYTES
@@ -117,6 +118,7 @@ class TestCsrfExemptSet:
         once a caller depends on it than to add later with its own cause."""
         assert token_auth.CSRF_EXEMPT_EXACT_METHODS == {
             TEAMS_WEBHOOK_PATH: frozenset({"POST"}),
+            TELEGRAM_WEBHOOK_PATH: frozenset({"POST"}),
         }
 
     def test_the_agent_hook_is_not_csrf_exempt(self) -> None:
@@ -135,7 +137,13 @@ class TestCsrfExemptSet:
         assert TEAMS_WEBHOOK_PATH in token_auth._BYPASS_EXACT_METHODS
         assert TEAMS_WEBHOOK_PATH in token_auth.CSRF_EXEMPT_EXACT_METHODS
 
-    @pytest.mark.parametrize("path,route_module", [(TEAMS_WEBHOOK_PATH, "messaging")])
+    @pytest.mark.parametrize(
+        "path,route_module",
+        [
+            (TEAMS_WEBHOOK_PATH, "messaging"),
+            (TELEGRAM_WEBHOOK_PATH, "messaging"),
+        ],
+    )
     def test_the_constant_names_a_route_the_app_registers(
         self, path: str, route_module: str
     ) -> None:

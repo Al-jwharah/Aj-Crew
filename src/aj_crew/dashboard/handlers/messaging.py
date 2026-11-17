@@ -105,6 +105,7 @@ from aj_crew.dashboard.messaging_api import slack_workspace as _owner_slack_work
 from aj_crew.dashboard.messaging_api import spawn as _owner_spawn
 from aj_crew.dashboard.messaging_api import teams_settings as _owner_teams_settings
 from aj_crew.dashboard.messaging_api import telegram_settings as _owner_telegram_settings
+from aj_crew.dashboard.messaging_api import telegram_webhook as _owner_telegram_webhook
 from aj_crew.dashboard.messaging_api import webex_settings as _owner_webex_settings
 from aj_crew.dashboard.messaging_api import wecom_settings as _owner_wecom_settings
 from aj_crew.dashboard.messaging_api.agent_push import (  # noqa: F401
@@ -271,6 +272,9 @@ from aj_crew.dashboard.messaging_api.telegram_settings import (  # noqa: F401
     _validate_telegram_token,
     api_telegram_config_get,
     api_telegram_config_save,
+)
+from aj_crew.dashboard.messaging_api.telegram_webhook import (  # noqa: F401
+    api_telegram_webhook,
 )
 from aj_crew.dashboard.messaging_api.webex_settings import (  # noqa: F401
     _coerce_like,
@@ -1088,6 +1092,7 @@ _facade_compose(
         _owner_slack_settings,
         _owner_discord_settings,
         _owner_telegram_settings,
+        _owner_telegram_webhook,
         _owner_teams_settings,
         _owner_webex_settings,
         _owner_imessage_settings,

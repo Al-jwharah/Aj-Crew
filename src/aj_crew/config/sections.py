@@ -476,10 +476,14 @@ from aj_crew.config.sections_tailnet import (  # noqa: F401
 )
 from aj_crew.config.sections_telegram import (  # noqa: F401
     TELEGRAM_ACTIVATIONS,
+    TELEGRAM_MODE_POLLING,
+    TELEGRAM_MODE_WEBHOOK,
+    TELEGRAM_MODES,
     TelegramAccountConfig,
     TelegramConfig,
     _parse_telegram_accounts,
     _validate_telegram_activation,
+    _validate_telegram_mode,
 )
 from aj_crew.config.sections_telemetry import (  # noqa: F401
     _DEFAULT_BEACON_ENDPOINT,

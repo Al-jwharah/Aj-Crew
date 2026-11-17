@@ -53,6 +53,7 @@ OWNERS = (
     "client_http",
     "client_polling",
     "client_albums",
+    "client_webhook",
 )
 
 #: ``TelegramClient`` members an owner defines, by owner, each bound as the class attribute.

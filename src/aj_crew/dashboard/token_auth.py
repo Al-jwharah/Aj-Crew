@@ -1472,6 +1472,7 @@ if TYPE_CHECKING:  # every owner-defined name in _EXPORTS, for type checkers and
         RELAY_VIEWER_TOKEN_PATH,
         SPA_FALLBACK_EXCLUDED_PREFIXES,
         TEAMS_WEBHOOK_PATH,
+        TELEGRAM_WEBHOOK_PATH,
         UPDATE_REVALIDATE_PATH,
         _credential_fingerprint,
         is_csrf_exempt,

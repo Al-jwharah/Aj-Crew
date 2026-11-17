@@ -530,6 +530,11 @@ _CAP_REGISTER: dict[str, tuple[str, str]] = {
         "_MAX_BODY_BYTES",
         _BOUNDED_EXPLICIT,
     ),
+    # Telegram Bot API inbound webhook update JSON, bounded at 1 MiB.
+    "messaging_api/telegram_webhook.py::api_telegram_webhook": (
+        "TELEGRAM_MAX_WEBHOOK_BYTES",
+        _BOUNDED_EXPLICIT,
+    ),
 }
 
 _DASHBOARD_DIR = Path(shared.__file__).resolve().parent.parent

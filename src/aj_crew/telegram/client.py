@@ -28,6 +28,7 @@ reads it. Which owner takes new work is recorded in
 from __future__ import annotations
 
 import asyncio
+import hmac
 import importlib as _importlib
 import json
 import logging
@@ -36,6 +37,7 @@ import re
 import sys as _sys
 import time
 import urllib.parse
+from collections import OrderedDict
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -1645,8 +1647,10 @@ class TelegramClient:
 #: routes through it, though its own code does not read them.
 _BOUND_FOR_IMPORTERS = (
     Iterable,
+    OrderedDict,
     atomic_write,
     get_recorder,
+    hmac,
     json,
     os,
     replace,
@@ -1659,6 +1663,7 @@ _OWNERS = (
     "aj_crew.telegram.client_http",
     "aj_crew.telegram.client_polling",
     "aj_crew.telegram.client_albums",
+    "aj_crew.telegram.client_webhook",
 )
 for _owner in _OWNERS:
     _importlib.import_module(_owner)
@@ -1696,4 +1701,20 @@ if TYPE_CHECKING:  # every owner-defined name in _EXPORTS, for type checkers and
         _LEGACY_CURSOR_FILENAME,
         _POLL_BACKOFF_MAX_S,
         _STATUS_FAILURE_THRESHOLD,
+    )
+    from aj_crew.telegram.client_webhook import (  # noqa: F401
+        DEFAULT_ALLOWED_UPDATES,
+        MAX_WEBHOOK_SECRET_LEN,
+        MIN_WEBHOOK_SECRET_LEN,
+        TELEGRAM_MAX_WEBHOOK_BYTES,
+        TELEGRAM_SECRET_HEADER,
+        TELEGRAM_WEBHOOK_DEDUP_CAP,
+        TELEGRAM_WEBHOOK_REQUEST_KEY,
+        WEBHOOK_SECRET_RE,
+        delete_telegram_webhook,
+        record_webhook_update_id,
+        set_telegram_webhook,
+        validate_webhook_secret,
+        validate_webhook_url,
+        verify_telegram_webhook_secret,
     )

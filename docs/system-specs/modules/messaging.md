@@ -4668,6 +4668,13 @@ negative) reads as 0, which is exactly the pre-persistence behaviour, and a writ
 failure costs one replay window rather than the channel.
 
 
+### Telegram's optional self-authenticating webhook mode (`client_webhook.py` + `telegram_webhook.py`)
+
+Alongside the default `mode = "polling"` (`getUpdates` long-polling), `TelegramConfig` supports `mode = "webhook"` with `webhook_url` (`https://` required, no credentials or fragments) and `webhook_secret` (`TELEGRAM_WEBHOOK_SECRET` in `.env`, vault-backed via `VAULT_CHANNEL_CREDENTIAL_KEYS`, 16–256 chars of `[A-Za-z0-9_-]`).
+
+- **Startup (`telegram/gateway.py`)**: when `mode == "webhook"`, `maybe_start_telegram` validates both `webhook_url` and the resolved `webhook_secret` before opening the channel (missing or malformed values fail closed without starting polling), registers the webhook with Telegram via `set_telegram_webhook` (`setWebhook` with `secret_token` and `allowed_updates=["message", "callback_query"]`), and binds `handle_webhook_update` onto the registered `TelegramTransport` without starting the `getUpdates` loop. Closing or restarting the channel clears `_webhook_mode` and `_webhook_secret` immediately.
+- **Route (`POST /api/messaging/telegram/webhook`)**: enrolled in `token_auth_paths._BYPASS_EXACT_METHODS` and `CSRF_EXEMPT_EXACT_METHODS` (`POST` only, identical server-to-server posture to `TEAMS_WEBHOOK_PATH`). `api_telegram_webhook` returns `503` when webhook mode is not active, applies per-source failed-auth throttling on direct peers, verifies `X-Telegram-Bot-Api-Secret-Token` via `verify_telegram_webhook_secret` (`hmac.compare_digest`, fail-closed) **before** reading or parsing the body, bounds JSON reads to `TELEGRAM_MAX_WEBHOOK_BYTES` (1 MiB), deduplicates `update_id` replays through `record_webhook_update_id` (`TELEGRAM_WEBHOOK_DEDUP_CAP = 4096`), and dispatches accepted updates into `TelegramClient._dispatch` (sharing the identical forum-topic and `allowed_user_ids` authorization gates as long-polling).
+
 ## Telegram settings API
 
 Two dashboard-only endpoints back the `/settings/channels/telegram` panel (legacy `?tab=channels&channel=telegram` and `?tab=telegram` links redirect there). Like the

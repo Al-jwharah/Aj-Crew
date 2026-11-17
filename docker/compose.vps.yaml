@@ -1,0 +1,47 @@
+# Aj Crew gateway — low-RAM 24/7 VPS compose profile (~1 GB RAM hosts).
+#
+# Usage:
+#   docker compose -f docker/compose.vps.yaml up -d
+#   docker compose -f docker/compose.vps.yaml exec ajcrew ajcrew token --ttl 2h
+#
+# Exposes the gateway strictly on loopback (127.0.0.1:5476). Terminate TLS at a
+# host reverse proxy (Caddy / Nginx / Cloudflare Tunnel) and forward
+# POST /api/messaging/telegram/webhook when running Telegram in webhook mode.
+
+services:
+  ajcrew:
+    image: ajcrew:dev
+    container_name: ajcrew-vps
+    restart: unless-stopped
+    mem_limit: 768m
+    mem_reservation: 384m
+    memswap_limit: 1g
+    oom_score_adj: 200
+    ports:
+      - "127.0.0.1:5476:5476"
+    volumes:
+      - ajcrew-home:/home/ajcrew
+    environment:
+      # Arena & bytecode tuning to keep glibc + Python RSS compact on 1 GB VPS nodes.
+      MALLOC_ARENA_MAX: "2"
+      PYTHONOPTIMIZE: "1"
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
+      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
+      AJCREW_OWNER_ID: ${AJCREW_OWNER_ID:-}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      WECOM_BOT_ID: ${WECOM_BOT_ID:-}
+      WECOM_SECRET: ${WECOM_SECRET:-}
+      WEBEX_BOT_TOKEN: ${WEBEX_BOT_TOKEN:-}
+      KIRO_API_KEY: ${KIRO_API_KEY:-}
+      AJCREW_ALLOW_UNSANDBOXED: ${AJCREW_ALLOW_UNSANDBOXED:-}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5476/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+
+volumes:
+  ajcrew-home:
