@@ -405,6 +405,7 @@ export const THEME_LABEL_KEY: Record<string, string> = {
   highcontrast: 'hooks.theme.high_contrast',
   'nu-disco': 'hooks.theme.nu_disco',
   'amethyst-oled': 'hooks.theme.amethyst_oled',
+  jewel: 'hooks.theme.jewel',
   colorblind: 'hooks.theme.color_blind_safe',
 }
 
@@ -422,6 +423,9 @@ export const THEMES: ThemeEntry[] = [
   { value: 'ice', label: '🧊 Ice' },
   { value: 'amoled', label: '🖤 AMOLED' },
   { value: 'aj', label: '💎 Aj' },
+  // Catalog-keyed like `amethyst-oled`: glyph-only fallback, full name in
+  // `hooks.theme.jewel`. Selectable only; `DEFAULT_COLOR_THEME` is still `aj`.
+  { value: 'jewel', label: '💠' },
   { value: 'intellij', label: '😶‍🌫️ IntelliJ' },
   // A catalog-keyed entry (see `THEME_LABEL_KEY`): `label` holds the glyph alone
   // as the pre-resolution fallback and the full display string lives in
