@@ -72,6 +72,12 @@ export interface LiveCrewWorkerRow extends CrewWorkerRowLike {
   created_by?: string
   last_turn_ts?: string
   peer_id?: string
+  active_tool?: string
+  phase?: string
+  turn_step?: number
+  elapsed_ms?: number
+  write_scope?: readonly string[]
+  handoff_summary?: string
 }
 
 /** A root's OPEN workers from the slot store, shaped as worker-list rows. The
@@ -90,7 +96,7 @@ export function liveCrewWorkers(slots: readonly LiveCrewWorkerRow[], root: strin
  *  tab (`liveCrewWorkers`) and a crewmate's Sessions tab (`liveMateWorkers`) use,
  *  so a row reads the same status on both. */
 function liveWorkerRow(s: LiveCrewWorkerRow, root: string): CrewWorker {
-  return {
+  const row: CrewWorker = {
     key: s.key,
     title: s.title || '',
     agent: s.agent || '',
@@ -103,6 +109,13 @@ function liveWorkerRow(s: LiveCrewWorkerRow, root: string): CrewWorker {
     created_by: s.created_by || root,
     dispatched_by: s.created_by || root,
   }
+  if (s.active_tool) row.active_tool = s.active_tool
+  if (s.phase) row.phase = s.phase
+  if (typeof s.turn_step === 'number' && s.turn_step > 0) row.turn_step = s.turn_step
+  if (typeof s.elapsed_ms === 'number' && s.elapsed_ms > 0) row.elapsed_ms = s.elapsed_ms
+  if (s.write_scope?.length) row.write_scope = [...s.write_scope]
+  if (s.handoff_summary) row.handoff_summary = s.handoff_summary
+  return row
 }
 
 /** A crewmate (mate) thread's OPEN sessions from the slot store, shaped as
@@ -117,13 +130,61 @@ export function liveMateWorkers(slots: readonly (LiveCrewWorkerRow & { mate_root
 }
 
 /** The worker list as shown: the route's rows (which win where both name a key,
- *  since they carry more), then every open live worker the route did not name
- *  -- the whole list while the route has not answered or is not served. */
+ *  since they carry more), enriched with any live-only transient telemetry on the
+ *  open slot row, then every open live worker the route did not name -- the whole
+ *  list while the route has not answered or is not served. */
 export function mergeCrewWorkers(listed: readonly CrewWorker[] | undefined, live: readonly CrewWorker[]): CrewWorker[] {
-  const out = [...(listed ?? [])]
+  const liveByKey = new Map(live.map(w => [w.key, w] as const))
+  const out = (listed ?? []).map(w => {
+    const slotRow = liveByKey.get(w.key)
+    if (!slotRow) return w
+    const active_tool = w.active_tool || slotRow.active_tool
+    const phase = w.phase || slotRow.phase
+    const turn_step = w.turn_step || slotRow.turn_step
+    const elapsed_ms = w.elapsed_ms || slotRow.elapsed_ms
+    const write_scope = w.write_scope?.length ? w.write_scope : slotRow.write_scope
+    const handoff_summary = w.handoff_summary || slotRow.handoff_summary
+    if (
+      active_tool === w.active_tool
+      && phase === w.phase
+      && turn_step === w.turn_step
+      && elapsed_ms === w.elapsed_ms
+      && write_scope === w.write_scope
+      && handoff_summary === w.handoff_summary
+    ) return w
+    return {
+      ...w,
+      ...(active_tool ? { active_tool } : {}),
+      ...(phase ? { phase } : {}),
+      ...(turn_step ? { turn_step } : {}),
+      ...(elapsed_ms ? { elapsed_ms } : {}),
+      ...(write_scope?.length ? { write_scope } : {}),
+      ...(handoff_summary ? { handoff_summary } : {}),
+    }
+  })
   const seen = new Set(out.map(w => w.key))
   for (const w of live) if (!seen.has(w.key)) out.push(w)
   return out
+}
+
+/** Structured live telemetry chips for a Crew worker card (empty when finished or idle). */
+export interface CrewWorkerLiveMeta {
+  activeTool: string
+  phase: string
+  turnStep: number
+  writeScope: string[]
+  summaryLine: string
+}
+
+export function crewWorkerLiveMeta(worker: CrewWorker): CrewWorkerLiveMeta {
+  const done = crewWorkerGroup(worker) === 'done'
+  return {
+    activeTool: done ? '' : (worker.active_tool || '').trim(),
+    phase: done ? '' : (worker.phase || '').trim(),
+    turnStep: !done && typeof worker.turn_step === 'number' && worker.turn_step > 0 ? worker.turn_step : 0,
+    writeScope: !done && worker.write_scope?.length ? worker.write_scope.filter(Boolean).slice(0, 4) : [],
+    summaryLine: (worker.handoff_summary || worker.summary || '').trim(),
+  }
 }
 
 /** One row of the worker list API's group: the server's own (`crew_workers._group`),
@@ -150,12 +211,14 @@ function foldForSearch(text: string): string {
   return text.normalize('NFKC').toLocaleLowerCase()
 }
 
-/** The workers whose title or task line (`summary`) holds `query`, live and
- *  finished alike, in their given order. A blank query matches every worker. */
+/** The workers whose title, task/handoff line, active tool or write scope holds `query`,
+ *  live and finished alike, in their given order. A blank query matches every worker. */
 export function searchCrewWorkers(workers: CrewWorker[], query: string): CrewWorker[] {
   const q = foldForSearch(query.trim())
   if (!q) return workers
-  return workers.filter(w => foldForSearch(`${w.title}\n${w.summary || ''}`).includes(q))
+  return workers.filter(w => foldForSearch(
+    `${w.title}\n${w.handoff_summary || ''}\n${w.summary || ''}\n${w.active_tool || ''}\n${(w.write_scope ?? []).join(' ')}`,
+  ).includes(q))
 }
 
 /** A worker's dispatcher when that is not the root: a sub-conductor's key, or "". */

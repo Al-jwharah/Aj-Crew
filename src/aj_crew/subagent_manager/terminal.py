@@ -791,6 +791,9 @@ class TerminalCoordinator(ManagerComponent):
         if info._slot_released:
             return False
         info._slot_released = True
+        from aj_crew.orchestration_budget import shared_execution_budget
+
+        shared_execution_budget().notify_external_release()
         return True
 
     async def _force_reap_impl(

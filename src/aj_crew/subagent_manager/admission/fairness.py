@@ -300,9 +300,12 @@ class _FairnessMixin(ManagerComponent):
 
     def capacity_view(self) -> CapacityView:
         """Read the cap, the running count and the child reserve as one snapshot."""
+        from aj_crew.orchestration_budget import shared_execution_budget
+
         settings = self.fairness_settings()
         cap = int(self._manager._max_concurrent)
-        running = int(self._manager._running_count)
+        workflow_slots = shared_execution_budget().active_count(kind="workflow")
+        running = int(self._manager._running_count) + int(workflow_slots)
         waiting = len(self.waiting_parents())
         lifted_from: int | None = None
         if waiting and settings.child_reserve > 0:

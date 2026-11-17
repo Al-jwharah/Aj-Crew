@@ -93,7 +93,7 @@ def resolve_compound_role_model(
     Never hardcodes a model ID: an unpinned role reads as ``"auto"`` and resolves
     to a served model or ``""`` (inherit the session's served backend default).
     """
-    from aj_crew.acp.client import resolve_usable_model
+    from aj_crew.agent_sdk.drivers.acp import resolve_usable_model
     from aj_crew.config.loader import AjCrewConfig, normalize_agent_model
 
     loaded = cfg if cfg is not None else AjCrewConfig.load()

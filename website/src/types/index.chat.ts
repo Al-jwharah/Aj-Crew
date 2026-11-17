@@ -840,6 +840,18 @@ export interface CrewWorker {
    *  display name (else its instance id). Its `key` names no local session, so
    *  the row offers no open, steer or approval. Absent on a local worker. */
   remote_crew?: string
+  /** Redacted active tool identity while a live turn is executing, or "". */
+  active_tool?: string
+  /** Current orchestration phase reported by the worker slot, or "". */
+  phase?: string
+  /** Monotonic tool/turn step counter within the current turn (0 when idle). */
+  turn_step?: number
+  /** Elapsed milliseconds on the active turn or tool step (0 when idle). */
+  elapsed_ms?: number
+  /** Repo-relative write-lease path prefixes claimed by this worker. */
+  write_scope?: string[]
+  /** Bounded `handoff/v1` executive summary when available, or "". */
+  handoff_summary?: string
 }
 
 /** One session's recap from records only, no model call

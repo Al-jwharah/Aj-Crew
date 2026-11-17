@@ -147,6 +147,9 @@ below, and every function the family defines runs on that module's globals.
 | `subagent_parts/start_pricing.py` | What a start costs in memory, the admitted-start reserve, the one off-loop host reading |
 | `subagent_parts/run_record.py` | The run record, `SubagentInfo`, and the scope fields it carries |
 | `subagent_parts/delivery.py` | How a run's outcome reaches its parent: the callback contracts, the delivery-routing field table and `delivery_is_parked`, the teardown gate's run ids |
+| `subagent_parts/handoff_envelope.py` | Compact `handoff/v1` structured envelopes (`<= 1,200` chars), symlink-safe `subagents/<run_id>/handoff.json` persistence and coalesced parallel wave digest tables (`format_wave_handoff_digest`) |
+| `orchestration_budget.py` | Process-wide `HostExecutionBudget` shared across `SubagentManager` and dynamic workflow `admitted_agent_fn` pools so subagent spawns and workflow agent steps draw from one slot and GiB reserve ceiling |
+| `workspace_leases.py` | `WorkspaceWriteLeaseTable` reader/writer path-prefix locks (`mode="read"` concurrent, `mode="write"` concurrent across disjoint `write_scope` prefixes and serialized on overlap) |
 | `subagent_parts/manager.py` | `SubagentManager`: its constructor, class attributes and properties, the durable task queue it opens and closes, and one binding per other method |
 | `subagent_parts/config_surface.py` | The manager's live configuration: sizing re-reads, the turn limit, the completion keep, the effective cap and its raise listener, the queue dispatch release |
 | `subagent_parts/admission_surface.py` | The spawn entry: admission (sync and async) and its spawn approval, the startup population and its clock, the run-id draw, the memory-pressure hold, the queue drain and dispatch, the queued-run and task-memory reads |

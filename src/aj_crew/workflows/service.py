@@ -40,6 +40,7 @@ from aj_crew.llm_helpers import (
     stream_and_collect,
 )
 from aj_crew.member_memory_auth import private_memory_store_for_session
+from aj_crew.orchestration_budget import shared_execution_budget
 from aj_crew.start_priority import StartPriority
 from aj_crew.task_planner import decompose_yaml
 from aj_crew.workflow_memory import (
@@ -881,6 +882,10 @@ class WorkflowService:
             admission = self._task_admission
             if memory_scope is not None and memory_scope.memory_mode != "persistent":
                 admission = admission.in_memory()
+            if self._concurrency and self._concurrency > 0:
+                budget = shared_execution_budget(default_max_slots=self._concurrency)
+                if self._concurrency > budget.max_slots:
+                    budget.set_max_slots(self._concurrency)
             agent_fn = admitted_agent_fn(
                 agent_fn, admission, run_id=run_id, session_key=session_key
             )

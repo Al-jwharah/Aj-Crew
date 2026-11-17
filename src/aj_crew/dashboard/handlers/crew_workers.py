@@ -715,6 +715,41 @@ def _remote_facts(state: Any, remote: list[tuple[str, LedgerFacts]]) -> dict[str
     return out
 
 
+def _live_worker_telemetry(row: Mapping[str, Any], slot: Any) -> dict[str, Any]:
+    """Bounded live telemetry fields for a Crew Live Activity card."""
+    from aj_crew.security import redact_and_truncate
+
+    raw_tool = str(row.get("active_tool") or getattr(slot, "active_tool", "") or "").strip()
+    active_tool = redact_and_truncate(" ".join(raw_tool.split()), 80) if raw_tool else ""
+    phase = str(row.get("phase") or getattr(slot, "phase", "") or "").strip()[:60]
+    raw_step = row.get("turn_step", getattr(slot, "turn_step", 0))
+    turn_step = int(raw_step) if isinstance(raw_step, int) and not isinstance(raw_step, bool) else 0
+    raw_elapsed = row.get("elapsed_ms", getattr(slot, "elapsed_ms", 0))
+    elapsed_ms = (
+        max(0, int(raw_elapsed))
+        if isinstance(raw_elapsed, (int, float)) and not isinstance(raw_elapsed, bool)
+        else 0
+    )
+    raw_scope = row.get("write_scope") or getattr(slot, "write_scope", None) or ()
+    write_scope = (
+        [str(s)[:120] for s in list(raw_scope)[:8] if str(s).strip()]
+        if isinstance(raw_scope, (list, tuple))
+        else []
+    )
+    raw_handoff = str(
+        row.get("handoff_summary") or getattr(slot, "handoff_summary", "") or ""
+    ).strip()
+    handoff_summary = redact_and_truncate(" ".join(raw_handoff.split()), 240) if raw_handoff else ""
+    return {
+        "active_tool": active_tool,
+        "phase": phase,
+        "turn_step": turn_step,
+        "elapsed_ms": elapsed_ms,
+        "write_scope": write_scope,
+        "handoff_summary": handoff_summary,
+    }
+
+
 async def api_crew_workers(request: web.Request) -> web.Response:
     """GET /api/chat/slots/{slot}/crew-workers -- one Crew Mode root's workers."""
     refused = await _gate(request, "crew_mode.workers")
@@ -753,6 +788,7 @@ async def api_crew_workers(request: web.Request) -> web.Response:
         status = _status(row)
         facts = items.get(key, NO_LEDGER)
         item, line = facts.item, facts.line
+        slot_obj = get_slot(key) if callable(get_slot) else None
         workers.append(
             {
                 "key": key,
@@ -762,10 +798,11 @@ async def api_crew_workers(request: web.Request) -> web.Response:
                 "group": _group(status, facts.progress, status == STATUS_IDLE and _looping(key)),
                 "last_activity": _last_activity(row),
                 "ledger_item": item,
-                "summary": _worker_line(row, line, get_slot(key) if callable(get_slot) else None),
+                "summary": _worker_line(row, line, slot_obj),
                 "created_by": str(row.get("created_by") or ""),
                 "dispatched_by": _dispatcher_of(row),
                 "approval": _approval_of(row),
+                **_live_worker_telemetry(row, slot_obj),
             }
         )
     closed_meta = await asyncio.to_thread(

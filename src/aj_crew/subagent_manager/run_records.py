@@ -142,9 +142,28 @@ async def _write_finished_result_off_loop_impl(
     ``done`` run, so a release landing mid-write would write ``keep`` on
     the loop for this worker's whole-file rewrite to roll back.
     """
-    writer = asyncio.ensure_future(
-        asyncio.to_thread(write_finished_result, info.id, text, update_state)
-    )
+
+    def _persist_result_and_handoff() -> bool:
+        wrote = write_finished_result(info.id, text, update_state)
+        try:
+            from aj_crew.subagent import build_handoff_envelope, write_handoff_envelope
+
+            verdict = "succeeded" if text is not None and not info.error else "failed"
+            env = build_handoff_envelope(
+                info.id,
+                verdict=verdict,
+                raw_result=text or info.result or "",
+                error=info.error or "",
+                follow_up_session=info.conversation_key or f"subagent:{info.id}",
+                credits=info.credits,
+                elapsed=info.elapsed,
+            )
+            write_handoff_envelope(info.id, env, full_result=text or info.result or "")
+        except Exception:
+            logger.debug("Handoff envelope write skipped for %s", info.id, exc_info=True)
+        return wrote
+
+    writer = asyncio.ensure_future(asyncio.to_thread(_persist_result_and_handoff))
     if hold_conversation:
         self._hold_for_detached_writer_impl(info, "result complete", writer)
     return await self._drain_state_writer_impl(

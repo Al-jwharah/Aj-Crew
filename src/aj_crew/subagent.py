@@ -13,9 +13,11 @@ from __future__ import annotations
 
 import asyncio
 import fnmatch
+import json  # noqa: F401 - resolved by handoff_envelope.py via _facade_compose
 import logging
 import math
 import os
+import stat  # noqa: F401 - resolved by handoff_envelope.py via _facade_compose
 import threading
 import time
 from collections.abc import (
@@ -88,7 +90,7 @@ from aj_crew.agent_sdk.spec_hooks import (
     turn_spec_hooks,
 )
 from aj_crew.agent_spec_format import is_markdown_spec, iter_agent_spec_files
-from aj_crew.atomic_write import on_event_loop  # noqa: F401
+from aj_crew.atomic_write import atomic_write, on_event_loop  # noqa: F401
 from aj_crew.config import live
 from aj_crew.config.loader import DEFAULT_MODEL, KIRO_CLI_BUILTIN_AGENTS, AjCrewConfig
 from aj_crew.config.paths import data_home, project_agents_dir
@@ -144,6 +146,7 @@ from aj_crew.llm_helpers import (
     transient_retry_delay,
 )
 from aj_crew.mcp_gateway import STUB_MODULE
+from aj_crew.orchestration_budget import shared_execution_budget  # noqa: F401
 from aj_crew.platform.context import redact_via_context
 from aj_crew.process_identity import (  # noqa: F401 - resolved by run_lifecycle.py/run_yields.py/terminal.py via bind_component_globals
     MAX_ERROR_DETAIL_LEN,
@@ -234,6 +237,7 @@ from aj_crew.subagent_parts import cancellation_surface as _cancellation_surface
 from aj_crew.subagent_parts import config_surface as _config_surface
 from aj_crew.subagent_parts import continuation_surface as _continuation_surface
 from aj_crew.subagent_parts import delivery as _delivery
+from aj_crew.subagent_parts import handoff_envelope as _handoff_envelope
 from aj_crew.subagent_parts import host_memory as _host_memory
 from aj_crew.subagent_parts import manager as _manager
 from aj_crew.subagent_parts import model_choice as _model_choice
@@ -302,6 +306,20 @@ from aj_crew.subagent_parts.delivery import (  # noqa: F401
     _audit_ids,
     _injection_notice_outcome,
     delivery_is_parked,
+)
+from aj_crew.subagent_parts.handoff_envelope import (  # noqa: F401
+    _MAX_CHANGED_FILES,
+    _MAX_HANDOFF_FILE_BYTES,
+    HANDOFF_ENVELOPE_MAX_CHARS,
+    HANDOFF_SCHEMA_VERSION,
+    HANDOFF_SUMMARY_MAX_CHARS,
+    SubagentHandoffEnvelope,
+    _extract_executive_summary,
+    build_handoff_envelope,
+    format_handoff_digest,
+    format_wave_handoff_digest,
+    read_handoff_envelope,
+    write_handoff_envelope,
 )
 from aj_crew.subagent_parts.host_memory import (  # noqa: F401
     _CGROUP_UNLIMITED,
@@ -481,6 +499,7 @@ from aj_crew.subagent_wait_reasons import (  # noqa: F401 - re-exported: the gat
     QUEUED_WAIT_EXPIRED_TEXT,
 )
 from aj_crew.validation import _AGENT_NAME_RE, is_registered_agent_name
+from aj_crew.workspace_leases import shared_workspace_leases  # noqa: F401
 
 # Standalone ClaudeCodeProvider removed (KiroACP-only). Name kept as None so the
 # legacy isinstance guards short-circuit; which seam serves a session is answered
@@ -606,6 +625,7 @@ _facade_compose(
         _start_pricing,
         _run_record,
         _delivery,
+        _handoff_envelope,
         _config_surface,
         _admission_surface,
         _continuation_surface,

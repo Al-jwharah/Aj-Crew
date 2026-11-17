@@ -40,6 +40,7 @@ from aj_crew.agent_sdk.mcp_problems import UNATTENDED_MCP_WAIT_SECS, wait_for_de
 from aj_crew.config.loader import AjCrewConfig
 from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
 from aj_crew.messaging.identity import publish_turn_identity
+from aj_crew.orchestration_budget import shared_execution_budget
 from aj_crew.security import redact
 from aj_crew.taskq.adapters.runner import (
     RunnerAdmission,
@@ -64,6 +65,7 @@ from aj_crew.workflows.agent_exec import (
     step_session_name,
     vet_step_spawn,
 )
+from aj_crew.workspace_leases import shared_workspace_leases
 
 logger = logging.getLogger(__name__)
 
@@ -657,8 +659,23 @@ def admitted_agent_fn(
             await handle.fail_async(error)
             raise RunnerAdmissionRefused(f"{handle.task_id}: {error}")
         waits = 0
+        budget = shared_execution_budget()
+        ws_leases = shared_workspace_leases()
+        step_cwd = opts.get("cwd") or workspace
+        write_scope = opts.get("write_scope")
+        lease_mode = "write" if opts.get("lease_mode") == "write" or write_scope else "read"
         while True:
+            budget_ticket = await budget.acquire(owner=row_id, kind="workflow_agent", timeout=300.0)
+            ws_lease = None
             try:
+                if isinstance(step_cwd, str) and step_cwd.strip():
+                    ws_lease = await ws_leases.acquire(
+                        step_cwd,
+                        holder=row_id,
+                        mode=lease_mode,  # type: ignore[arg-type]
+                        write_scope=write_scope if isinstance(write_scope, (list, tuple)) else None,
+                        timeout=300.0,
+                    )
                 result = await agent_fn(prompt, opts)
             except asyncio.CancelledError:
                 # The SYNCHRONOUS write here and in the ``BaseException`` arm
@@ -696,6 +713,9 @@ def admitted_agent_fn(
             except BaseException as exc:
                 handle.fail(f"{type(exc).__name__}: {exc}"[:500])
                 raise
+            finally:
+                ws_leases.release(ws_lease)
+                budget.release(budget_ticket)
             await handle.done_async()
             return result
 

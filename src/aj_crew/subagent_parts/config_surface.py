@@ -28,6 +28,7 @@ if TYPE_CHECKING:
         asyncio,
         logger,
         resolve_max_subagents,
+        shared_execution_budget,
     )
 
 
@@ -115,6 +116,8 @@ def apply_limits(
             max_concurrent = self._user_max_concurrent
     self._user_max_concurrent = max(1, int(max_concurrent))
     self._max_concurrent = self._clamp_effective_cap()
+    if self._max_concurrent > 0:
+        shared_execution_budget().set_max_slots(self._max_concurrent)
     try:
         self._default_turn_limit = int(agent.subagent_max_turns)
     except (TypeError, ValueError):

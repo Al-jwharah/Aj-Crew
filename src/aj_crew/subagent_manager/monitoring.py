@@ -201,6 +201,34 @@ class OrphanStallMonitor(ManagerComponent):
 
     def start_reaper_impl(self) -> None:
         """Start the periodic reaper loop.  Call once after the event loop is running."""
+        import weakref
+
+        from aj_crew.orchestration_budget import shared_execution_budget
+
+        mgr_ref = weakref.ref(self._manager)
+        loop = asyncio.get_running_loop()
+
+        def _live_subagent_slots() -> int:
+            mgr = mgr_ref()
+            if mgr is None or getattr(mgr, "_shutting_down", False) or loop.is_closed():
+                return 0
+            tasks = getattr(mgr, "_tasks", None)
+            if not tasks:
+                return 0
+            live_tasks = sum(1 for t in list(tasks.values()) if not t.done())
+            return min(max(0, int(getattr(mgr, "_running_count", 0) or 0)), live_tasks)
+
+        def _on_budget_release() -> None:
+            mgr = mgr_ref()
+            if mgr is None or getattr(mgr, "_shutting_down", False) or loop.is_closed():
+                return
+            loop.call_soon_threadsafe(mgr._drain_queue)
+
+        budget = shared_execution_budget()
+        budget.set_max_slots(max(1, int(self._manager._max_concurrent)))
+        budget.bind_external_slot_reader("subagent", _live_subagent_slots)
+        budget.register_release_callback("subagent_manager", _on_budget_release)
+
         if self._manager._reaper_task is None:
             self._manager._reaper_task = asyncio.create_task(self._manager._reaper_loop())
             # One-shot orphan reconciliation on startup
@@ -750,7 +778,14 @@ class OrphanStallMonitor(ManagerComponent):
         # Use pid_recorded_at (when PID was actually written) instead of
         # started (folder creation time) to avoid false negatives under load
         pid_recorded_at = state.get("pid_recorded_at", state.get("started", 0))
-        if self._manager._is_orphan_process(pid, pid_recorded_at):
+        incarnation = state.get("process_incarnation")
+        if isinstance(incarnation, dict):
+            from aj_crew.session_pid_tracking import incarnation_matches_live
+
+            is_verified_orphan = incarnation_matches_live(incarnation)
+        else:
+            is_verified_orphan = self._manager._is_orphan_process(pid, pid_recorded_at)
+        if is_verified_orphan:
             # ``state.json`` is a record this run wrote before the
             # restart, and it says nothing about who is using the
             # process NOW. A shared runtime carries the parent and
@@ -1229,6 +1264,7 @@ class OrphanStallMonitor(ManagerComponent):
             )
         except Exception:
             logger.debug("Reaper: learned settled RSS seed failed", exc_info=True)
+        last_idle_tombstone_prune_mono: float | None = None
         while True:
             await asyncio.sleep(_REAPER_INTERVAL)
             now = time.time()
@@ -1254,12 +1290,14 @@ class OrphanStallMonitor(ManagerComponent):
                     )
             # Off the event loop: the sweep is several /proc walks per live agent,
             # and the reaper shares the loop with every chat turn and heartbeat.
-            try:
-                await asyncio.get_running_loop().run_in_executor(
-                    maintenance_executor(), self._manager._sample_live_costs
-                )
-            except Exception:
-                logger.debug("Reaper: live-cost sample failed", exc_info=True)
+            # Skip thread-pool dispatch completely when zero live agents hold a PID.
+            if any(not a.done and a._pid for a in self._manager._agents.values()):
+                try:
+                    await asyncio.get_running_loop().run_in_executor(
+                        maintenance_executor(), self._manager._sample_live_costs
+                    )
+                except Exception:
+                    logger.debug("Reaper: live-cost sample failed", exc_info=True)
             try:
                 await asyncio.get_running_loop().run_in_executor(
                     maintenance_executor(), self._manager._refresh_learned_settled
@@ -1443,18 +1481,25 @@ class OrphanStallMonitor(ManagerComponent):
             # refusal was published on it, the only durable record of the
             # refusal, so a store wedged past the retention window must not
             # cost it. A store that cannot answer keeps it too.
-            try:
-                pruned = await asyncio.get_running_loop().run_in_executor(
-                    maintenance_executor(),
-                    prune_stale_tombstones,
-                    7,
-                    self._manager._result_ttl_secs,
-                    self._refusal_tombstone_unsettled,
-                )
-                if pruned:
-                    logger.info("Reaper: pruned %d stale tombstone(s)", pruned)
-            except Exception:
-                logger.debug("Reaper: tombstone pruning failed", exc_info=True)
+            should_prune_tombstones = (
+                bool(self._manager._agents)
+                or last_idle_tombstone_prune_mono is None
+                or (mono_now - last_idle_tombstone_prune_mono >= 900.0)
+            )
+            if should_prune_tombstones:
+                last_idle_tombstone_prune_mono = mono_now
+                try:
+                    pruned = await asyncio.get_running_loop().run_in_executor(
+                        maintenance_executor(),
+                        prune_stale_tombstones,
+                        7,
+                        self._manager._result_ttl_secs,
+                        self._refusal_tombstone_unsettled,
+                    )
+                    if pruned:
+                        logger.info("Reaper: pruned %d stale tombstone(s)", pruned)
+                except Exception:
+                    logger.debug("Reaper: tombstone pruning failed", exc_info=True)
 
     def _refusal_tombstone_unsettled(self, agent_id: str, tombstone: dict) -> bool:
         """True for a refusal or queued-stop tombstone whose task row is not (known to be) terminal.

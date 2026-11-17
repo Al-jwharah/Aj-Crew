@@ -585,9 +585,13 @@ async def persist_spawn_records(
             # Out of startup: a queued spawn held by the in-startup bound
             # may start now (``_note_startup_progress``).
             self._manager._note_startup_progress(info)
-            await self._manager._write_state_off_loop(
-                info, "PID record", pid=pid, pid_recorded_at=_sa.time.time()
-            )
+            from aj_crew.session_pid_tracking import capture_process_incarnation
+
+            incarnation = capture_process_incarnation(pid)
+            pid_fields: dict[str, object] = {"pid": pid, "pid_recorded_at": _sa.time.time()}
+            if incarnation is not None:
+                pid_fields["process_incarnation"] = incarnation
+            await self._manager._write_state_off_loop(info, "PID record", **pid_fields)
     except Exception:
         _sa.logger.debug("Failed to record PID for %s", info.id, exc_info=True)
 

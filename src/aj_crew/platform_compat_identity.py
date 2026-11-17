@@ -1031,6 +1031,73 @@ def process_incarnation_id(pid: int) -> str | None:
     return _own_identity_token(pid)
 
 
+#: (pid, boot_id) cache for :func:`host_boot_id`, keyed by PID like :data:`_OWN_START_TIME`.
+_HOST_BOOT_ID: tuple[int, str | None] | None = None
+
+
+def _darwin_boot_id() -> str | None:
+    """macOS kernel boot instant ``sec.usec`` via ``sysctlbyname("kern.boottime")``."""
+    try:
+        libc_path = ctypes.util.find_library("c")
+        if libc_path is None:
+            return None
+        libc = ctypes.CDLL(libc_path)
+        size = ctypes.c_size_t(16)
+        buf = ctypes.create_string_buffer(16)
+        rc = libc.sysctlbyname(b"kern.boottime", buf, ctypes.byref(size), None, ctypes.c_size_t(0))
+        if rc != 0:
+            return None
+        sec, usec = struct.unpack("<qi", buf.raw[:12])
+        return f"{sec}.{usec:06d}" if sec > 0 else None
+    except Exception:
+        return None
+
+
+def _windows_boot_id() -> str | None:
+    """Windows OS boot timestamp (100-ns FILETIME) via ``NtQuerySystemInformation``."""
+    try:
+        ntdll = ctypes.windll.ntdll  # type: ignore[attr-defined]
+        # SYSTEM_TIMEOFDAY_INFORMATION begins with LARGE_INTEGER BootTime (8 bytes).
+        buf = ctypes.create_string_buffer(48)
+        ret_len = wintypes.ULONG(0)
+        status = ntdll.NtQuerySystemInformation(3, buf, 48, ctypes.byref(ret_len))
+        if status == 0 and ret_len.value >= 8:
+            (boot_ft,) = struct.unpack_from("<q", buf.raw, 0)
+            if boot_ft > 0:
+                return str(boot_ft)
+    except Exception:
+        pass
+    try:
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        kernel32.GetTickCount64.restype = ctypes.c_uint64
+        uptime_ms = int(kernel32.GetTickCount64())
+        boot_epoch_sec = int(round(time.time() - (uptime_ms / 1000.0)))
+        return f"winboot:{boot_epoch_sec}" if boot_epoch_sec > 0 else None
+    except Exception:
+        return None
+
+
+def host_boot_id() -> str | None:
+    """Stable identifier for the current OS boot session, or ``None`` if unreadable.
+
+    Never spawns a subprocess and caches its result per process so callers on the
+    gateway event loop can stamp durable run records at zero recurring cost.
+    """
+    global _HOST_BOOT_ID
+    pid = os.getpid()
+    if _HOST_BOOT_ID is None or _HOST_BOOT_ID[0] != pid:
+        if sys.platform == "linux":
+            val = _linux_boot_id()
+        elif sys.platform == "darwin":
+            val = _darwin_boot_id()
+        elif IS_WINDOWS:
+            val = _windows_boot_id()
+        else:
+            val = None
+        _HOST_BOOT_ID = (pid, val)
+    return _HOST_BOOT_ID[1]
+
+
 def own_process_start_time() -> str | None:
     """This process's own start-time identity, read once and cached.
 

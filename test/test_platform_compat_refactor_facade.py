@@ -258,6 +258,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         effective_uid _START_TIME_PS_TIMEOUT _process_lstart process_start_time
         process_start_id_for_source _OWN_START_TIME _linux_boot_id _own_identity_token
         process_incarnation_id own_process_start_time
+        _HOST_BOOT_ID _darwin_boot_id _windows_boot_id host_boot_id
         """.split()),
     "aj_crew.platform_compat_ports": tuple("""
         _normalized_tcp_endpoint _linux_tcp_peer_pid _macos_tcp_peer_pid _WindowsTcpOwnerRow

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CREW_GROUP_LABEL_KEY, CREW_GROUP_ORDER, CREW_GROUP_TONE, crewSubDispatcher, crewWorkerGroup, crewWorkerGroupOfRow, groupCrewWorkers, orderUnderDispatcher, summarizeCrewWorkers , liveCrewWorkers, liveMateWorkers, mergeCrewWorkers, crewRowCounts } from './crewWorkers'
+import { CREW_GROUP_LABEL_KEY, CREW_GROUP_ORDER, CREW_GROUP_TONE, crewSubDispatcher, crewWorkerGroup, crewWorkerGroupOfRow, crewWorkerLiveMeta, groupCrewWorkers, orderUnderDispatcher, searchCrewWorkers, summarizeCrewWorkers, liveCrewWorkers, liveMateWorkers, mergeCrewWorkers, crewRowCounts } from './crewWorkers'
 import type { CrewWorker } from '../types'
 
 describe('crewWorkers', () => {
@@ -145,5 +145,61 @@ describe('live worker rows', () => {
   it('reads one status for a row on the Crew tab and the mate tab', () => {
     const row = { key: 'w', running: true, needs_input: true, crew_root: 'r', mate_root: 'r' }
     expect(liveMateWorkers([row], 'r')[0]).toEqual(liveCrewWorkers([row], 'r')[0])
+  })
+
+  it('forwards live telemetry, merges slot telemetry into listed rows, and exposes crewWorkerLiveMeta', () => {
+    const slots = [
+      {
+        key: 'w-live',
+        title: 'Executor',
+        crew_root: 'r',
+        running: true,
+        active_tool: 'fs_write',
+        phase: 'implementing',
+        turn_step: 4,
+        write_scope: ['src/aj_crew/subagent.py'],
+      },
+    ]
+    const live = liveCrewWorkers(slots, 'r')
+    expect(live[0]).toMatchObject({
+      active_tool: 'fs_write',
+      phase: 'implementing',
+      turn_step: 4,
+      write_scope: ['src/aj_crew/subagent.py'],
+    })
+    const listed: CrewWorker[] = [
+      {
+        key: 'w-live',
+        title: 'Executor',
+        agent: 'ajcrew-worker',
+        status: 'working',
+        group: 'working',
+        last_activity: '',
+        ledger_item: 'it_1',
+        summary: 'Ledger progress',
+        handoff_summary: 'Completed AST refactor cleanly',
+        created_by: 'r',
+      },
+    ]
+    const merged = mergeCrewWorkers(listed, live)
+    const meta = crewWorkerLiveMeta(merged[0])
+    expect(meta).toEqual({
+      activeTool: 'fs_write',
+      phase: 'implementing',
+      turnStep: 4,
+      writeScope: ['src/aj_crew/subagent.py'],
+      summaryLine: 'Completed AST refactor cleanly',
+    })
+    expect(searchCrewWorkers(merged, 'fs_write')).toHaveLength(1)
+    expect(searchCrewWorkers(merged, 'subagent.py')).toHaveLength(1)
+    expect(searchCrewWorkers(merged, 'AST refactor')).toHaveLength(1)
+
+    expect(crewWorkerLiveMeta({ ...merged[0], group: 'done' })).toEqual({
+      activeTool: '',
+      phase: '',
+      turnStep: 0,
+      writeScope: [],
+      summaryLine: 'Completed AST refactor cleanly',
+    })
   })
 })

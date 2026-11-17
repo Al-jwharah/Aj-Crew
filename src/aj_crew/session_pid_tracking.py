@@ -165,6 +165,38 @@ def _pid_start_token(pid: int) -> str | None:
     return platform_compat.get_process_start_id(pid)
 
 
+def capture_process_incarnation(pid: int | None) -> dict[str, object] | None:
+    """Snapshot reboot-scoped ``(pid, start_id, boot_id)`` for durable crash recovery."""
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 1:
+        return None
+    start_id = platform_compat.get_process_start_id(pid)
+    if not start_id:
+        return None
+    return {
+        "pid": pid,
+        "start_id": start_id,
+        "boot_id": platform_compat.host_boot_id() or "",
+    }
+
+
+def incarnation_matches_live(record: Mapping[str, object] | None) -> bool:
+    """True only when *record* positively matches the live OS process on THIS boot."""
+    if not isinstance(record, Mapping):
+        return False
+    raw_pid = record.get("pid")
+    start_id = record.get("start_id")
+    boot_id = record.get("boot_id")
+    if not isinstance(raw_pid, int) or isinstance(raw_pid, bool) or raw_pid <= 1:
+        return False
+    if not isinstance(start_id, str) or not start_id:
+        return False
+    live_boot = platform_compat.host_boot_id() or ""
+    if isinstance(boot_id, str) and boot_id and live_boot and boot_id != live_boot:
+        return False
+    live_start = platform_compat.get_process_start_id(raw_pid)
+    return live_start is not None and live_start == start_id
+
+
 def _pid_file_path() -> Path:
     return config_dir() / _PID_FILE
 

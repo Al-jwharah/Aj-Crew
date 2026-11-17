@@ -28,7 +28,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile'
 import { i18nT } from '../../../i18n/t'
 import { CrewStatusDot } from '../../../components/crew/CrewModeMarks'
 import CrewApprovalCards, { crewApprovalRequests } from '../../../components/crew/CrewApprovalCards'
-import { crewRouteNotServed, crewSubDispatcher, crewWorkerGroup, mergeCrewWorkers, searchCrewWorkers } from '../../../lib/crewWorkers'
+import { crewRouteNotServed, crewSubDispatcher, crewWorkerGroup, crewWorkerLiveMeta, mergeCrewWorkers, searchCrewWorkers } from '../../../lib/crewWorkers'
 import { fmtRelativeTime } from '../sessionOrder'
 import { CREW_FINISHED_OPEN_KEY, CREW_WORKER_SEARCH_MIN, CrewPanelBack, CrewWorkerSearch, openCrewSession, reopenCrewWorker, useCrewWorkerQuery, useCrewWorkers, useLiveCrewWorkers } from './CrewWorkerList'
 import { usePersistedBool } from '../../../hooks/usePersistedBool'
@@ -448,7 +448,23 @@ function MemberRow({ node, open, gutter, onToggle, onOpen, current, pausedIn }: 
             {!pausedIn && <CrewStatusDot group={crewWorkerGroup(w)} />}
           </span>
         </span>
-        {w.summary && <span className="block text-[12px] text-text/80 truncate mt-0.5">{w.summary}</span>}
+        {(() => {
+          const meta = crewWorkerLiveMeta(w)
+          const hasLiveChips = !!(meta.phase || meta.activeTool || meta.turnStep > 0 || meta.writeScope.length > 0)
+          return <>
+            {meta.summaryLine && <span className="block text-[12px] text-text/80 truncate mt-0.5" data-testid="ultra-member-summary">{meta.summaryLine}</span>}
+            {hasLiveChips && (
+              <span className="flex flex-wrap items-center gap-1 mt-1 text-[11px]" data-testid="ultra-member-telemetry">
+                {meta.phase && <span className="px-1.5 py-0.5 rounded bg-accent-subtle text-accent font-medium truncate max-w-[140px]" data-testid="ultra-member-phase">{meta.phase}</span>}
+                {meta.activeTool && <span className="px-1.5 py-0.5 rounded bg-bg-elevated border border-border font-mono text-text/85 truncate max-w-[180px]" data-testid="ultra-member-active-tool">{meta.activeTool}</span>}
+                {meta.turnStep > 0 && <span className="text-muted tabular-nums" data-testid="ultra-member-step">#{meta.turnStep}</span>}
+                {meta.writeScope.map(scope => (
+                  <span key={scope} className="px-1.5 py-0.5 rounded bg-bg-hover font-mono text-muted truncate max-w-[150px]" data-testid="ultra-member-write-scope">{scope}</span>
+                ))}
+              </span>
+            )}
+          </>
+        })()}
         <span className="block text-[11px] text-muted truncate mt-0.5">
           <span data-testid="ultra-member-location">{w.remote_crew || i18nT('sessionEnvironments.picker.thisMachine')}</span>
           {w.last_activity && <> &middot; {fmtRelativeTime(w.last_activity)}</>}
