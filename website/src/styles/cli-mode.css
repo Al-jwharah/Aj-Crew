@@ -63,7 +63,7 @@
    layout are unaffected. */
 [data-ui="cli"] [style*="--mc-content-width"] .items-end:has([data-role="user"]) {
   align-items: flex-start !important;
-  text-align: left !important;
+  text-align: start !important;
 }
 
 /* The UserMessage root in VIEW mode ONLY — distinguished by having a
@@ -72,11 +72,11 @@
    preserved. */
 [data-ui="cli"] [style*="--mc-content-width"] [data-role="user"]:has(.msg-content) {
   display: block !important;
-  text-align: left !important;
+  text-align: start !important;
   max-width: none !important;
   width: 100%;
-  border-left: 4px solid var(--cli-user-bar);
-  padding-left: 10px;
+  border-inline-start: 4px solid var(--cli-user-bar);
+  padding-inline-start: 10px;
   margin: 8px 0 6px 0;
   position: relative;
 }
@@ -138,30 +138,30 @@
    share a left edge with the message text and the hover row's timestamp. */
 [data-ui="cli"] [style*="--mc-content-width"] .items-end:has([data-role="user"]) > [data-testid="thread-footer"] {
   align-self: flex-start !important;
-  margin-left: 8px !important;
-  margin-right: 0 !important;
+  margin-inline-start: 8px !important;
+  margin-inline-end: 0 !important;
 }
 
-/* The assistant footer is already on the left, but it misses the indent for the
+/* The assistant footer is already on the inline-start side, but it misses the indent for the
    same structural reason: CLI mode indents the bubble by putting the bar and
    padding on the message ROOT, and the footer is that root's SIBLING, so it
-   keeps sitting on the column edge — 16px (6px double bar + 10px padding) left
-   of the reply it belongs to. `margin-left: 10px` plus the button's own `px-1.5`
+   keeps sitting on the column edge — 16px (6px double bar + 10px padding) startward
+   of the reply it belongs to. `margin-inline-start: 10px` plus the button's own `px-1.5`
    puts its faces on that same edge. Measured, not derived: see
    `scripts/capture-thread-footer-cli-align.mjs`, which asserts the offset for
    both sides. */
 [data-ui="cli"] [style*="--mc-content-width"] :has(> [data-role="assistant"]) > [data-testid="thread-footer"] {
-  margin-left: 10px !important;
+  margin-inline-start: 10px !important;
 }
 
 
 /* ── Assistant message: double-border for non-color cue ─────────────────── */
 
-/* `border-left-style: double` renders two parallel lines — distinct from
+/* `border-inline-start-style: double` renders two parallel lines — distinct from
    the user's solid bar even for users with colour-vision deficiency. */
 [data-ui="cli"] [style*="--mc-content-width"] [data-role="assistant"] {
-  border-left: 6px double var(--cli-assistant-bar);
-  padding-left: 10px;
+  border-inline-start: 6px double var(--cli-assistant-bar);
+  padding-inline-start: 10px;
   margin: 8px 0 6px 0;
   position: relative;
 }
@@ -186,12 +186,16 @@
   padding: 0 4px;
   border-radius: 2px;
   font-family: var(--mono);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 [data-ui="cli"] [style*="--mc-content-width"] .msg-content pre {
   background: transparent !important;
   border: 1px solid var(--border);
   border-radius: 2px;
   font-family: var(--mono);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 
@@ -217,11 +221,11 @@
   position: relative;
 }
 
-/* `> ` prompt glyph at the left edge of the textarea. */
+/* `> ` prompt glyph at the inline-start edge of the textarea. */
 [data-ui="cli"] [style*="--mc-content-width"] [data-testid="input-wrapper"]::before {
   content: ">";
   position: absolute;
-  left: 8px;
+  inset-inline-start: 8px;
   top: 14px;
   color: var(--accent);
   font-family: var(--mono);
@@ -236,9 +240,9 @@
 /* One rule for the composer input (the textarea, or the Lexical div under
    Style Markdown While Typing) and the textarea's paste-chip mirror
    (PasteHighlightLayer): they must share the same text box, or each chip
-   background sits 8px left of its token text. */
+   background sits 8px off its token text. */
 [data-ui="cli"] [style*="--mc-content-width"] :is([data-composer-input], [data-composer-typo][aria-hidden]) {
-  padding-left: 24px !important;
+  padding-inline-start: 24px !important;
 }
 
 [data-ui="cli"] [style*="--mc-content-width"] [data-composer-input] {
@@ -250,5 +254,5 @@
 /* The Lexical composer's placeholder is an overlay beside the editor, not a
    native ::placeholder, so it needs the same indent to clear the > glyph. */
 [data-ui="cli"] [style*="--mc-content-width"] [data-composer-placeholder] {
-  padding-left: 24px !important;
+  padding-inline-start: 24px !important;
 }

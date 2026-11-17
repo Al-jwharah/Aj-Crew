@@ -41,6 +41,7 @@
 
 /** Codepoint ranges per script, enough to classify a letter's writing system. */
 const SCRIPT_RANGES = {
+  Arabic: [[0x0600, 0x06ff], [0x0750, 0x077f], [0x08a0, 0x08ff], [0xfb50, 0xfdff], [0xfe70, 0xfeff]],
   Bengali: [[0x0980, 0x09ff]],
   Devanagari: [[0x0900, 0x097f], [0xa8e0, 0xa8ff], [0x11b00, 0x11b5f]],
   Hiragana: [[0x3041, 0x309f], [0x1b001, 0x1b11f]],
@@ -60,6 +61,7 @@ const SCRIPT_RANGES = {
  * includes `en`, the generated pseudolocale, and the five Latin-script locales.
  */
 export const TARGET_SCRIPTS = {
+  ar: ['Arabic'],
   bn: ['Bengali'],
   hi: ['Devanagari'],
   ja: ['Hiragana', 'Katakana', 'Han'],

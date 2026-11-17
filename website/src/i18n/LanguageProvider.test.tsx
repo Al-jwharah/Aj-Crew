@@ -48,6 +48,7 @@ function Probe() {
       <span data-testid="sync">{syncFailed ? 'failed' : 'ok'}</span>
       <span data-testid="catalog">{catalogFailed ? 'failed' : 'ok'}</span>
       <button onClick={() => setLanguage('zh-CN')}>to-zh</button>
+      <button onClick={() => setLanguage('ar')}>to-ar</button>
       <button onClick={() => setLanguage('')}>to-auto</button>
     </div>
   )
@@ -64,6 +65,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   document.documentElement.removeAttribute('lang')
+  document.documentElement.removeAttribute('dir')
 })
 
 describe('LanguageProvider', () => {
@@ -150,6 +152,18 @@ describe('LanguageProvider', () => {
     localStorage.setItem(LANG_STORAGE_KEY, 'zh-CN')
     wrap(<Probe />)
     await waitFor(() => expect(document.documentElement.lang).toBe('zh-CN'))
+    expect(document.documentElement.dir).toBe('ltr')
+  })
+
+  it('switches <html dir> to rtl for Arabic and back to ltr for LTR locales', async () => {
+    wrap(<Probe />)
+    await userEvent.click(screen.getByText('to-ar'))
+    await waitFor(() => expect(document.documentElement.lang).toBe('ar'))
+    expect(document.documentElement.dir).toBe('rtl')
+
+    await userEvent.click(screen.getByText('to-zh'))
+    await waitFor(() => expect(document.documentElement.lang).toBe('zh-CN'))
+    expect(document.documentElement.dir).toBe('ltr')
   })
 
   it('keeps <html lang> on the rendered language when the switch does not happen', async () => {

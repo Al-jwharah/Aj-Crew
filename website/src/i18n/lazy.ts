@@ -32,6 +32,7 @@ const AUTHORED_LOADERS: Record<string, () => Promise<CatalogModule>> = {
   hi: () => import('./locales/hi.json'),
   es: () => import('./locales/es.json'),
   fr: () => import('./locales/fr.json'),
+  ar: () => import('./locales/ar.json'),
   bn: () => import('./locales/bn.json'),
   pt: () => import('./locales/pt.json'),
   ru: () => import('./locales/ru.json'),

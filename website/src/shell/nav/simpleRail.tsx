@@ -90,7 +90,7 @@ function RecentChats({ shell, onAllChats }: { shell: AppShell; onAllChats: () =>
 
   return (
     <div className="flex min-h-[72px] flex-1 flex-col" data-testid="simple-recent-chats">
-      <div className="flex shrink-0 items-center gap-2 pr-2 pl-[18px] pt-3 pb-1">
+      <div className="flex shrink-0 items-center gap-2 pe-2 ps-[18px] pt-3 pb-1">
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-muted" title={i18nT('simpleLayout.recent')}>{i18nT('simpleLayout.recent')}</span>
         {/* The whole list (folders, search, sort, every row action) is the
             chat page's sessions column; this opens it. */}
@@ -120,7 +120,7 @@ function RecentChats({ shell, onAllChats }: { shell: AppShell; onAllChats: () =>
                 aria-disabled={!connected}
                 title={label}
                 onClick={() => open(slot.key)}
-                className={`flex w-full items-center gap-2 rounded-md border-none px-2.5 py-1.5 text-left text-[13px] transition-colors duration-200 ${
+                className={`flex w-full items-center gap-2 rounded-md border-none px-2.5 py-1.5 text-start text-[13px] transition-colors duration-200 ${
                   active
                     ? 'bg-accent-subtle font-semibold text-text-strong'
                     : connected
@@ -236,7 +236,7 @@ export function SimpleRailBody({ shell }: { shell: AppShell }) {
           badge={collapsed ? undefined : <ChevronDown size={14} aria-hidden className={`shrink-0 text-muted transition-transform duration-200 motion-reduce:transition-none ${moreOpen ? 'rotate-180' : ''}`} />}
         />
         {moreOpen && (
-          <div role="group" aria-label={i18nT('simpleLayout.more')} data-testid="simple-more-group" className={`flex flex-col gap-0.5 ${collapsed ? '' : 'ml-3 border-l border-border pl-1.5'}`}>
+          <div role="group" aria-label={i18nT('simpleLayout.more')} data-testid="simple-more-group" className={`flex flex-col gap-0.5 ${collapsed ? '' : 'ms-3 border-s border-border ps-1.5'}`}>
             <AppsNavRows shell={shell} collapsed={collapsed} />
             {extra.map(row)}
             {sortedAppGroup.map(row)}

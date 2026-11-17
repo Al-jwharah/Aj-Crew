@@ -97,6 +97,7 @@ describe.each(AUTHORED)('name-refusal copy in %s', (_code, { translation }) => {
  */
 const LOWERCASE_WORD: Record<string, string> = {
   en: 'lowercase',
+  ar: 'صغيرة',
   de: 'Kleinbuchstaben',
   es: 'minúsculas',
   fr: 'minuscules',

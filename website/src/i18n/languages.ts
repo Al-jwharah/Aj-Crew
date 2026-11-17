@@ -43,13 +43,10 @@ export interface LanguageEntry {
  * Ordered by global speaker count, so the picker's top entries are the ones
  * most users are looking for rather than an alphabetical accident.
  *
- * Right-to-left languages (Arabic, Urdu) are deliberately absent: the catalogs
- * would translate correctly, but the dashboard's layout is built from
- * physical-direction Tailwind utilities (`pl-*`, `left-*`, `text-left`) and
- * unmirrored directional icons, so an RTL locale would render readable text in
- * a visibly wrong shell. RTL needs `dir="rtl"` plus a logical-property
- * conversion first; shipping the catalog before that would be a worse
- * experience than English.
+ * Arabic (`ar`) drives bidirectional RTL layout via `languageDir()` (`<html dir="rtl">`,
+ * logical CSS properties, `dir="auto"` prose blocks, and `dir="ltr"` code/terminal
+ * isolation). Additional RTL locales (such as Urdu or Hebrew) remain absent only
+ * until their catalogs are authored.
  */
 export const SUPPORTED_LANGUAGES: readonly LanguageEntry[] = [
   { code: 'en', label: 'English' },
@@ -57,6 +54,7 @@ export const SUPPORTED_LANGUAGES: readonly LanguageEntry[] = [
   { code: 'hi', label: 'हिन्दी' },
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
+  { code: 'ar', label: 'العربية' },
   { code: 'bn', label: 'বাংলা' },
   { code: 'pt', label: 'Português' },
   { code: 'ru', label: 'Русский' },
@@ -155,4 +153,15 @@ export function isRestorableLanguage(code: string): boolean {
 /** Endonym for a code, or the raw code when it isn't one we ship. */
 export function languageLabel(code: string): string {
   return SUPPORTED_LANGUAGES.find(l => l.code === code)?.label ?? code
+}
+
+/** Shipped right-to-left UI language codes. */
+export const RTL_LANGUAGE_CODES: ReadonlySet<string> = new Set(['ar'])
+
+/** Document writing direction (`ltr` or `rtl`) for a resolved language tag. */
+export function languageDir(code: string): 'ltr' | 'rtl' {
+  const normalized = code.trim()
+  if (RTL_LANGUAGE_CODES.has(normalized)) return 'rtl'
+  const primary = normalized.split('-')[0].toLowerCase()
+  return RTL_LANGUAGE_CODES.has(primary) ? 'rtl' : 'ltr'
 }

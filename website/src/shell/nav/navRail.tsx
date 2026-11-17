@@ -101,7 +101,7 @@ export function ShellNavRail({ shell }: { shell: AppShell }) {
   // `renderNavRow` directly, so the floating copy carries no action either.
   const renderAppRow = (n: Parameters<typeof renderNavRow>[0]) => (
     !effectiveCollapsed && !isMobile ? (
-      <div className="relative group/approw [&>.nav-item]:pr-9">
+      <div className="relative group/approw [&>.nav-item]:pe-9">
         {renderNavRow(n)}
         <AppRowPopoutAction route={n.path} label={surfaceLabel(n)} active={navRowActive(n.path)} />
       </div>
@@ -168,7 +168,7 @@ export function ShellNavRail({ shell }: { shell: AppShell }) {
               the onboarding anchor "apps" stays on the Discover row. */}
           {!effectiveCollapsed ? (
             <>
-              <div className="nav-section flex items-center pl-3 pr-1 pt-3 pb-1">
+              <div className="nav-section flex items-center ps-3 pe-1 pt-3 pb-1">
                 <span
                   // `overflow-hidden` + `whitespace-nowrap` means this clips
                   // silently once the label grows — which it does in a longer

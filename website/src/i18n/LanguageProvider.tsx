@@ -69,7 +69,7 @@ import { api } from '../api/client'
 import { safeSetItem } from '../utils/safeStorage'
 import { changeLanguage, i18next } from './index'
 import { LANG_STORAGE_KEY, readStoredLanguage, resolveLanguage } from './detect'
-import { AUTO_LANGUAGE } from './languages'
+import { AUTO_LANGUAGE, languageDir } from './languages'
 
 interface ThemeBootData {
   language?: string
@@ -220,16 +220,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const [catalogFailed, setCatalogFailed] = useState(false)
 
-  // Apply to i18next + <html lang>. Runs on mount too, so a catalog that failed
-  // during the bounded boot wait is retried after English renders. The result is
-  // retained for the picker: its selected choice must not imply that the switch
-  // happened when the previous language is still on screen.
+  // Apply to i18next + <html lang> / <html dir>. Runs on mount too, so a catalog
+  // that failed during the bounded boot wait is retried after English renders. The
+  // result is retained for the picker: its selected choice must not imply that the
+  // switch happened when the previous language is still on screen.
   useEffect(() => {
     let current = true
     void changeLanguage(resolved).then((switched) => {
       if (!current) return
       setCatalogFailed(!switched)
-      document.documentElement.lang = i18next.language || resolved
+      const activeLang = i18next.language || resolved
+      document.documentElement.lang = activeLang
+      document.documentElement.dir = languageDir(activeLang)
     })
     return () => { current = false }
   }, [resolved])

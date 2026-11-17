@@ -89,7 +89,7 @@ function codeTextOf(node: React.ReactNode): string | null {
  *  `CopyableCode`). One constant carried both for a long time, which dressed
  *  every copy chip as a link: readers clicked expecting navigation and got a
  *  silent clipboard write. */
-const CHIP_BASE = 'bg-bg-elevated px-1.5 py-0.5 rounded text-sm font-mono'
+const CHIP_BASE = 'bg-bg-elevated px-1.5 py-0.5 rounded text-sm font-mono [direction:ltr] [unicode-bidi:isolate]'
 
 /** The look of a chip whose click NAVIGATES or OPENS something — a confirmed
  *  path, a session, an autolinked work item: the accent colour and the hover

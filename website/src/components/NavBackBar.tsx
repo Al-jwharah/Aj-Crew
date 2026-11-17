@@ -35,9 +35,9 @@ export function NavBackBar({ label, onBack, className = '' }: {
       <button
         type="button"
         onClick={onBack}
-        className={`flex items-center gap-0.5 -ml-1.5 py-2 pr-3 ${COARSE_TOUCH_TARGET} text-[14px] font-medium text-accent bg-transparent border-none cursor-pointer`}
+        className={`flex items-center gap-0.5 -ms-1.5 py-2 pe-3 ${COARSE_TOUCH_TARGET} text-[14px] font-medium text-accent bg-transparent border-none cursor-pointer`}
       >
-        <ChevronLeft size={19} strokeWidth={2.25} className="shrink-0" />
+        <ChevronLeft size={19} strokeWidth={2.25} className="shrink-0 rtl:scale-x-[-1]" />
         {label}
       </button>
     </div>

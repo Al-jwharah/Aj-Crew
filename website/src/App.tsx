@@ -252,7 +252,7 @@ export function UpdateOverlay({ onCancel }: { onCancel: () => void }) {
         <div className="text-lg font-bold text-text-strong mb-2">{i18nT('app.updating_ajcrew')}</div>
         <div className="text-sm text-muted mb-5">{detail || i18nT('app.starting_update')}</div>
         {/* Step progress */}
-        <div className="flex flex-col gap-2 text-left mb-5">
+        <div className="flex flex-col gap-2 text-start mb-5">
           {STEP_ORDER.map((s, i) => {
             const si = UPDATE_STEPS[s]
             const done = currentIdx > i
@@ -261,7 +261,7 @@ export function UpdateOverlay({ onCancel }: { onCancel: () => void }) {
               <div key={s} className={`flex items-center gap-2.5 text-[13px] transition-colors ${done ? 'text-ok' : active ? 'text-accent font-medium' : 'text-muted/40'}`}>
                 <span className="w-5 text-center">{done ? <Check className="lucide-inline" /> : active ? si.icon : '○'}</span>
                 <span>{i18nT(UPDATE_STEP_LABEL_KEY[s])}</span>
-                {active && <span className="ml-auto text-[11px] text-muted animate-pulse">{elapsedStr}</span>}
+                {active && <span className="ms-auto text-[11px] text-muted animate-pulse">{elapsedStr}</span>}
               </div>
             )
           })}
@@ -427,7 +427,7 @@ export default function App() {
           data-testid="mobile-nav-rail"
           role="navigation"
           aria-label={i18nT('app.main_navigation')}
-          className="w-[72px] shrink-0 h-full flex flex-col items-center gap-1 pt-1.5 pb-2.5 border-r border-border bg-bg-accent overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-none"
+          className="w-[72px] shrink-0 h-full flex flex-col items-center gap-1 pt-1.5 pb-2.5 border-e border-border bg-bg-accent overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-none"
           style={{ scrollbarWidth: 'none' }}
           top={<>
             <button
@@ -525,7 +525,7 @@ export default function App() {
               touch
               replace
               onClickOverride={navRowActive(settingsSurface.path) ? onActivate : undefined}
-              badge={settingsDotLabel ? <span title={settingsDotLabel.title} role="status" aria-label={settingsDotLabel.label} className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full z-10" /> : undefined}
+              badge={settingsDotLabel ? <span title={settingsDotLabel.title} role="status" aria-label={settingsDotLabel.label} className="absolute top-1 end-1 w-2 h-2 bg-accent rounded-full z-10" /> : undefined}
             />
             <button
               type="button"
@@ -706,7 +706,7 @@ export default function App() {
       {!isMobile && <div id="activity-bar-slot" className="h-full min-h-0 min-w-0" style={{ gridArea: 'actbar' }} />}
 
       {/* Skip to content — visible only on focus for keyboard users */}
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-accent focus:text-accent-fg focus:text-sm focus:font-medium">{i18nT('app.skip_to_content')}</a>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:start-2 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-accent focus:text-accent-fg focus:text-sm focus:font-medium">{i18nT('app.skip_to_content')}</a>
       {/* Spoken way out of focus mode. Turning it on makes the header and rail
           inert and moves focus to main, so a screen-reader user who clicked the
           toggle has lost every chrome control and hears nothing about how to get
@@ -740,7 +740,7 @@ export default function App() {
             ref={railPeekTrigger}
             data-testid="focus-peek-rail"
             aria-hidden="true"
-            className="focus-peek-rail absolute left-0 bottom-0 z-[61]"
+            className="focus-peek-rail absolute start-0 bottom-0 z-[61]"
             // Starts below the top strip so the two tile the corner rather than
             // overlapping, where whichever won would be arbitrary.
             style={{ top: FOCUS_INSET }}
@@ -835,8 +835,8 @@ export default function App() {
         style={focusActive
           ? {
             gridArea: 'content',
-            paddingLeft: FOCUS_INSET,
-            transition: 'padding-left 150ms cubic-bezier(0.2, 0, 0, 1)',
+            paddingInlineStart: FOCUS_INSET,
+            transition: 'padding-inline-start 150ms cubic-bezier(0.2, 0, 0, 1)',
           }
           : { gridArea: 'content' }}
       >

@@ -104,7 +104,7 @@ describe('list shell parity — sessions sidebar and members roster share one re
     expect(shell.LIST_HEADER_CLS).toBe('flex justify-between items-center px-2 mt-0.5 h-10')
     expect(shell.LIST_TITLE_CLS).toBe('sessions-panel-title text-sm font-semibold text-text-strong tracking-[.04em] truncate')
     expect(shell.LIST_BODY_CLS).toBe('flex-1 min-h-0 overflow-y-auto scrollbar-none p-2 pt-[var(--list-dock-h,0.5rem)] scroll-pt-[var(--list-dock-h,0.5rem)]')
-    expect(shell.ROW_BOX_CLS).toBe('pl-3.5 pr-3 py-2 rounded-md')
+    expect(shell.ROW_BOX_CLS).toBe('ps-3.5 pe-3 py-2 rounded-md')
     expect(shell.ROW_IDLE_CLS).toBe('text-muted hover:text-text hover:bg-bg-hover')
     expect(shell.ROW_ACTIVE_CLS).toBe('text-text-strong bg-accent-subtle')
     expect(shell.ROW_TITLE_CLS).toBe('text-[13px] leading-[20px]')

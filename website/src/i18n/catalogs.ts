@@ -16,6 +16,7 @@ import zhCN from './locales/zh-CN.json'
 import hi from './locales/hi.json'
 import es from './locales/es.json'
 import fr from './locales/fr.json'
+import ar from './locales/ar.json'
 import bn from './locales/bn.json'
 import pt from './locales/pt.json'
 import ru from './locales/ru.json'
@@ -52,6 +53,7 @@ const AUTHORED_CATALOGS: Record<string, { translation: Record<string, unknown> }
   hi: { translation: hi },
   es: { translation: es },
   fr: { translation: fr },
+  ar: { translation: ar },
   bn: { translation: bn },
   pt: { translation: pt },
   ru: { translation: ru },

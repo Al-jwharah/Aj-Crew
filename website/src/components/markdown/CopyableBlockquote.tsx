@@ -171,7 +171,7 @@ export function CopyableBlockquote({ node, children }: { node?: HastElement; chi
   const label = copied ? i18nT('components.blockquote.copied') : i18nT('components.blockquote.copy')
   return (
     <InsideBlockquote.Provider value={nested || copyable}>
-      <blockquote data-sourcepos={typeof sourcepos === 'string' ? sourcepos : undefined} className={`border-l-[3px] border-accent pl-3 my-2 text-muted italic${copyable ? ' group/quote relative pr-7' : ''}`}>
+      <blockquote dir="auto" data-sourcepos={typeof sourcepos === 'string' ? sourcepos : undefined} className={`border-s-[3px] border-accent ps-3 my-2 text-muted italic${copyable ? ' group/quote relative pe-7' : ''}`}>
         {children}
         {copyable && copyFailed && (
           <>
@@ -188,7 +188,7 @@ export function CopyableBlockquote({ node, children }: { node?: HastElement; chi
           <button
             type="button"
             data-testid="blockquote-copy"
-            className={`absolute top-0 right-0 p-1 rounded not-italic text-muted hover:text-text hover:bg-bg-hover cursor-pointer opacity-0 group-hover/quote:opacity-100 focus-visible:opacity-100 transition-opacity ${HOVER_NONE_ACTION_BTN_CLS}`}
+            className={`absolute top-0 end-0 p-1 rounded not-italic text-muted hover:text-text hover:bg-bg-hover cursor-pointer opacity-0 group-hover/quote:opacity-100 focus-visible:opacity-100 transition-opacity ${HOVER_NONE_ACTION_BTN_CLS}`}
             onClick={copy}
             title={label}
             aria-label={label}

@@ -134,7 +134,7 @@ class TestUiLanguageSection:
         write purpose pills — and the Slack/Discord task titles derived from
         them — in the unsupported language, durably (purposes persist in
         session history and are inherited by forked sessions)."""
-        for tag in ("ar", "th", "zz", "tlh"):
+        for tag in ("he", "th", "zz", "tlh"):
             _seed_language(tag)
             ctx = _builder(tmp_path).build_session_context()
             assert "[UI LANGUAGE]" not in ctx, f"non-catalog {tag!r} was injected"
@@ -304,7 +304,7 @@ class TestNormalizeUiLanguageTag:
     """
 
     def test_a_shipped_tag_is_returned_verbatim(self):
-        for tag in ("en", "zh-CN", "ja", "pt"):
+        for tag in ("en", "zh-CN", "ar", "ja", "pt"):
             assert normalize_ui_language_tag(tag) == tag
 
     def test_surrounding_whitespace_is_tolerated(self):
@@ -313,7 +313,7 @@ class TestNormalizeUiLanguageTag:
     def test_a_shape_valid_tag_with_no_catalog_is_refused(self):
         # Steering a model to a language the chrome cannot render puts two
         # languages on one screen, so "shape-valid" is not enough.
-        assert normalize_ui_language_tag("ar") == ""
+        assert normalize_ui_language_tag("he") == ""
 
     def test_the_dev_pseudolocale_is_refused(self):
         # Generated accent-and-bracket text is not a language a model can write.

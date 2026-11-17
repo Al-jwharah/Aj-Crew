@@ -534,7 +534,7 @@ export default function SidePanelLayout({ title, tabs, defaultTab, rememberKey, 
                 <div key={t.key} role="listitem">
                   {t.dividerBefore && <div className="h-px bg-border mx-2.5 my-2" role="separator" />}
                   <button
-                    className={`flex items-center gap-2.5 w-full px-2.5 py-2.5 ${COARSE_TOUCH_TARGET} rounded-md text-[14px] text-left font-medium cursor-pointer border-none bg-transparent text-text transition-colors hover:bg-bg-hover`}
+                    className={`flex items-center gap-2.5 w-full px-2.5 py-2.5 ${COARSE_TOUCH_TARGET} rounded-md text-[14px] text-start font-medium cursor-pointer border-none bg-transparent text-text transition-colors hover:bg-bg-hover`}
                     onClick={() => setTab(t.key)}
                   >
                     {t.tile
@@ -543,7 +543,7 @@ export default function SidePanelLayout({ title, tabs, defaultTab, rememberKey, 
                     <span className="flex-1 min-w-0 truncate">{t.label}</span>
                     {t.dot && <span className="w-2 h-2 bg-accent rounded-full shrink-0" role="status" aria-label={t.dotLabel ?? i18nT('components.sidePanelLayout.update_available')} />}
                     <TabCountBadge badge={t.badge} />
-                    <ChevronRight size={15} className="text-muted-strong shrink-0" />
+                    <ChevronRight size={15} className="text-muted-strong shrink-0 rtl:scale-x-[-1]" />
                   </button>
                 </div>
               ))
@@ -597,7 +597,7 @@ export default function SidePanelLayout({ title, tabs, defaultTab, rememberKey, 
 
   return (
     <div className="flex-1 min-h-0 flex overflow-hidden">
-      {!isMobile && <nav className="side-panel-glass w-[200px] shrink-0 border-r border-border bg-bg pt-1 pb-3 px-3 flex flex-col">
+      {!isMobile && <nav className="side-panel-glass w-[200px] shrink-0 border-e border-border bg-bg pt-1 pb-3 px-3 flex flex-col">
           <div data-testid="side-panel-nav-title" className="text-sm font-semibold text-muted px-2.5 py-2 mb-1 shrink-0">{title}</div>
           {/* Pinned sidebar-top slot: stays put while the tab list scrolls. The
             * dropdown it may open renders full-rail-width and downward (dock
@@ -620,7 +620,7 @@ export default function SidePanelLayout({ title, tabs, defaultTab, rememberKey, 
                 </div>
               )}
               <button
-                className={`flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md text-[13px] text-left font-medium cursor-pointer border-none transition-all ${
+                className={`flex items-center gap-2.5 w-full px-2.5 py-2 rounded-md text-[13px] text-start font-medium cursor-pointer border-none transition-all ${
                   tab === t.key
                     ? 'bg-accent-subtle text-accent'
                     : 'bg-transparent text-muted hover:text-text hover:bg-bg-hover'
@@ -636,9 +636,9 @@ export default function SidePanelLayout({ title, tabs, defaultTab, rememberKey, 
                       {t.icon}
                     </span>}
                 {t.label}
-                {t.dot && <span className="ml-auto w-2 h-2 bg-accent rounded-full shrink-0" role="status" aria-label={t.dotLabel ?? i18nT('components.sidePanelLayout.update_available')} />}
+                {t.dot && <span className="ms-auto w-2 h-2 bg-accent rounded-full shrink-0" role="status" aria-label={t.dotLabel ?? i18nT('components.sidePanelLayout.update_available')} />}
                 {/* The dot, when present, already holds the row's right edge. */}
-                <TabCountBadge badge={t.badge} className={t.dot ? '' : 'ml-auto'} />
+                <TabCountBadge badge={t.badge} className={t.dot ? '' : 'ms-auto'} />
               </button>
             </React.Fragment>
           ))}

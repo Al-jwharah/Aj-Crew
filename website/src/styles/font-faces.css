@@ -304,6 +304,22 @@
        local('NirmalaUI-Bold'), local('Vrinda Bold');
   unicode-range: U+0980-09FF;
 }
+@font-face {
+  font-family: 'KC Arabic Fallback';
+  font-style: normal; font-weight: 400;
+  src: local('Geeza Pro'), local('GeezaPro'), local('Noto Sans Arabic'),
+       local('NotoSansArabic-Regular'), local('Segoe UI'), local('SegoeUI'),
+       local('Tahoma'), local('Arial'), local('ArialMT');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+@font-face {
+  font-family: 'KC Arabic Fallback';
+  font-style: normal; font-weight: 700;
+  src: local('Geeza Pro Bold'), local('GeezaPro-Bold'), local('Noto Sans Arabic Bold'),
+       local('NotoSansArabic-Bold'), local('Segoe UI Bold'), local('SegoeUI-Bold'),
+       local('Tahoma Bold'), local('Tahoma-Bold'), local('Arial Bold'), local('Arial-BoldMT');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+}
 /* ── Straight ASCII quotes (U+0022 " and U+0027 ') ──
    Space Grotesk — the default body face — has no straight-quote glyph: it draws
    both code points as its CLOSING curly form, so a straight quote in UI copy, or

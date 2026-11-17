@@ -1530,6 +1530,7 @@ function ChatInput({
             playwright/composer-paste-highlight-scrollbar.spec.ts the second. */}
         <textarea
           ref={composedTextareaRef}
+          dir="auto"
           aria-label={inputAriaLabel ?? i18nT('components.chatInput.message_input')}
           data-composer-input=""
           spellCheck={spellCheck}
@@ -1635,7 +1636,7 @@ function ChatInput({
             still and the text column opens above them. */}
         <div data-testid="composer-bottom-row" className={inlineToolbar ? 'contents' : `flex items-center justify-between px-2.5 pb-2 pt-0.5${terminal.active ? ' flex-wrap gap-y-1' : ''}`}>
           {typingLock && <TypingLockBanner lock={typingLock} />}
-          <div ref={leftClusterRef} className={`flex items-center gap-0.5 min-w-0${inlineToolbar ? ' order-first pl-1.5 shrink-0 relative z-[1]' : ''}${typingLocked ? ' hidden' : ''}`}>
+          <div ref={leftClusterRef} className={`flex items-center gap-0.5 min-w-0${inlineToolbar ? ' order-first ps-1.5 shrink-0 relative z-[1]' : ''}${typingLocked ? ' hidden' : ''}`}>
             <AttachMenu plus={plus} onUploadFiles={onUploadFiles} uploading={uploading} onCancelUpload={onCancelUpload} uploadCount={uploadCount} uploadSlot={uploadSlot} directFilePicker={directFilePicker} fileInputId={fileInputId} openPicker={openPicker} isMac={isMac} touchInput={touchInput} onScreenshot={onScreenshot} collapseMenuRow={collapseMenuRow} typedCommandMenus={typedCommandMenus && !terminal.active} onFileSelect={terminal.active ? undefined : onFileSelect} optimizeRow={busyOptimizeRow} appActionRows={appActions.rows} />
             {directFilePicker && collapsible && (
               /* The repo's own overflow mechanism, not a second spelling of it.
@@ -1743,7 +1744,7 @@ function ChatInput({
             )}
             {isMobile && afterApprovalMode}
           </div>
-          <div ref={rightClusterRef} className={`flex items-center gap-1 shrink-0${terminal.active ? ' ml-auto max-w-full justify-end [&>button]:shrink-0' : ''}${inlineToolbar ? ' order-last pr-1.5' : ''}`}>
+          <div ref={rightClusterRef} className={`flex items-center gap-1 shrink-0${terminal.active ? ' ms-auto max-w-full justify-end [&>button]:shrink-0' : ''}${inlineToolbar ? ' order-last pe-1.5' : ''}`}>
             {onVoiceToggle && !typingLocked && (
               <MicButton voiceHoldMode={voiceHoldMode} voiceRecording={voiceRecording} micIsModeSwitch={micIsModeSwitch} transcribeInFlight={transcribeInFlight} micHeldElsewhere={micHeldElsewhere} micBlocked={micBlocked} toggleVoiceMode={toggleVoiceMode} onVoiceToggle={onVoiceToggle} onVoicePrewarm={onVoicePrewarm} disabled={disabled} optimizing={optimizing} micLabel={micLabel} micKeyShortcuts={micKeyShortcuts} />
             )}

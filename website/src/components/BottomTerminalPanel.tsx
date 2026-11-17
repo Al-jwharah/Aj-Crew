@@ -213,7 +213,7 @@ function TabChip({ tab, active, closing = false, hintId, closeActions, onSelect,
           // `--bg` in both default themes; the utilities outspecify the bare
           // global `:focus-visible` rule, and the offset is restated so the
           // extent stays the 4px the strip's gutter reserves.
-          className={`group relative flex items-center gap-1.5 h-8 pl-3 pr-1.5 rounded-full cursor-pointer shrink-0 max-w-[240px] select-none border transition-colors ${
+          className={`group relative flex items-center gap-1.5 h-8 ps-3 pe-1.5 rounded-full cursor-pointer shrink-0 max-w-[240px] select-none border transition-colors ${
             editing ? 'bg-transparent border-transparent text-text'
               : active ? 'bg-bg-elevated border-border text-text-strong shadow-sm' : 'bg-transparent border-transparent text-muted hover:text-text hover:bg-bg-hover focus-visible:outline-2 focus-visible:outline-muted focus-visible:outline-offset-2'
           } ${closing ? 'opacity-60' : ''}`}
@@ -781,7 +781,7 @@ export function TerminalDetachedBar() {
     <div className="shrink-0 flex items-center gap-2 h-9 px-3 border-t border-border bg-bg text-[12.5px] text-muted">
       <TerminalSquare size={13} className="shrink-0 opacity-80" />
       <span className="min-w-0 truncate">{i18nT('components.bottomTerminalPanel.terminal_is_in_its_own_window')}</span>
-      <div className="flex items-center gap-1.5 ml-auto shrink-0">
+      <div className="flex items-center gap-1.5 ms-auto shrink-0">
         <button
           className="h-6 px-2 rounded-md text-[12px] text-muted hover:text-text hover:bg-bg-hover transition-colors bg-transparent border-none cursor-pointer"
           onClick={() => focusTerminalPopout()}
@@ -948,7 +948,7 @@ export default function BottomTerminalPanel() {
           key={motionKey}
           ref={panelRef}
           data-testid="bottom-terminal-panel"
-          className={`overflow-hidden bg-bg ${fullscreen ? 'absolute inset-0 z-[51]' : isRight ? 'shrink-0' : 'min-h-0'} ${isRight ? 'border-l border-border' : 'border-t border-border'}`}
+          className={`overflow-hidden bg-bg ${fullscreen ? 'absolute inset-0 z-[51]' : isRight ? 'shrink-0' : 'min-h-0'} ${isRight ? 'border-s border-border' : 'border-t border-border'}`}
           /* Docked, the bottom dock takes its full height at once and slides in
              with a transform: animating `height` re-laid out the whole shell and
              refit xterm on every frame; the right dock slides its width. In
@@ -983,7 +983,7 @@ export default function BottomTerminalPanel() {
               {/* group-active: a pressed style is what makes Chromium treat the grip as a touch target */}
               <div className={`absolute transition-colors duration-200 group-active/drag:bg-accent-hover ${
                 isRight
-                  ? `inset-y-0 left-0 w-[2px] ${dragging ? 'bg-accent' : 'bg-transparent group-hover/drag:bg-accent'}`
+                  ? `inset-y-0 start-0 w-[2px] ${dragging ? 'bg-accent' : 'bg-transparent group-hover/drag:bg-accent'}`
                   : `inset-x-0 top-0 h-[2px] ${dragging ? 'bg-accent' : 'bg-transparent group-hover/drag:bg-accent'}`
               }`} />
             </div>

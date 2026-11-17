@@ -36,8 +36,8 @@
      same reason, fixing the straight-quote glyph (#6374) in every UI language.
      It is sans-only: the mono stacks resolve to JetBrains Mono, whose straight
      quotes are already correct. */
-  --script-fallbacks:'KC Straight Quotes','KC Kana Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback';
-  --script-fallbacks-mono:'KC Kana Mono Fallback','KC Kana Fallback','KC Hangul Mono Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback';
+  --script-fallbacks:'KC Straight Quotes','KC Kana Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
+  --script-fallbacks-mono:'KC Kana Mono Fallback','KC Kana Fallback','KC Hangul Mono Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
   /* An installed theme pack fills --theme-font-sans / --theme-font-mono with its
      own faces (see hooks/themeCss.ts). Reading them here means code surfaces
      follow a pack's monospace face without the user having to switch the whole UI
@@ -62,8 +62,8 @@ html:lang(zh-CN) {
      aliases follow it: Japanese and Korean CONTENT under a Chinese UI (#13085)
      otherwise falls to the OS cascade and renders as tofu. They carry no Han
      range, so they never override the leading Simplified Han face. */
-  --script-fallbacks:'KC Straight Quotes','KC Han Fallback','KC Kana Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback';
-  --script-fallbacks-mono:'KC Han Mono Fallback','KC Han Fallback','KC Kana Mono Fallback','KC Kana Fallback','KC Hangul Mono Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback';
+  --script-fallbacks:'KC Straight Quotes','KC Han Fallback','KC Kana Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
+  --script-fallbacks-mono:'KC Han Mono Fallback','KC Han Fallback','KC Kana Mono Fallback','KC Kana Fallback','KC Hangul Mono Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
 }
 html:lang(ja) {
   /* Never retain the SC aliases here. If no named Japanese face is installed,
@@ -71,8 +71,8 @@ html:lang(ja) {
      'KC Japanese Fallback' covers kana but NOT Hangul, so the Hangul-only alias
      follows it: Korean content under a Japanese UI (#13085) would otherwise be
      tofu. No Han range on it, so the leading Japanese face still wins Han. */
-  --script-fallbacks:'KC Straight Quotes','KC Japanese Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback';
-  --script-fallbacks-mono:'KC Japanese Mono Fallback','KC Japanese Fallback','KC Hangul Mono Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback';
+  --script-fallbacks:'KC Straight Quotes','KC Japanese Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
+  --script-fallbacks-mono:'KC Japanese Mono Fallback','KC Japanese Fallback','KC Hangul Mono Fallback','KC Hangul Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
 }
 html:lang(ko) {
   /* Never retain the SC or JP aliases here. Neither draws Hangul, so leaving one
@@ -80,8 +80,8 @@ html:lang(ko) {
      'KC Korean Fallback' covers Hangul but NOT kana, so the kana-only alias
      follows it: Japanese content under a Korean UI (#13085) would otherwise be
      tofu. No Han range on it, so the leading Korean face still wins Han. */
-  --script-fallbacks:'KC Straight Quotes','KC Korean Fallback','KC Kana Fallback','KC Devanagari Fallback','KC Bengali Fallback';
-  --script-fallbacks-mono:'KC Korean Mono Fallback','KC Korean Fallback','KC Kana Mono Fallback','KC Kana Fallback','KC Devanagari Fallback','KC Bengali Fallback';
+  --script-fallbacks:'KC Straight Quotes','KC Korean Fallback','KC Kana Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
+  --script-fallbacks-mono:'KC Korean Mono Fallback','KC Korean Fallback','KC Kana Mono Fallback','KC Kana Fallback','KC Devanagari Fallback','KC Bengali Fallback','KC Arabic Fallback';
 }
 /* Dark theme shadows */
 :root,[data-theme="dark"],[data-theme="monokai-dark"],[data-theme="solarized-dark"],[data-theme="amber-dark"],[data-theme="nord-dark"],[data-theme="dracula-dark"],[data-theme="rosepine-dark"],[data-theme="catppuccin-dark"],[data-theme="tokyonight-dark"],[data-theme="gruvbox-dark"],[data-theme="ice-dark"]{

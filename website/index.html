@@ -381,7 +381,10 @@
     // useLanguage.
     try {
       var l = localStorage.getItem('mc-lang');
-      if (l && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$/.test(l)) document.documentElement.lang = l;
+      if (l && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$/.test(l)) {
+        document.documentElement.lang = l;
+        document.documentElement.dir = /^ar(?:-|$)/i.test(l) ? 'rtl' : 'ltr';
+      }
     } catch (e) {}
   </script>
 </head>

@@ -85,6 +85,7 @@ const SCRIPT_PROBES: Record<string, ReadonlyArray<readonly [string, number]>> = 
 const COMMON_ALIASES = [
   'KC Devanagari Fallback',
   'KC Bengali Fallback',
+  'KC Arabic Fallback',
 ] as const
 
 /**

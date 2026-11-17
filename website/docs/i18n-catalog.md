@@ -96,13 +96,14 @@ Catalogs live in `src/i18n/locales/`:
 | `en-XA.json` | generated pseudolocale, dev-only. Not a language. |
 
 Shipped languages, ordered by global speaker count (which is also the picker
-order): `en`, `zh-CN`, `hi`, `es`, `fr`, `bn`, `pt`, `ru`, `de`, `ja`, `ko`, `it`.
+order): `en`, `zh-CN`, `hi`, `es`, `fr`, `ar`, `bn`, `pt`, `ru`, `de`, `ja`, `ko`, `it`.
 
-**Right-to-left languages (Arabic, Urdu) are intentionally not shipped.** The
-layout is built from physical-direction utilities (`pl-*`, `left-*`, `text-left`)
-and unmirrored directional icons, so an RTL catalog would render correct text in a
-visibly wrong shell. Adding one needs `dir="rtl"` plus a logical-property
-conversion (`ps-*`/`pe-*`, `start-*`/`end-*`) first, not just a catalog.
+**Arabic (`ar`) and bidirectional RTL.** `languageDir()` in `src/i18n/languages.ts`
+returns `'rtl'` for `ar` and `'ltr'` otherwise; both the pre-hydration inline
+bootstrap in `index.html` and `LanguageProvider.tsx` synchronize `<html lang>` and
+`<html dir>`. Layout shells use logical CSS properties (`ps-*`/`pe-*`, `ms-*`/`me-*`,
+`start-*`/`end-*`, `border-s`/`border-e`, `text-start`/`text-end`), prose blocks
+carry `dir="auto"`, and code, diff, and terminal surfaces isolate as `dir="ltr"`.
 
 Adding a language is a **data change**: four edits, no component or test changes.
 
@@ -472,14 +473,14 @@ container tolerates it.
 ## Script fonts: keep the aliases first
 
 `src/styles/font-faces.css` declares `@font-face` aliases carrying `unicode-range`
-for Han, Kana, Hangul, Devanagari and Bengali; `src/styles/design-tokens.css`
+for Han, Kana, Hangul, Devanagari, Bengali and Arabic; `src/styles/design-tokens.css`
 collects them into `--script-fallbacks` and
 `--script-fallbacks-mono`, and puts **that token first** in `--font-body` and
 `--mono`. The range restriction is what makes this safe: the aliases are never
 consulted for Latin or general punctuation, so they cannot change Latin metrics
 or leading, and they are a no-op when the named face is not installed.
 
-The `:root` tokens carry only the non-Han script aliases (Devanagari, Bengali).
+The `:root` tokens carry only the non-Han script aliases (Kana, Hangul, Devanagari, Bengali, Arabic).
 Regional Han faces are scoped with `html:lang(zh-CN)`, `html:lang(ja)`, and
 `html:lang(ko)` so untagged CJK in an English UI reaches the browser/OS
 locale-aware cascade instead of being forced through Simplified Chinese glyph

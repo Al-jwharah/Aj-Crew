@@ -945,6 +945,7 @@ export default function CliPanel({ sessionId, cwd, remoteSlot, chatSlot, visible
     // it matches the xterm canvas: a pack that gives the terminal its own
     // background no longer gets a frame of the app --bg around the terminal.
     <div
+      dir="ltr"
       className="flex flex-col w-full h-full overflow-hidden px-3 pt-2"
       style={{ background: 'var(--term-bg, var(--bg))' }}
     >

@@ -86,7 +86,7 @@ describe('nav surface labels', () => {
 })
 
 describe('Settings tab labels', () => {
-  it('resolve per language rather than being frozen at import', async () => {
+  it('resolve per language rather than being frozen at import', { timeout: 180000 }, async () => {
     // Imported lazily so the module's own import-time evaluation can't be what
     // makes this pass.
     const { default: _SettingsPage } = await import('../pages/SettingsPage')

@@ -563,7 +563,7 @@ function MdParagraph({ node, children }: React.HTMLAttributes<HTMLParagraphEleme
   // whether the reference ends it or sits mid-sentence. Only such a paragraph
   // gets the slot, so every other paragraph keeps its exact DOM.
   if (holdsSessionRef(node)) return <ParagraphWithNoticeSlot node={node}>{children}</ParagraphWithNoticeSlot>
-  return <p {...sp(node)} className={MD_PARAGRAPH_CLS}>{children}</p>
+  return <p dir="auto" {...sp(node)} className={MD_PARAGRAPH_CLS}>{children}</p>
 }
 
 function ParagraphWithNoticeSlot({ node, children }: { node?: HastElement; children?: React.ReactNode }) {
@@ -572,7 +572,7 @@ function ParagraphWithNoticeSlot({ node, children }: { node?: HastElement; child
   const [slot, setSlot] = useState<HTMLElement | null>(null)
   return (
     <ParagraphNoticeSlotCtx.Provider value={slot}>
-      <p {...sp(node)} className={MD_PARAGRAPH_CLS}>{children}</p>
+      <p dir="auto" {...sp(node)} className={MD_PARAGRAPH_CLS}>{children}</p>
       {/* A `div` so the notices stack as blocks; empty, it takes no height. */}
       <div ref={setSlot} data-paragraph-notices="" />
     </ParagraphNoticeSlotCtx.Provider>
@@ -1465,7 +1465,7 @@ export default memo(function MarkdownRenderer({ content, streaming = false, onFi
 
   if (rawMode) {
     // The raw view is the message's content too: its source is what a message action reads.
-    return <pre data-message-body="" className="text-[13px] font-mono whitespace-pre-wrap break-words leading-relaxed text-muted">{content}</pre>
+    return <pre dir="auto" data-message-body="" className="text-[13px] font-mono whitespace-pre-wrap break-words leading-relaxed text-muted">{content}</pre>
   }
 
   // Root class drives the per-char entrance keyframe (.ft-word descendants

@@ -95,7 +95,7 @@ export function RailBrandToggle({ effectiveCollapsed, toggleNav, avatar, brandin
           brand block makes the row taller. */}
       <button
         type="button"
-        className={`group relative flex items-center gap-2 w-full p-0 bg-transparent border-none cursor-pointer text-left ${effectiveCollapsed ? 'justify-center' : ''}`}
+        className={`group relative flex items-center gap-2 w-full p-0 bg-transparent border-none cursor-pointer text-start ${effectiveCollapsed ? 'justify-center' : ''}`}
         onClick={() => { dismissTip(); toggleNav() }}
         {...pointerProps}
         onMouseEnter={showTip}
@@ -148,11 +148,11 @@ export function RailBrandToggle({ effectiveCollapsed, toggleNav, avatar, brandin
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.18, ease: 'easeOut', delay: 0.12 } }}
               exit={{ opacity: 0, transition: { duration: 0.12, ease: 'easeIn' } }}
-              className="absolute right-0 top-[6px] h-4 flex items-center text-muted pointer-events-none"
+              className="absolute end-0 top-[6px] h-4 flex items-center text-muted pointer-events-none"
             >
               {/* Arrow-to-edge, not a hide-panel glyph: the rail
                   collapses to an icon rail rather than hiding. */}
-              <ArrowLeftToLine size={15} />
+              <ArrowLeftToLine size={15} className="rtl:scale-x-[-1]" />
             </motion.span>
           )}
         </AnimatePresence>

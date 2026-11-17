@@ -181,6 +181,7 @@ PREFERRED_LANGUAGES: dict[str, str] = {
     "hi": "Hindi",
     "es": "Spanish",
     "fr": "French",
+    "ar": "Arabic",
     "bn": "Bengali",
     "pt": "Portuguese",
     "ru": "Russian",
