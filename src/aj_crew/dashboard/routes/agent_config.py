@@ -28,6 +28,15 @@ from aj_crew.dashboard.handlers.mcp_discover import (
     api_mcp_discover_detail,
     api_mcp_discover_install,
 )
+from aj_crew.dashboard.handlers.subscriptions import (
+    api_perplexity_mcp_query,
+    api_subscriptions_begin,
+    api_subscriptions_complete,
+    api_subscriptions_delete,
+    api_subscriptions_refresh_models,
+    api_subscriptions_save,
+    api_subscriptions_status,
+)
 
 
 def register(app: web.Application) -> None:
@@ -49,6 +58,13 @@ def register(app: web.Application) -> None:
     # dropped first. A POST because it mutates spawn-path state: the GET above may
     # only report the divergence, which is what ``restart_required`` is for.
     app.router.add_post("/api/acp-backends/recheck", api_acp_backend_recheck)
+    app.router.add_get("/api/subscriptions", api_subscriptions_status)
+    app.router.add_post("/api/subscriptions/begin", api_subscriptions_begin)
+    app.router.add_post("/api/subscriptions/complete", api_subscriptions_complete)
+    app.router.add_post("/api/subscriptions/save", api_subscriptions_save)
+    app.router.add_delete("/api/subscriptions/{provider}", api_subscriptions_delete)
+    app.router.add_post("/api/subscriptions/refresh-models", api_subscriptions_refresh_models)
+    app.router.add_post("/api/perplexity-mcp/query", api_perplexity_mcp_query)
     app.router.add_get("/api/config/ajcrew", handlers.api_ajcrew_config)
     app.router.add_put("/api/config/ajcrew", handlers.api_ajcrew_config)
     app.router.add_patch("/api/config/ajcrew", handlers.api_ajcrew_config_patch)

@@ -1,0 +1,244 @@
+[
+  {
+    "agent_capabilities": {
+      "loadSession": true,
+      "mcpCapabilities": {
+        "http": true,
+        "sse": false
+      },
+      "sessionCapabilities": {
+        "close": {}
+      }
+    },
+    "agent_version": "1.0.0",
+    "frame": "response",
+    "id": 1,
+    "protocol_version": 1
+  },
+  {
+    "action": "skip",
+    "frame": "_kiro/mcp/status",
+    "params": {
+      "servers": [],
+      "sessionId": "native-668a51efb44e410a"
+    }
+  },
+  {
+    "config_options": [
+      {
+        "category": "model",
+        "currentValue": "auto",
+        "id": "model",
+        "name": "Model",
+        "options": [
+          {
+            "name": "Auto (Active Provider Default)",
+            "value": "auto"
+          },
+          {
+            "name": "Loopback OpenAI: loopback-test-model",
+            "value": "openai/loopback-test-model"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "category": "thought_level",
+        "currentValue": "auto",
+        "id": "effort",
+        "name": "Reasoning Effort",
+        "options": [
+          {
+            "name": "Auto",
+            "value": "auto"
+          },
+          {
+            "name": "Off",
+            "value": "off"
+          },
+          {
+            "name": "Minimal",
+            "value": "minimal"
+          },
+          {
+            "name": "Low",
+            "value": "low"
+          },
+          {
+            "name": "Medium",
+            "value": "medium"
+          },
+          {
+            "name": "High",
+            "value": "high"
+          },
+          {
+            "name": "Xhigh",
+            "value": "xhigh"
+          },
+          {
+            "name": "Max",
+            "value": "max"
+          }
+        ],
+        "type": "select"
+      }
+    ],
+    "frame": "response",
+    "id": 2,
+    "modes": {
+      "advertised": true,
+      "current": "ajcrew",
+      "ids": [
+        "default",
+        "ajcrew"
+      ]
+    },
+    "session_id": "native-668a51efb44e410a"
+  },
+  {
+    "frame": "response",
+    "id": 3
+  },
+  {
+    "frame": "response",
+    "id": 4
+  },
+  {
+    "action": "update",
+    "events": [
+      {
+        "kind": "tool_call",
+        "raw_tool_params": {
+          "path": "probe.txt"
+        },
+        "title": "fs_read",
+        "tool_call_id": "call_live_1",
+        "tool_identity_trusted": true,
+        "tool_input": "{\n  \"path\": \"probe.txt\"\n}",
+        "tool_kind": "read",
+        "tool_name": "fs_read",
+        "wire_title": "fs_read"
+      }
+    ],
+    "frame": "session/update",
+    "session_update": "tool_call"
+  },
+  {
+    "action": "permission",
+    "events": [
+      {
+        "kind": "permission_request",
+        "mcp_identity_trusted": true,
+        "options": [
+          {
+            "id": "allow_once",
+            "label": "Allow"
+          },
+          {
+            "id": "reject_once",
+            "label": "Deny"
+          }
+        ],
+        "raw_params_trusted": true,
+        "raw_tool_params": {
+          "path": "probe.txt"
+        },
+        "request_id": 1000,
+        "shell_classified": true,
+        "title": "fs_read",
+        "tool_call_id": "call_live_1",
+        "tool_input": "{\n  \"path\": \"probe.txt\"\n}",
+        "tool_kind": "read",
+        "tool_name": "fs_read"
+      }
+    ],
+    "frame": "session/request_permission",
+    "recorded_options": {
+      "always": "allow_once",
+      "once": "allow_once",
+      "reject": "reject_once"
+    }
+  },
+  {
+    "action": "update",
+    "events": [
+      {
+        "kind": "tool_result",
+        "tool_call_id": "call_live_1",
+        "tool_final": true,
+        "tool_output": "1: jewel-ready",
+        "tool_output_bytes": 14,
+        "tool_output_digest": "593603a27e66764dfa8ab651723363e7370f6b21d2d7bf53d947ac0e920032a4",
+        "tool_status": "completed"
+      }
+    ],
+    "frame": "session/update",
+    "session_update": "tool_call_update"
+  },
+  {
+    "action": "update",
+    "events": [
+      {
+        "kind": "thinking_chunk",
+        "text": "File read succeeded."
+      }
+    ],
+    "frame": "session/update",
+    "session_update": "agent_thought_chunk",
+    "text_chunk": {
+      "text": "File read succeeded.",
+      "thinking": true
+    }
+  },
+  {
+    "action": "update",
+    "events": [
+      {
+        "kind": "text_chunk",
+        "text": "Probe file contents: jewel-ready."
+      }
+    ],
+    "frame": "session/update",
+    "session_update": "agent_message_chunk",
+    "text_chunk": {
+      "text": "Probe file contents: jewel-ready.",
+      "thinking": false
+    }
+  },
+  {
+    "frame": "response",
+    "id": 5,
+    "prompt_tokens": [
+      106,
+      20,
+      0,
+      0
+    ],
+    "stop_reason": "end_turn"
+  },
+  {
+    "action": "update",
+    "events": [
+      {
+        "kind": "text_chunk",
+        "text": "Compaction complete."
+      }
+    ],
+    "frame": "session/update",
+    "session_update": "agent_message_chunk",
+    "text_chunk": {
+      "text": "Compaction complete.",
+      "thinking": false
+    }
+  },
+  {
+    "frame": "response",
+    "id": 6,
+    "stop_reason": "end_turn"
+  },
+  {
+    "frame": "response",
+    "id": 7
+  }
+]

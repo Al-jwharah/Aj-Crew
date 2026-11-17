@@ -49,6 +49,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_PI,
     ACP_BACKEND_PROCESS_NAMES,
     ACP_BACKEND_STRANDS,
@@ -503,6 +504,11 @@ def _probe_strands() -> BackendInstallState:
     return state
 
 
+def _probe_native() -> BackendInstallState:
+    """Aj Crew's built-in Python ACP engine ships inside this package and needs no CLI."""
+    return BackendInstallState(ACP_BACKEND_NATIVE, _policy_id(ACP_BACKEND_NATIVE), INSTALLED)
+
+
 #: Backend id -> its probe. A probe that answers by calling :func:`probe_backend`
 #: for ANOTHER backend must also be named in :func:`forget_probe`, in BOTH
 #: directions: its own entry is a copy, so evicting the copy alone rebuilds it from
@@ -526,6 +532,7 @@ _PROBES: Dict[str, Callable[[], BackendInstallState]] = {
     },
     # Self-served, plus a Python environment the shared probe cannot see.
     ACP_BACKEND_STRANDS: _probe_strands,
+    ACP_BACKEND_NATIVE: _probe_native,
 }
 
 

@@ -38,6 +38,7 @@ from aj_crew.acp.harness.deepseek import DeepseekLaunch
 from aj_crew.acp.harness.goose import GooseLaunch
 from aj_crew.acp.harness.kas import KasHarness
 from aj_crew.acp.harness.kiro import KiroHarness
+from aj_crew.acp.harness.native import NativeHarness
 from aj_crew.acp.harness.opencode import OpencodeLaunch
 from aj_crew.acp.harness.pi import PiLaunch
 from aj_crew.acp.harness.strands import StrandsLaunch
@@ -49,6 +50,7 @@ from aj_crew.acp.types import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -64,6 +66,7 @@ __all__ = [
     "KasHarness",
     "KiroHarness",
     "LaunchAdapter",
+    "NativeHarness",
     "NotificationAliases",
     "OpencodeLaunch",
     "PiLaunch",
@@ -90,6 +93,7 @@ _HARNESSES: dict[str, type[HarnessAdapter]] = {
     # a harness unreachable to its own tests, and would leave the runtime resolving
     # one that exists on disk but not in the table.
     ACP_BACKEND_CODEX: CodexHarness,
+    ACP_BACKEND_NATIVE: NativeHarness,
 }
 
 

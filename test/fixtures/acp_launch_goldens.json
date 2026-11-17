@@ -134,6 +134,28 @@
     "spawn_label": "kiro-cli acp",
     "stderr_label": "kiro-cli"
   },
+  "native": {
+    "argv": [
+      "/opt/bin/python3",
+      "-m",
+      "aj_crew.acp.native_engine"
+    ],
+    "env_added": {
+      "AJCREW_RUNTIME_AGENT": "ajcrew",
+      "AJCREW_RUNTIME_PYTHON": "<interpreter>",
+      "AJCREW_SCRATCH": "<scratch>",
+      "AJCREW_SPAWNED": "1",
+      "AJCREW_SPAWN_HOME": "<data-home>",
+      "AJCREW_SPAWN_INSTANCE": "<spawn-instance>",
+      "KIRO_CHAT_LOG_FILE": "<scratch-log>",
+      "PATH": "<augmented-path>",
+      "TEMP": "<scratch>",
+      "TMP": "<scratch>",
+      "TMPDIR": "<scratch>"
+    },
+    "env_removed": [],
+    "served_by": "AcpRuntime"
+  },
   "opencode": {
     "argv": [
       "/opt/bin/opencode",

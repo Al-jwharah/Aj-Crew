@@ -5503,7 +5503,7 @@
         "backup_others_on_drive": "このドライブにバックアップしている他のインストール：{{count}}",
         "backup_show_others": "他のインストールのアーカイブを含める",
         "backup_others_truncated": "最初の {{max}} 件の他のインストールのみ表示しています。",
-"backup_archives_truncated": "{{kind}} のアーカイブの一部を一覧表示できませんでした。最新のものが表示されていない可能性があります。",
+        "backup_archives_truncated": "{{kind}} のアーカイブの一部を一覧表示できませんでした。最新のものが表示されていない可能性があります。",
         "backup_shared_note": "2つのインストールで1つのドライブを共有しても、メモリの共有にもセッションの共有にもなりません。各バックアップはある瞬間の個別のアーカイブであり、復元はそのファイルをステージングフォルダーにダウンロードするだけです — ファイルの置き換えは、gateway を停止した状態で自分で行います。",
         "backup_restore_foreign_confirm": "このアーカイブは別のインストール（{{install}}）によってアップロードされました。復元すると、このインストールではなくそのインストールのデータをダウンロードします。それでもダウンロードしますか？",
         "backup_restore_unverified_confirm": "このアーカイブはこのインストール自身のフォルダーに保存されていますが、このインストールにはアップロードした記録がありません。ドライブに書き込める者なら誰でもそのフォルダーを作成できるため、このインストールのものではない可能性があります。それでもダウンロードしますか？",
@@ -12375,7 +12375,7 @@
         "spec_choice_done_resuming": "今後 {{agent}} には {{file}} を使います。セッションを再開しています。後で ajcrew agent pin で変更できます。",
         "spec_choice_done": "今後 {{agent}} には {{file}} を使います。メッセージをもう一度送信して開始してください。後で ajcrew agent pin で変更できます。",
         "spec_choice_failed": "選択を保存できませんでした",
-      "hidden_scratch_folder": "このチャットのフォルダーは以前の実行で作られた一時フォルダーで、もう開けません。このチャットは既定のフォルダーで動作するようになりました。"
+        "hidden_scratch_folder": "このチャットのフォルダーは以前の実行で作られた一時フォルダーで、もう開けません。このチャットは既定のフォルダーで動作するようになりました。"
       },
       "folderPanel": {
         "clear_search": "検索をクリア",
@@ -14932,7 +14932,8 @@
         "card_summary_features": "{{total}} 機能中 {{available}}",
         "card_summary_safety_notes_other": "安全上の注意 {{count}} 件",
         "card_summary_runs_without_asking": "一部のツールは確認なしで実行される場合があります",
-        "missing_agent_summary": "エージェントが見つかりませんか？"
+        "missing_agent_summary": "エージェントが見つかりませんか？",
+        "aj_crew_native": "{{productName}} ネイティブ"
       },
       "debugToolsTab": {
         "overlays_the_chat_with_live_scroll_and_anchor_dia": "チャットにスクロールとアンカーの診断情報をリアルタイムで重ねて表示します",
@@ -15207,6 +15208,25 @@
         "save_failed": "この値を保存できませんでした。もう一度お試しください。",
         "title": "モデルプロバイダー",
         "value_missing": "参照先の値がシークレットにないため、新しい Strands セッションは拒否されます。新しい値を保存するか、削除してください。"
+      },
+      "nativeProviders": {
+        "title": "サブスクリプションと直接プロバイダー",
+        "subtitle": "開いているブラウザセッションに接続リンクを貼り付けて再ログインなしで連携するか、ローカル Ollama の有効化、または暗号化ボールトへの API キー保存を行えます。",
+        "copy_connect_link": "接続リンクをコピー",
+        "copied": "コピー済み",
+        "paste_placeholder": "コールバック URL または API キーを貼り付け",
+        "client_id_placeholder": "OAuth クライアント ID（API キー使用時は任意）",
+        "api_key_placeholder": "API キー（暗号化ボールトに保存）",
+        "base_url_placeholder": "ベース URL",
+        "complete_connect": "接続する",
+        "enable_ollama": "ローカル Ollama を有効化",
+        "save_key": "キーを保存",
+        "disconnect": "接続解除",
+        "connected": "接続済み",
+        "not_connected": "未接続",
+        "refresh_models": "モデルを更新",
+        "models_discovered": "検出されたライブモデル数",
+        "action_failed": "プロバイダー設定を更新できませんでした。"
       }
     },
     "developerPage": {

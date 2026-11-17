@@ -27,6 +27,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -83,7 +84,8 @@ def wrap_user_message(text: str) -> str:
 # that takes a user's mid-turn message but not a deny notice belongs in
 # ``ACP_BACKENDS_STEERING_REQUEST``; the two are read by ``supports_steer`` and
 # ``supports_refusal_steer``.
-ACP_BACKENDS_STEER = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS})
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
+ACP_BACKENDS_STEER = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_NATIVE})
 
 # Backends that take a USER's mid-turn message over a REQUEST whose answer is
 # awaited, rather than kiro-cli's fire-and-forget ``_session/steer``, and that can
@@ -336,6 +338,7 @@ ACP_BACKENDS_STEER_RETRACT = frozenset({ACP_BACKEND_KIRO})
 # deepseek is the one non-member:
 # :data:`ACP_BACKENDS_CONTEXT_RECYCLE` carries the consequence, because deepseek
 # reports no compaction at all, so a decline leaves its context unbounded.
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
 ACP_BACKENDS_COMPACT = frozenset(
     {
         ACP_BACKEND_KIRO,
@@ -346,6 +349,7 @@ ACP_BACKENDS_COMPACT = frozenset(
         ACP_BACKEND_KAS,
         ACP_BACKEND_PI,
         ACP_BACKEND_COPILOT,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -440,6 +444,7 @@ ACP_BACKENDS_INLINE_COMPACTION = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_PI,
         ACP_BACKEND_COPILOT,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -624,6 +629,7 @@ ACP_BACKENDS_LOCAL_CLEAR = frozenset(
         # strands sends every prompt to its model as text in project mode, ``/clear``
         # included, so the dashboard answers it.
         ACP_BACKEND_STRANDS,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -651,7 +657,9 @@ ACP_BACKENDS_LOCAL_CLEAR = frozenset(
 # knows from its own prompt handler, so their other commands keep the prompt
 # path (``ACP_BACKENDS_LOCAL_CLEAR`` covers the ``/clear`` most of them lack). A
 # harness added later stays out until its command handling is checked.
-ACP_BACKENDS_LOCAL_HARNESS_COMMANDS = frozenset({ACP_BACKEND_KAS, ACP_BACKEND_STRANDS})
+ACP_BACKENDS_LOCAL_HARNESS_COMMANDS = frozenset(
+    {ACP_BACKEND_KAS, ACP_BACKEND_STRANDS, ACP_BACKEND_NATIVE}
+)
 
 # Backends whose model-side REFUSAL arrives with a structured reason, not just a
 # stop reason. When the Kiro service's content filter declines a turn, kiro-cli
@@ -714,7 +722,7 @@ ACP_BACKENDS_UNATTRIBUTED_TERMINAL_ERROR = frozenset({ACP_BACKEND_CODEX})
 # turn_completion promptTurnSummaries unit=credit entry (acp_frames/kas/turn-usage-live.jsonl);
 # claude, opencode and goose as token counts on the ``session/prompt`` result's ``usage``
 # (acp_frames/claude/session.jsonl, acp_frames/opencode/session-live.jsonl,
-# acp_frames/goose/turn-live.jsonl).
+# acp_frames/goose/turn-live.jsonl); native in acp_frames/native/session-live.jsonl.
 ACP_BACKENDS_REPORT_USAGE = frozenset(
     {
         ACP_BACKEND_KIRO,
@@ -722,6 +730,7 @@ ACP_BACKENDS_REPORT_USAGE = frozenset(
         ACP_BACKEND_CLAUDE,
         ACP_BACKEND_OPENCODE,
         ACP_BACKEND_GOOSE,
+        ACP_BACKEND_NATIVE,
     }
 )
 

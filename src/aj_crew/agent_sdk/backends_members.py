@@ -20,6 +20,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
 )
@@ -81,6 +82,7 @@ from aj_crew.agent_sdk.backends import (
 # (``internal_secret_missing``). Fail closed until a host-side control-plane transport
 # exists; letting the child read the credential widens the mask, which this set does
 # not decide.
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
 ACP_BACKENDS_MEMBER_CAPABILITIES = frozenset(
     {
         ACP_BACKEND_KIRO,
@@ -89,6 +91,7 @@ ACP_BACKENDS_MEMBER_CAPABILITIES = frozenset(
         ACP_BACKEND_CODEX,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_PI,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -114,7 +117,9 @@ ACP_BACKENDS_MEMBER_CAPABILITIES = frozenset(
 # included, stayed out of the model's tool list while its sibling asked and ran.
 # A saved spec that uses ``disabledTools`` is refused before spawn on a non-member
 # (``capability_tool_limits_unsupported``) rather than run wider than it was saved.
-ACP_BACKENDS_MEMBER_TOOL_LIMITS = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE})
+ACP_BACKENDS_MEMBER_TOOL_LIMITS = frozenset(
+    {ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_NATIVE}
+)
 
 # Backends that honour a crewmate WORKER's single-tool limits. The worker's spec
 # is built per session (``mate_worker.worker_session_spec``), with every tool the
@@ -130,7 +135,8 @@ ACP_BACKENDS_MEMBER_TOOL_LIMITS = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS, 
 # ``test/fixtures/acp_frames/kas/worker-kit-live.jsonl``. A crewmate file's
 # ``excludedTools [shell]``, carried in the worker's customAgents entry, withheld
 # ``shell``: the model listed only the ``read`` tools.
-ACP_BACKENDS_MATE_WORKER_TOOL_LIMITS = frozenset({ACP_BACKEND_KAS})
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
+ACP_BACKENDS_MATE_WORKER_TOOL_LIMITS = frozenset({ACP_BACKEND_KAS, ACP_BACKEND_NATIVE})
 
 # Backends that honour the MCP half of a crewmate WORKER's single-tool limits: a
 # tool switched off with ``disabledTools``, and an ``@server/tool`` or ``@server``
@@ -149,6 +155,7 @@ ACP_BACKENDS_MATE_WORKER_TOOL_LIMITS = frozenset({ACP_BACKEND_KAS})
 # ``@server/tool`` and excluded a third server whole by ``@server``: none of those
 # tools reached the model's tool list while their siblings asked and ran.
 # kiro-cli is not here: it never runs a worker (``ACP_BACKENDS_MATE_WORKER_KIT``).
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
 ACP_BACKENDS_MATE_WORKER_MCP_TOOL_LIMITS = ACP_BACKENDS_MATE_WORKER_TOOL_LIMITS | frozenset(
     {ACP_BACKEND_CLAUDE}
 )
@@ -181,7 +188,10 @@ ACP_BACKENDS_MATE_WORKER_MCP_TOOL_LIMITS = ACP_BACKENDS_MATE_WORKER_TOOL_LIMITS 
 # the worker's ``ajcrew-core`` would run inside the sandbox with the gateway
 # credential hidden by the enforced mask, so its control plane would be refused. A
 # worker allocated on strands is refused before spawn (``capability_harness_unsupported``).
-ACP_BACKENDS_MATE_WORKER_KIT = frozenset({ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX})
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
+ACP_BACKENDS_MATE_WORKER_KIT = frozenset(
+    {ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_NATIVE}
+)
 
 # Backends of the set above whose worker gets its prompt only from the
 # ``[AGENT SYSTEM PROMPT]`` context block: their mirrors project no spec prompt
@@ -417,6 +427,7 @@ ACP_BACKENDS_MEMBER_DISPATCH = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_PI,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -495,6 +506,7 @@ ACP_BACKENDS_MEMBER_PANEL = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_PI,
+        ACP_BACKEND_NATIVE,
     }
 )
 

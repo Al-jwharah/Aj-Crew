@@ -494,6 +494,17 @@ class AgentConfig:
             "the provider's CLI default runs. Ignored by every other backend.",
         ),
     )
+    native_providers: dict[str, dict[str, Any]] = field(
+        default_factory=dict,
+        metadata=_meta(
+            "Native model providers & subscriptions",
+            "Direct model providers and connected subscriptions for the built-in "
+            "'native' ACP engine (ChatGPT, Google Gemini, Perplexity, OpenAI, "
+            "Anthropic, DeepSeek, OpenRouter, Ollama, or custom OpenAI-compatible "
+            "endpoints). Credentials are stored in Aj Crew's encrypted vault and "
+            "referenced only via 'secret://<name>'.",
+        ),
+    )
     sweep_agents_backups: bool = field(
         default=False,
         metadata=_meta(

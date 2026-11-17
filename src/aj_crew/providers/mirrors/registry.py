@@ -37,6 +37,7 @@ from aj_crew.acp_backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -279,6 +280,16 @@ PROJECTIONS: dict[str, McpProjection] = {
             "gap: what is outstanding is only WHERE the code sits, and the RFC schedules "
             "that as a pure relocation of its own so a live harness's projection is not "
             "moved and changed in one diff"
+        ),
+        projection="aj_crew.acp.kas_agents",
+        tracking="docs/request-for-change/rfc-agent-config-mirror.md#5-migration",
+    ),
+    ACP_BACKEND_NATIVE: McpProjection(
+        kind=ProjectionKind.EXTERNAL,
+        reason=(
+            "Aj Crew's built-in Python ACP engine receives the exact governed "
+            "_meta.kiro.customAgents and mcpServers wire projection built by kas_agents, "
+            "enforcing tools, excludedTools, disabledTools, and permissions in-process"
         ),
         projection="aj_crew.acp.kas_agents",
         tracking="docs/request-for-change/rfc-agent-config-mirror.md#5-migration",

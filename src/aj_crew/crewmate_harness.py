@@ -105,7 +105,7 @@ class KasUnavailable(CrewmateHarnessUnavailable):
 
 #: The two harnesses ``tool_gate.label_for`` answers with their raw id; every
 #: other known harness, Kiro CLI included, takes its name from that one map.
-_LABELS = {"kas": "Kiro Agent", "claude": "Claude Code"}
+_LABELS = {"kas": "Kiro Agent", "claude": "Claude Code", "native": "Aj Crew Native"}
 
 
 def harness_label(stored: str) -> str:

@@ -576,3 +576,54 @@ def agent_env_write_refusals(raw: object) -> tuple[str, ...]:
         if reason is not None:
             refusals.append(f"{key!r}: {reason}")
     return tuple(refusals)
+
+
+NATIVE_PROVIDER_KINDS: tuple[str, ...] = (
+    "openai_compat",
+    "chatgpt_oauth",
+    "anthropic",
+    "gemini",
+    "perplexity",
+    "ollama",
+)
+
+
+def coerce_native_providers(raw: object) -> dict[str, dict[str, object]]:
+    """Normalize ``agent.native_providers`` to safe provider metadata dicts.
+
+    Secret values must live in the encrypted vault (referenced via ``secret://`` in
+    ``api_key_ref``); any plaintext non-``secret://`` ``api_key_ref`` is dropped with
+    a warning so raw keys never survive config load.
+    """
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, dict[str, object]] = {}
+    for pid, entry in raw.items():
+        if not isinstance(pid, str) or not pid.strip() or not isinstance(entry, dict):
+            continue
+        clean_id = pid.strip()[:64]
+        kind = str(entry.get("kind") or "openai_compat").strip()
+        if kind not in NATIVE_PROVIDER_KINDS:
+            kind = "openai_compat"
+        base_url = str(entry.get("base_url") or "").strip()
+        api_key_ref = str(entry.get("api_key_ref") or "").strip()
+        if api_key_ref and not api_key_ref.startswith(SECRET_URI_PREFIX):
+            logger.warning(
+                "agent.native_providers[%r].api_key_ref must be a secret:// reference; ignoring value",
+                clean_id,
+            )
+            api_key_ref = ""
+        default_model = str(entry.get("default_model") or "").strip()
+        enabled = bool(entry.get("enabled", True))
+        label = str(entry.get("label") or clean_id).strip()[:80]
+        client_id = str(entry.get("client_id") or "").strip()[:256]
+        out[clean_id] = {
+            "kind": kind,
+            "label": label,
+            "base_url": base_url,
+            "api_key_ref": api_key_ref,
+            "default_model": default_model,
+            "enabled": enabled,
+            **({"client_id": client_id} if client_id else {}),
+        }
+    return out

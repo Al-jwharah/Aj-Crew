@@ -38,6 +38,7 @@ from aj_crew.acp.types import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKENDS_ACP_RUNTIME,
@@ -289,6 +290,7 @@ def test_member_capabilities_are_opt_in() -> None:
             ACP_BACKEND_CODEX,
             ACP_BACKEND_DEEPSEEK,
             ACP_BACKEND_PI,
+            ACP_BACKEND_NATIVE,
         }
     )
     assert ACP_BACKENDS_MEMBER_CAPABILITIES is not ACP_BACKENDS_SESSION_SHARING
@@ -296,7 +298,7 @@ def test_member_capabilities_are_opt_in() -> None:
         source = inspect.getsource(provider.member_tool_limits_supported.fget)
         assert "in ACP_BACKENDS_MEMBER_TOOL_LIMITS" in source
     assert ACP_BACKENDS_MEMBER_TOOL_LIMITS == frozenset(
-        {ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE}
+        {ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_NATIVE}
     )
 
 
@@ -318,7 +320,12 @@ def test_the_mate_worker_takes_the_member_rule() -> None:
         source = inspect.getsource(provider.mate_worker_kit_supported.fget)
         assert "in ACP_BACKENDS_MATE_WORKER_KIT" in source
     assert ACP_BACKENDS_MATE_WORKER_KIT == frozenset(
-        {ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX}
+        {
+            ACP_BACKEND_KAS,
+            ACP_BACKEND_CLAUDE,
+            ACP_BACKEND_CODEX,
+            ACP_BACKEND_NATIVE,
+        }
     )
     assert ACP_BACKENDS_MATE_WORKER_KIT <= ACP_BACKENDS_MEMBER_CAPABILITIES
     assert ACP_BACKEND_KIRO not in ACP_BACKENDS_MATE_WORKER_KIT

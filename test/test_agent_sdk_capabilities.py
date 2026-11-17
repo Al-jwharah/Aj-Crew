@@ -349,6 +349,7 @@ def test_known_membership_is_unchanged_by_the_move() -> None:
         "deepseek",
         "goose",
         "kas",
+        "native",
         "opencode",
         "pi",
         "strands",
@@ -731,6 +732,7 @@ def test_honor_zero_tool_ban_membership_matches_the_rule() -> None:
         sdk_backends.ACP_BACKEND_DEEPSEEK,
         sdk_backends.ACP_BACKEND_PI,
         sdk_backends.ACP_BACKEND_STRANDS,
+        sdk_backends.ACP_BACKEND_NATIVE,
     }
 
 

@@ -64,6 +64,27 @@ describe("resolveDeepLink accepts the local shapes", () => {
     }
     assert.equal(resolveDeepLink(`ajcrew://apps/detail/${"a".repeat(128)}`).ok, true);
   });
+
+  it("auth-complete raises Settings -> Agent Harness after browser subscription connect", () => {
+    assert.deepEqual(resolveDeepLink("ajcrew://auth-complete"), {
+      ok: true,
+      route: "/settings?tab=agent-backend",
+      slotKey: "",
+    });
+    assert.deepEqual(resolveDeepLink("ajcrew://auth-complete?provider=chatgpt"), {
+      ok: true,
+      route: "/settings?tab=agent-backend",
+      slotKey: "",
+    });
+    assert.deepEqual(resolveDeepLink("ajcrew://auth-complete?provider=bad%20id"), {
+      ok: false,
+      reason: "invalid provider",
+    });
+    assert.deepEqual(resolveDeepLink("ajcrew://auth-complete?token=secret"), {
+      ok: false,
+      reason: "unknown query parameter",
+    });
+  });
 });
 
 describe("remote-crew/add fills in the Remote Crew add form", () => {

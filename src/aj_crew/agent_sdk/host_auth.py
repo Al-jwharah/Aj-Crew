@@ -71,6 +71,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -497,6 +498,25 @@ AGENT_AUTH_DECLARATIONS: Tuple[AgentAuthDeclaration, ...] = (
             "`AWS_BEARER_TOKEN_BEDROCK` and `AWS_REGION`), then start a new chat."
         ),
         # Its credential is not the host's: a kiro-cli logout cannot bear on it.
+        host_logout_retires_children=False,
+        entitlement_source=ENTITLEMENT_HOST_VAULT,
+    ),
+    AgentAuthDeclaration(
+        backend=ACP_BACKEND_NATIVE,
+        credential_leaves=(),
+        home_override_env_vars=(),
+        adapter_own_leaves=(),
+        sign_in_remedy=(
+            "Connect a subscription or save a provider key in the Secrets vault under "
+            "Settings -> Agent Harness -> Subscriptions & Direct Providers (or Settings -> Secrets), "
+            "then send your message again."
+        ),
+        signed_out_message=(
+            "The Native harness has no connected subscription or provider key in the Secrets vault. "
+            "Connect ChatGPT, Google Gemini, Perplexity, Local Ollama, or save an API key under "
+            "Settings -> Agent Harness -> Subscriptions & Direct Providers (or Settings -> Secrets), "
+            "then send your message again."
+        ),
         host_logout_retires_children=False,
         entitlement_source=ENTITLEMENT_HOST_VAULT,
     ),

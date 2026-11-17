@@ -31,6 +31,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -109,6 +110,7 @@ from aj_crew.agent_sdk.backends import (
 #   reads no kiro agent spec, so the derived spec cannot express a read-only posture.
 # * pi: Crew's gate extension asks about every call but expresses no read-only
 #   posture.
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
 ACP_BACKENDS_SIDE_READONLY = frozenset(
     {
         ACP_BACKEND_KIRO,
@@ -117,6 +119,7 @@ ACP_BACKENDS_SIDE_READONLY = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_STRANDS,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -289,7 +292,13 @@ ACP_BACKENDS_NATIVE_WORKFLOWS = frozenset({ACP_BACKEND_KAS})
 #: :data:`aj_crew.acp.harness_tool_names.STRANDS_TOOL_IDS_BY_KIRO_TOOL`, for a
 #: call the gate proved is that built-in only.
 ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS = frozenset(
-    {ACP_BACKEND_KAS, ACP_BACKEND_GOOSE, ACP_BACKEND_OPENCODE, ACP_BACKEND_STRANDS}
+    {
+        ACP_BACKEND_KAS,
+        ACP_BACKEND_GOOSE,
+        ACP_BACKEND_OPENCODE,
+        ACP_BACKEND_STRANDS,
+        ACP_BACKEND_NATIVE,
+    }
 )
 
 #: Backends whose session never runs the agent spec's own ``hooks``, so Crew's turn
@@ -438,6 +447,7 @@ ACP_BACKEND_ROUTING: dict = {
     # pi's and deepseek's member. Live capture:
     # ``test/fixtures/acp_frames/strands/permission-deny-allow-live.jsonl``.
     ACP_BACKEND_STRANDS: Routing.VERIFIED_GATE_EXTENSION,
+    ACP_BACKEND_NATIVE: Routing.AGENT_SPEC,
 }
 
 

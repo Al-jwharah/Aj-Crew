@@ -116,7 +116,13 @@ def _kiro_family_backend_is_selected() -> bool:
         from aj_crew.config import AjCrewConfig
 
         backend = AjCrewConfig.load().agent.acp_backend
-        return backend in ACP_BACKENDS_KIRO_FAMILY
+        if backend not in ACP_BACKENDS_KIRO_FAMILY:
+            return False
+        from aj_crew.subscriptions.store import has_active_native_provider
+
+        if has_active_native_provider():
+            return False
+        return True
     except Exception:
         return True
 
@@ -607,11 +613,14 @@ class KiroPrerequisiteService:
             # queued callers. A human Check again keeps ``force=True`` and still
             # bypasses that cache, so the button never returns a stale answer.
             await self._probe(force=not coalesce)
-        elif not self._has_probed:
+        elif not self._has_probed and await asyncio.to_thread(_kiro_family_backend_is_selected):
             # Nothing has resolved yet (warm-up still pending or it failed).
             # One probe here is the boot probe, just arriving late.
             await self._probe()
-        elif await self.identity_changed_since_probe():
+        elif (
+            await asyncio.to_thread(_kiro_family_backend_is_selected)
+            and await self.identity_changed_since_probe()
+        ):
             # The store now names a different account (or none) than the latch
             # describes. This is the one condition under which an ORDINARY poll
             # re-probes: without it the card keeps reporting the account the user

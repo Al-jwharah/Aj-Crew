@@ -679,6 +679,17 @@ class KasHarness(MembershipHarness):
                 )
             )
             if reason:
+                from aj_crew.subscriptions.store import has_active_native_provider
+
+                if not host_auth and await asyncio.to_thread(has_active_native_provider):
+                    from aj_crew.acp.harness.native import NativeHarness
+
+                    logger.info(
+                        "KAS auto-unlock: Kiro sign-in absent (%s) and native providers configured; "
+                        "spawning Aj Crew native engine",
+                        reason,
+                    )
+                    return await NativeHarness().resolve_spawn(ctx)
                 return await self._bundle_spawn_plan(
                     ctx, kas_route_mod.KasRoute(bundle=True, reason=reason)
                 )

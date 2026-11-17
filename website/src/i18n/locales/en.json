@@ -4167,7 +4167,7 @@
         "backup_others_on_drive": "Other installs backing up to this drive: {{count}}",
         "backup_show_others": "Include archives from other installs",
         "backup_others_truncated": "Only the first {{max}} other installs are shown.",
-"backup_archives_truncated": "Some {{kind}} archives could not be listed. The newest may be missing.",
+        "backup_archives_truncated": "Some {{kind}} archives could not be listed. The newest may be missing.",
         "backup_shared_note": "One drive shared by two installs is not shared memory and not shared sessions. Each backup is a separate archive of one point in time, and a restore only downloads that file to a staging folder — you replace files yourself, with the gateway stopped.",
         "backup_restore_foreign_confirm": "This archive was uploaded by another install ({{install}}). Restoring it downloads that install's data, not this install's. Download it anyway?",
         "backup_restore_unverified_confirm": "This archive is stored under this install's own folder, but this install has no record of uploading it. Anything that can write to the drive can create that folder, so it may not be this install's. Download it anyway?",
@@ -8401,7 +8401,8 @@
         "card_summary_safety_notes_one": "{{count}} safety note",
         "card_summary_safety_notes_other": "{{count}} safety notes",
         "card_summary_runs_without_asking": "Some tools may run without asking",
-        "missing_agent_summary": "Don't see an agent?"
+        "missing_agent_summary": "Don't see an agent?",
+        "aj_crew_native": "{{productName}} Native"
       },
       "debugToolsTab": {
         "overlays_the_chat_with_live_scroll_and_anchor_dia": "Overlays the chat with live scroll and anchor diagnostics",
@@ -8457,6 +8458,25 @@
         "save_failed": "Could not save this value. Try again.",
         "title": "Model provider",
         "value_missing": "The value this names is no longer in Secrets, so new Strands sessions are refused. Save a new value, or remove it."
+      },
+      "nativeProviders": {
+        "title": "Subscriptions & Direct Providers",
+        "subtitle": "Paste a connect link into an open browser session without signing in again, enable local Ollama, or store a direct API key in the encrypted vault.",
+        "copy_connect_link": "Copy Connect Link",
+        "copied": "Copied",
+        "paste_placeholder": "Paste callback URL or API key",
+        "client_id_placeholder": "OAuth Client ID (optional when using API key)",
+        "api_key_placeholder": "API key (saved to encrypted vault)",
+        "base_url_placeholder": "Base URL",
+        "complete_connect": "Connect",
+        "enable_ollama": "Enable Local Ollama",
+        "save_key": "Save Key",
+        "disconnect": "Disconnect",
+        "connected": "Connected",
+        "not_connected": "Not connected",
+        "refresh_models": "Refresh Models",
+        "models_discovered": "Live models discovered",
+        "action_failed": "Could not update provider configuration."
       }
     },
     "embedSettingsPage": {

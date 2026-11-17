@@ -789,6 +789,7 @@ def _agent_section_fields(agent_data: dict) -> AgentConfig:
         strands_project_sha256=_strands_str_or_empty(section.get("strands_project_sha256")),
         strands_provider=_strands_str_or_empty(section.get("strands_provider")),
         strands_model=_strands_str_or_empty(section.get("strands_model")),
+        native_providers=_sections.coerce_native_providers(section.get("native_providers")),
         sweep_agents_backups=section.read("sweep_agents_backups", _safe_bool),
         sandbox=section.get("sandbox"),
         sandbox_allow_no_isolation=bool(section.get("sandbox_allow_no_isolation")),

@@ -28,6 +28,7 @@ from aj_crew.acp.client import AcpClient
 from aj_crew.acp.harness import claude as claude_mod
 from aj_crew.acp.harness import codex as codex_harness_mod
 from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp.harness import native as native_harness_mod
 from aj_crew.acp.harness import opencode as opencode_mod
 from aj_crew.acp.harness import pi as pi_mod
 from aj_crew.acp.harness import pi_node as pi_node_mod
@@ -87,6 +88,7 @@ VOLATILE_ENV = {
     "AJCREW_STRANDS_GATE_SESSION": "<nonce>",
     # Under the capture's own home, so the path is the host's.
     "AJCREW_STRANDS_STATE_DIR": "<state-dir>",
+    "AJCREW_NATIVE_KEYS_FILE": "<keys-file>",
     # The pi steer channel: a stem naming the gateway's pid and the launch nonce, and
     # a key minted per launch (``acp.harness.pi_steer``).
     "AJCREW_PI_STEER": "<steer-stem>",
@@ -594,6 +596,9 @@ def _capture_runtime_served(
                 codex_harness_mod, "resolve_spawn_masks", new=AsyncMock(return_value=((), ()))
             ),
             patch.object(codex_harness_mod, "_sandbox_wrapper_generations", return_value=0),
+            patch.object(
+                native_harness_mod, "_resolve_native_python", return_value="/opt/bin/python3"
+            ),
         ]
     )
     stack.extend(extra_patches)

@@ -142,6 +142,18 @@ function resolveDeepLink(raw) {
     return { ok: true, route: `/apps/detail/${encodeURIComponent(name)}`, slotKey: "" };
   }
 
+  if (host === "auth-complete") {
+    if (segments.length) return refuse("unknown route");
+    if (params.length > 1 || (params.length === 1 && params[0] !== "provider")) {
+      return refuse("unknown query parameter");
+    }
+    if (params.length === 1) {
+      const provider = url.searchParams.get("provider") || "";
+      if (!/^[a-z0-9_-]{1,32}$/.test(provider)) return refuse("invalid provider");
+    }
+    return { ok: true, route: "/settings?tab=agent-backend", slotKey: "" };
+  }
+
   if (host === "remote-crew") return resolveRemoteCrewAdd(raw, segments, url.searchParams);
 
   return refuse("unknown route");

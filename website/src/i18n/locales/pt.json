@@ -5815,7 +5815,7 @@
         "backup_others_on_drive": "Outras instalações que fazem backup neste drive: {{count}}",
         "backup_show_others": "Incluir arquivos de outras instalações",
         "backup_others_truncated": "Apenas as primeiras {{max}} outras instalações são mostradas.",
-"backup_archives_truncated": "Não foi possível listar alguns arquivos de {{kind}}. Os mais recentes podem estar faltando.",
+        "backup_archives_truncated": "Não foi possível listar alguns arquivos de {{kind}}. Os mais recentes podem estar faltando.",
         "backup_shared_note": "Um drive compartilhado por duas instalações não é memória compartilhada nem sessões compartilhadas. Cada backup é um arquivo separado de um momento, e uma restauração apenas baixa esse arquivo para uma pasta de preparação — os arquivos você mesmo substitui, com o gateway parado.",
         "backup_restore_foreign_confirm": "Este arquivo foi enviado por outra instalação ({{install}}). Restaurá-lo baixa os dados daquela instalação, não os desta instalação. Baixar mesmo assim?",
         "backup_restore_unverified_confirm": "Este arquivo está guardado na pasta própria desta instalação, mas esta instalação não tem registro de tê-lo enviado. Qualquer um que possa escrever no drive pode criar essa pasta, então talvez ele não seja desta instalação. Baixar mesmo assim?",
@@ -12917,7 +12917,7 @@
         "spec_choice_done_resuming": "A partir de agora {{agent}} usa {{file}}. Iniciando a sessão novamente. Você pode mudar isso depois com ajcrew agent pin.",
         "spec_choice_done": "A partir de agora {{agent}} usa {{file}}. Envie sua mensagem novamente para começar. Você pode mudar isso depois com ajcrew agent pin.",
         "spec_choice_failed": "Não foi possível salvar a escolha",
-      "hidden_scratch_folder": "A pasta deste chat era uma pasta temporária de uma execução anterior e não pode mais ser aberta. O chat agora trabalha na pasta padrão."
+        "hidden_scratch_folder": "A pasta deste chat era uma pasta temporária de uma execução anterior e não pode mais ser aberta. O chat agora trabalha na pasta padrão."
       },
       "folderPanel": {
         "clear_search": "Limpar pesquisa",
@@ -15720,7 +15720,8 @@
         "card_summary_safety_notes_many": "{{count}} avisos de segurança",
         "card_summary_safety_notes_other": "{{count}} avisos de segurança",
         "card_summary_runs_without_asking": "Algumas ferramentas podem rodar sem perguntar",
-        "missing_agent_summary": "Não encontra um agente?"
+        "missing_agent_summary": "Não encontra um agente?",
+        "aj_crew_native": "{{productName}} Nativo"
       },
       "debugToolsTab": {
         "overlays_the_chat_with_live_scroll_and_anchor_dia": "Sobrepõe ao chat um diagnóstico ao vivo de rolagem e âncoras",
@@ -15995,6 +15996,25 @@
         "save_failed": "Não foi possível salvar este valor. Tente de novo.",
         "title": "Provedor de modelos",
         "value_missing": "O valor que isto indica não está mais em Segredos, então novas sessões do Strands são recusadas. Salve um novo valor ou remova-o."
+      },
+      "nativeProviders": {
+        "title": "Assinaturas e provedores diretos",
+        "subtitle": "Cole um link de conexão na sessão aberta do navegador sem fazer login novamente, ative o Ollama local ou salve uma chave de API no cofre criptografado.",
+        "copy_connect_link": "Copiar link de conexão",
+        "copied": "Copiado",
+        "paste_placeholder": "Colar URL de retorno ou chave de API",
+        "client_id_placeholder": "ID do cliente OAuth (opcional ao usar chave de API)",
+        "api_key_placeholder": "Chave de API (salva no cofre criptografado)",
+        "base_url_placeholder": "URL base",
+        "complete_connect": "Conectar",
+        "enable_ollama": "Ativar Ollama local",
+        "save_key": "Salvar chave",
+        "disconnect": "Desconectar",
+        "connected": "Conectado",
+        "not_connected": "Desconectado",
+        "refresh_models": "Atualizar modelos",
+        "models_discovered": "Modelos ao vivo descobertos",
+        "action_failed": "Não foi possível atualizar a configuração do provedor."
       }
     },
     "developerPage": {

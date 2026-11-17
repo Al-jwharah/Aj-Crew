@@ -5503,7 +5503,7 @@
         "backup_others_on_drive": "이 드라이브에 백업하는 다른 설치본: {{count}}",
         "backup_show_others": "다른 설치본의 아카이브 포함",
         "backup_others_truncated": "처음 {{max}}개의 다른 설치본만 표시됩니다.",
-"backup_archives_truncated": "일부 {{kind}} 아카이브를 나열할 수 없습니다. 최신 아카이브가 빠져 있을 수 있습니다.",
+        "backup_archives_truncated": "일부 {{kind}} 아카이브를 나열할 수 없습니다. 최신 아카이브가 빠져 있을 수 있습니다.",
         "backup_shared_note": "두 설치본이 하나의 드라이브를 공유해도 메모리 공유나 세션 공유가 되는 것은 아닙니다. 각 백업은 한 시점의 개별 아카이브이며, 복원은 해당 파일을 스테이징 폴더로 다운로드할 뿐입니다 — 파일은 gateway를 멈춘 상태에서 직접 교체합니다.",
         "backup_restore_foreign_confirm": "이 아카이브는 다른 설치본({{install}})이 업로드했습니다. 복원하면 이 설치본이 아니라 그 설치본의 데이터를 다운로드합니다. 그래도 다운로드하시겠습니까?",
         "backup_restore_unverified_confirm": "이 아카이브는 이 설치본 자체 폴더에 저장되어 있지만, 이 설치본에는 업로드한 기록이 없습니다. 드라이브에 쓸 수 있는 누구나 그 폴더를 만들 수 있으므로, 이 설치본의 것이 아닐 수도 있습니다. 그래도 다운로드하시겠습니까?",
@@ -12375,7 +12375,7 @@
         "spec_choice_done_resuming": "이제부터 {{agent}}에 {{file}}을(를) 사용합니다. 세션을 다시 시작합니다. 나중에 ajcrew agent pin으로 바꿀 수 있습니다.",
         "spec_choice_done": "이제부터 {{agent}}에 {{file}}을(를) 사용합니다. 메시지를 다시 보내 시작하세요. 나중에 ajcrew agent pin으로 바꿀 수 있습니다.",
         "spec_choice_failed": "선택을 저장하지 못했습니다",
-      "hidden_scratch_folder": "이 채팅의 폴더는 이전 실행에서 만든 임시 폴더라 더 이상 열 수 없습니다. 이제 이 채팅은 기본 폴더에서 작업합니다."
+        "hidden_scratch_folder": "이 채팅의 폴더는 이전 실행에서 만든 임시 폴더라 더 이상 열 수 없습니다. 이제 이 채팅은 기본 폴더에서 작업합니다."
       },
       "folderPanel": {
         "clear_search": "검색 지우기",
@@ -14932,7 +14932,8 @@
         "card_summary_features": "기능 {{total}}개 중 {{available}}개",
         "card_summary_safety_notes_other": "안전 참고 {{count}}개",
         "card_summary_runs_without_asking": "일부 도구는 묻지 않고 실행될 수 있음",
-        "missing_agent_summary": "에이전트가 보이지 않나요?"
+        "missing_agent_summary": "에이전트가 보이지 않나요?",
+        "aj_crew_native": "{{productName}} 네이티브"
       },
       "debugToolsTab": {
         "overlays_the_chat_with_live_scroll_and_anchor_dia": "실시간 스크롤 및 앵커 진단 정보를 채팅 위에 표시합니다",
@@ -15207,6 +15208,25 @@
         "save_failed": "이 값을 저장하지 못했습니다. 다시 시도하세요.",
         "title": "모델 제공자",
         "value_missing": "가리키는 값이 시크릿에 더 이상 없어 새 Strands 세션이 거부됩니다. 새 값을 저장하거나 제거하세요."
+      },
+      "nativeProviders": {
+        "title": "구독 및 직접 연결 제공자",
+        "subtitle": "다시 로그인할 필요 없이 열려 있는 브라우저 세션에 연결 링크를 붙여넣거나, 로컬 Ollama를 활성화하거나, 암호화된 보관함에 API 키를 저장하세요.",
+        "copy_connect_link": "연결 링크 복사",
+        "copied": "복사됨",
+        "paste_placeholder": "콜백 주소 또는 API 키 붙여넣기",
+        "client_id_placeholder": "OAuth 클라이언트 ID (API 키 사용 시 선택 사항)",
+        "api_key_placeholder": "API 키 (암호화된 보관함에 저장)",
+        "base_url_placeholder": "기본 주소",
+        "complete_connect": "연결하기",
+        "enable_ollama": "로컬 Ollama 활성화",
+        "save_key": "키 저장",
+        "disconnect": "연결 해제",
+        "connected": "연결됨",
+        "not_connected": "연결 안 됨",
+        "refresh_models": "모델 새로고침",
+        "models_discovered": "실시간 검색된 모델 수",
+        "action_failed": "제공자 구성을 업데이트할 수 없습니다."
       }
     },
     "developerPage": {

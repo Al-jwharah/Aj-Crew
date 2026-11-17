@@ -1419,6 +1419,20 @@ async def api_models(request: web.Request) -> web.Response:
             status=400,
         )
     backend, bundle_route = route
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_NATIVE
+
+    if backend == ACP_BACKEND_NATIVE:
+        from aj_crew.subscriptions.discovery import get_cached_or_discover_models
+
+        refresh = request.query.get("refresh") in ("1", "true")
+        return web.json_response(await get_cached_or_discover_models(refresh=refresh))
+    if backend == ACP_BACKEND_KAS and not await kiro_latched_ready(request):
+        from aj_crew.subscriptions.discovery import get_cached_or_discover_models
+        from aj_crew.subscriptions.store import has_active_native_provider
+
+        if await asyncio.to_thread(has_active_native_provider, cfg):
+            refresh = request.query.get("refresh") in ("1", "true")
+            return web.json_response(await get_cached_or_discover_models(refresh=refresh))
     if backend == ACP_BACKEND_CLAUDE:
         return web.json_response(
             _cc_models(request, configured_default=_scoped_default(cfg, backend))

@@ -411,6 +411,11 @@ ACP_BACKEND_COPILOT = "copilot"
 # VERIFIED RANGE: @strands-agents/cli 0.2.3 over strands-harness 0.3.3 /
 # strands-agents 1.63.0 (``test/fixtures/acp_frames/strands/``).
 ACP_BACKEND_STRANDS = "strands"
+# Aj Crew's own built-in Python ACP engine (``python -m aj_crew.acp.native_engine``):
+# direct multi-provider streaming (OpenAI-compatible, Anthropic, Gemini, Perplexity,
+# DeepSeek, OpenRouter, Ollama) + full ``customAgents`` / MCP governance, zero external
+# CLIs or Kiro account required.
+ACP_BACKEND_NATIVE = "native"
 # The kiro-cli backend is spelled as the empty string throughout, so name it
 # rather than leaving every call site to infer it from "not claude".
 ACP_BACKEND_KIRO = ""
@@ -457,6 +462,7 @@ ACP_BACKENDS_KNOWN: FrozenSet[str] = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_COPILOT,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -474,6 +480,7 @@ ACP_BACKENDS_INDEPENDENT_SETUP: FrozenSet[str] = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_COPILOT,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -602,6 +609,7 @@ BASELINE_SELECTABLE_BACKENDS: FrozenSet[str] = frozenset(
         ACP_BACKEND_GOOSE,
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_COPILOT,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -629,6 +637,7 @@ POLICY_ID_BY_BACKEND: dict = {
     ACP_BACKEND_GOOSE: ACP_BACKEND_GOOSE,
     ACP_BACKEND_DEEPSEEK: ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_COPILOT: ACP_BACKEND_COPILOT,
+    ACP_BACKEND_NATIVE: ACP_BACKEND_NATIVE,
 }
 
 #: The backend a deployment policy may never deny.

@@ -23,6 +23,9 @@ export const ACP_BACKEND_KIRO = 'kiro'
  *  which completes first-run setup on kiro-cli ACP support, not a kiro-cli login. */
 export const ACP_BACKEND_KAS = 'kas'
 
+/** The in-tree Python multiplexed ACP engine (`ACP_BACKEND_NATIVE` on the gateway). */
+export const ACP_BACKEND_NATIVE = 'native'
+
 /** kiro-cli and its KAS relay: the harnesses backed by the Kiro service. */
 export const KIRO_HARNESS_BACKENDS: readonly string[] = [ACP_BACKEND_KIRO, ACP_BACKEND_KAS]
 
@@ -105,6 +108,7 @@ export function acpBackendName(backend: { id: string; policy_id?: string }): str
     case 'opencode': return i18nT('pages.developer.agentBackendTab.opencode')
     case 'pi': return i18nT('pages.developer.agentBackendTab.pi')
     case 'strands': return i18nT('pages.developer.agentBackendTab.strands')
+    case ACP_BACKEND_NATIVE: return i18nT('pages.developer.agentBackendTab.aj_crew_native')
     default: return backend.policy_id || backend.id
   }
 }

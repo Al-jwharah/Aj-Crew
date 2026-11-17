@@ -22,6 +22,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -93,7 +94,7 @@ from aj_crew.agent_sdk.backends import (
 # demux Crew has -- see ``ACP_BACKENDS_ACP_RUNTIME`` -- so Crew opens one process per
 # session and there is no shared session to persist. A harness capability Crew cannot
 # reach is recorded here rather than claimed.
-ACP_BACKENDS_SESSION_SHARING = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_CODEX})
+ACP_BACKENDS_SESSION_SHARING = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_CODEX, ACP_BACKEND_NATIVE})
 
 # Backends served by AcpRuntime + AcpSessionHandle — the kiro-agent family
 # (kiro-cli and KAS) whose single process hosts N sessions via demux.
@@ -139,7 +140,9 @@ ACP_BACKENDS_SESSION_SHARING = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_CODEX})
 # cli.json overlay and takes effort through ``session/set_config_option``. That
 # is why membership here is a statement about the TRANSPORT and nothing else --
 # every kiro-family convention is its own set, and codex is absent from each.
-ACP_BACKENDS_ACP_RUNTIME = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX})
+ACP_BACKENDS_ACP_RUNTIME = frozenset(
+    {ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX, ACP_BACKEND_NATIVE}
+)
 
 # Backends ``AcpClient._spawn`` can construct a session for directly: kiro (the
 # resolve-and-exec branch a backend with no process adapter falls through to)
@@ -212,7 +215,10 @@ ACP_BACKENDS_ACP_CLIENT_SPAWNABLE = frozenset(
 # (set_config_option, then ``session/close`` -> {}, then set_config_option -> Session
 # not found). The real-adapter lane's live test is the anti-drift guard; these
 # captures are the replayed record.
-ACP_BACKENDS_SESSION_EVICTION = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX})
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
+ACP_BACKENDS_SESSION_EVICTION = frozenset(
+    {ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX, ACP_BACKEND_NATIVE}
+)
 
 # Backends on their own ``AcpClient`` whose process starts a fresh conversation in
 # place: ``AcpClient.new_conversation`` closes the old session and opens a new one
@@ -284,6 +290,7 @@ ACP_BACKENDS_HARNESS_OWNED_SESSIONS = frozenset(
         # module's ``session`` option) and restores it on ``session/load`` by id:
         # ``test/fixtures/acp_frames/strands/session-load-live.jsonl``.
         ACP_BACKEND_STRANDS,
+        ACP_BACKEND_NATIVE,
     }
 )
 

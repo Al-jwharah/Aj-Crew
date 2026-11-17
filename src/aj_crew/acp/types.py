@@ -26,6 +26,7 @@ from aj_crew.acp_backends import (  # noqa: F401 - re-exported for existing impo
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKEND_LAUNCH,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -451,6 +452,7 @@ PROVIDER_LABEL_GOOSE = "goose"
 PROVIDER_LABEL_DEEPSEEK = "deepseek"
 PROVIDER_LABEL_COPILOT = "copilot"
 PROVIDER_LABEL_STRANDS = "strands"
+PROVIDER_LABEL_NATIVE = "native"
 
 #: Backend id -> its label. The mapping is what ``provider_label`` resolves
 #: through, so a harness's label and the answer a session persists under are one
@@ -472,6 +474,7 @@ PROVIDER_LABEL_BY_BACKEND: dict = {
     ACP_BACKEND_GOOSE: PROVIDER_LABEL_GOOSE,
     ACP_BACKEND_DEEPSEEK: PROVIDER_LABEL_DEEPSEEK,
     ACP_BACKEND_COPILOT: PROVIDER_LABEL_COPILOT,
+    ACP_BACKEND_NATIVE: PROVIDER_LABEL_NATIVE,
 }
 
 # KAS reads only fs.readTextFile / fs.writeTextFile / terminal from the top

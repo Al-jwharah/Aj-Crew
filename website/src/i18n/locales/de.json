@@ -5659,7 +5659,7 @@
         "backup_others_on_drive": "Andere Installationen, die auf dieses Laufwerk sichern: {{count}}",
         "backup_show_others": "Archive von anderen Installationen einschließen",
         "backup_others_truncated": "Es werden nur die ersten {{max}} anderen Installationen angezeigt.",
-"backup_archives_truncated": "Einige Archive vom Typ {{kind}} konnten nicht aufgelistet werden. Die neuesten fehlen hier möglicherweise.",
+        "backup_archives_truncated": "Einige Archive vom Typ {{kind}} konnten nicht aufgelistet werden. Die neuesten fehlen hier möglicherweise.",
         "backup_shared_note": "Ein Laufwerk, das sich zwei Installationen teilen, bedeutet kein gemeinsames Gedächtnis und keine gemeinsamen Sitzungen. Jede Sicherung ist ein separates Archiv eines Zeitpunkts, und eine Wiederherstellung lädt diese Datei nur in einen Zwischenordner herunter — die Dateien ersetzt du selbst, bei gestopptem Gateway.",
         "backup_restore_foreign_confirm": "Dieses Archiv wurde von einer anderen Installation ({{install}}) hochgeladen. Es wiederherzustellen lädt die Daten jener Installation herunter, nicht die dieser Installation. Trotzdem herunterladen?",
         "backup_restore_unverified_confirm": "Dieses Archiv liegt im eigenen Ordner dieser Installation, aber diese Installation hat keinen Nachweis, es hochgeladen zu haben. Alles, was auf das Laufwerk schreiben kann, kann diesen Ordner anlegen, daher stammt es womöglich nicht von dieser Installation. Trotzdem herunterladen?",
@@ -12646,7 +12646,7 @@
         "spec_choice_done_resuming": "Ab jetzt wird {{file}} für {{agent}} verwendet. Die Sitzung wird neu gestartet. Ändern kannst du das später mit ajcrew agent pin.",
         "spec_choice_done": "Ab jetzt wird {{file}} für {{agent}} verwendet. Sende deine Nachricht erneut, um zu starten. Ändern kannst du das später mit ajcrew agent pin.",
         "spec_choice_failed": "Die Auswahl konnte nicht gespeichert werden",
-      "hidden_scratch_folder": "Der Ordner dieses Chats war ein temporärer Ordner aus einem früheren Lauf und kann nicht mehr geöffnet werden. Der Chat arbeitet jetzt im Standardordner."
+        "hidden_scratch_folder": "Der Ordner dieses Chats war ein temporärer Ordner aus einem früheren Lauf und kann nicht mehr geöffnet werden. Der Chat arbeitet jetzt im Standardordner."
       },
       "folderPanel": {
         "clear_search": "Suche löschen",
@@ -15326,7 +15326,8 @@
         "card_summary_safety_notes_one": "{{count}} Sicherheitshinweis",
         "card_summary_safety_notes_other": "{{count}} Sicherheitshinweise",
         "card_summary_runs_without_asking": "Manche Tools können ohne Rückfrage laufen",
-        "missing_agent_summary": "Fehlt ein Agent?"
+        "missing_agent_summary": "Fehlt ein Agent?",
+        "aj_crew_native": "{{productName}} Nativ"
       },
       "debugToolsTab": {
         "overlays_the_chat_with_live_scroll_and_anchor_dia": "Blendet Live-Diagnose zu Scrollposition und Ankern über dem Chat ein",
@@ -15601,6 +15602,25 @@
         "save_failed": "Der Wert konnte nicht gespeichert werden. Versuche es erneut.",
         "title": "Modellanbieter",
         "value_missing": "Der Wert, auf den das verweist, ist nicht mehr in den Secrets, daher werden neue Strands-Sitzungen abgelehnt. Speichere einen neuen Wert oder entferne ihn."
+      },
+      "nativeProviders": {
+        "title": "Abos und direkte Anbieter",
+        "subtitle": "Füge einen Verbindungslink ohne erneute Anmeldung in deine offene Browsersitzung ein, aktiviere lokales Ollama oder speichere einen API-Schlüssel im verschlüsselten Tresor.",
+        "copy_connect_link": "Verbindungslink kopieren",
+        "copied": "Kopiert",
+        "paste_placeholder": "Callback-Adresse oder API-Schlüssel einfügen",
+        "client_id_placeholder": "OAuth-Client-Kennung (optional bei API-Schlüssel)",
+        "api_key_placeholder": "API-Schlüssel (im verschlüsselten Tresor gespeichert)",
+        "base_url_placeholder": "Basisadresse",
+        "complete_connect": "Verbinden",
+        "enable_ollama": "Lokales Ollama aktivieren",
+        "save_key": "Schlüssel speichern",
+        "disconnect": "Trennen",
+        "connected": "Verbunden",
+        "not_connected": "Nicht verbunden",
+        "refresh_models": "Modelle aktualisieren",
+        "models_discovered": "Verfügbare Modelle erkannt",
+        "action_failed": "Anbieterkonfiguration konnte nicht aktualisiert werden."
       }
     },
     "developerPage": {

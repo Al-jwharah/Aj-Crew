@@ -25,6 +25,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -185,7 +186,8 @@ ACP_BACKENDS_SESSION_MCP_ARRAY: FrozenSet[str] = frozenset(
 # applied. KAS 0.66.43 (kiro-cli 2.32.0) dropped the prompt of every custom
 # agent, JSON or markdown. Below kiro-cli 2.33.1 the relay route still runs, and a
 # new chat gets an upgrade notice (``acp.harness.kas.kas_agent_prompt_issue``).
-ACP_BACKENDS_MARKDOWN_AGENT_SPECS = frozenset({ACP_BACKEND_KAS})
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
+ACP_BACKENDS_MARKDOWN_AGENT_SPECS = frozenset({ACP_BACKEND_KAS, ACP_BACKEND_NATIVE})
 
 # Backends whose agent's MCP SERVERS come from the USER-LEVEL spec alone, so a
 # checkout's same-named spec never puts a server of its own in their session.
@@ -208,7 +210,7 @@ ACP_BACKENDS_MARKDOWN_AGENT_SPECS = frozenset({ACP_BACKEND_KAS})
 # them outside the pool, outside caller-identity attribution and outside broker
 # governance. Read through the runtime's own scope helper, never as "is KAS": a
 # host added later whose servers come from the user level alone joins here.
-ACP_BACKENDS_USER_LEVEL_AGENT_SPECS_ONLY = frozenset({ACP_BACKEND_KAS})
+ACP_BACKENDS_USER_LEVEL_AGENT_SPECS_ONLY = frozenset({ACP_BACKEND_KAS, ACP_BACKEND_NATIVE})
 
 # Backends that never take an agent's grants (``allowedTools``, a server's
 # ``autoApprove``) from the spec FILE: Crew projects the spec onto the wire at
@@ -315,7 +317,10 @@ def overlay_project_scope(backend: str, work_dir: Any) -> dict[str, Any]:
 # via ``_meta.kiro.customAgents``, ``test/fixtures/acp_frames/kas/client-meta-settings-live.jsonl``
 # (same run: the projected probe server's tool ran off the empty array). In each
 # the model called ``@probe/probe_codeword`` and it returned ``tangerine-42``.
-ACP_BACKENDS_SPEC_SERVERS_OFF_WIRE = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS})
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
+ACP_BACKENDS_SPEC_SERVERS_OFF_WIRE = frozenset(
+    {ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_NATIVE}
+)
 
 # Backends on which an agent spec's ``"tools": []`` is honoured as a total ban --
 # no MCP server AND no harness-native tool (Bash, file edit, ...) is callable --
@@ -408,6 +413,7 @@ ACP_BACKENDS_HONOR_ZERO_TOOL_BAN = frozenset(
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_PI,
         ACP_BACKEND_STRANDS,
+        ACP_BACKEND_NATIVE,
     }
 )
 
@@ -634,6 +640,7 @@ ACP_BACKENDS_MCP_RELAUNCH_RELOAD = frozenset({ACP_BACKEND_STRANDS})
 # live capture of a spec-declared server running, so none inherits the claim.
 # Templates Crew owns (default, worker, conductors) are merged by their installer and
 # reach every backend; this set is only about the others.
+# native: captured live in ``test/fixtures/acp_frames/native/session-live.jsonl``.
 ACP_BACKENDS_TEMPLATE_ADDITIONS_AT_SPAWN = frozenset(
-    {ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX}
+    {ACP_BACKEND_KAS, ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_NATIVE}
 )

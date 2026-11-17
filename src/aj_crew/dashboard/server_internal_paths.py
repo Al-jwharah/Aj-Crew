@@ -75,6 +75,11 @@ _STRICT_INTERNAL_API_PATHS = frozenset(
         # ``local_only=False`` deployment reclassifies strict paths as mixed.
         "/api/computer-use/frame",
         "/api/session-keepalive",
+        # Sandboxed SEL audit relay: when ``trust/sel_hmac.key`` is kernel-masked
+        # inside an OS sandbox, ``SecurityEventLog`` posts batches over loopback
+        # with ``X-Internal-Secret`` so the unsandboxed gateway chains and appends
+        # them without ever exposing the HMAC signing key to the sandbox.
+        "/api/internal/sel/record",
         # Session search's Chinese dictionary words for mcp-core (the gateway
         # holds the host's one copy). MCP-only, no browser caller. The handler
         # re-asserts loopback AND ``internal_auth`` itself, because a missing
@@ -249,6 +254,7 @@ _STRICT_INTERNAL_API_PATHS = frozenset(
         # session identity through X-Session-Key, so cookie authentication can
         # never authorize this leaf.
         "/api/autonudge/session-monitor",
+        "/api/perplexity-mcp/query",
     }
     # A shipped built-in app's own agent-facing routes, declared in its host grants
     # (``strict_internal_paths``): leaf paths under that app's own namespace. The seam

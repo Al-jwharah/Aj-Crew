@@ -26,6 +26,7 @@ from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
+    ACP_BACKEND_NATIVE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -315,6 +316,7 @@ ACP_BACKENDS_SELF_SERVED_ACP: FrozenSet[str] = frozenset(ACP_BACKEND_LAUNCH)
 ACP_BACKEND_PROCESS_NAMES: Mapping[str, str] = {
     ACP_BACKEND_KIRO: "kiro-cli",
     ACP_BACKEND_KAS: "kiro-cli",
+    ACP_BACKEND_NATIVE: "native_engine",
     ACP_BACKEND_CLAUDE: "claude-agent-acp",
     ACP_BACKEND_CODEX: "codex-acp",
     ACP_BACKEND_PI: "pi-acp",
