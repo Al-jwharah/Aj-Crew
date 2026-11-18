@@ -1,6 +1,7 @@
 /**
- * Screenshot harness for issue #22582: the Set up Kiro page must name the `unzip`
- * the Linux Kiro CLI installer needs when the gateway host does not have it.
+ * Screenshot harness for issue #22582: the first-run setup page must name the
+ * `unzip` the Linux Kiro CLI installer needs when the gateway host does not have
+ * it.
  *
  * Two states of the first-run gate on a Linux gateway host with Kiro CLI not
  * installed:

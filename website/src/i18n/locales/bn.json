@@ -7985,6 +7985,7 @@
       "unzip_command_debian_ubuntu": "Debian বা Ubuntu",
       "unzip_command_fedora_rhel": "Fedora বা RHEL",
       "install_kiro_cli_then_run_on_host": "তারপর Kiro CLI ইনস্টল করতে {{platform}} গেটওয়ে হোস্টে এই কমান্ডটি চালাও।",
+      "set_up_your_coding_agent": "তোমার কোডিং এজেন্ট সেট আপ করো",
       "setup_intro": "<0>{{platform}} গেটওয়ে হোস্টে</0> একটি কোডিং এজেন্ট চালু করো, তারপর ড্যাশবোর্ড নিজে থেকেই খুলে যাবে।",
       "setup_intro_unknown_platform": "<0>গেটওয়ে হোস্টে</0> একটি কোডিং এজেন্ট চালু করো, তারপর ড্যাশবোর্ড নিজে থেকেই খুলে যাবে।",
       "gateway_host": "গেটওয়ে হোস্ট",

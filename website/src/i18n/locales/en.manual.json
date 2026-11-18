@@ -2966,6 +2966,7 @@
       "unzip_command_debian_ubuntu": "Debian or Ubuntu",
       "unzip_command_fedora_rhel": "Fedora or RHEL",
       "install_kiro_cli_then_run_on_host": "Then run this on the {{platform}} gateway host to install Kiro CLI.",
+      "set_up_your_coding_agent": "Set up your coding agent",
       "setup_intro": "Get a coding agent running on the <0>{{platform}} gateway host</0>, then the dashboard will open automatically.",
       "setup_intro_unknown_platform": "Get a coding agent running on the <0>gateway host</0>, then the dashboard will open automatically.",
       "gateway_host": "Gateway host",

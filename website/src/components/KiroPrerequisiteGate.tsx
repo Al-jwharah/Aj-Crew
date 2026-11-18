@@ -1840,7 +1840,15 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
                 <span>{i18nT('components.kiroPrerequisiteGate.gateway_host')}</span>
               )}
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-text-strong">{i18nT('components.kiroPrerequisiteGate.set_up_kiro')}</h1>
+            {/* The title names what this page can set up. A closed LTS login
+                gate hides the other agents below, so Kiro CLI is the only way
+                through and the title names it; otherwise any agent on this
+                page finishes setup, and a Kiro-only title would be false. */}
+            <h1 className="text-3xl font-bold tracking-tight text-text-strong">
+              {ltsLocked
+                ? i18nT('components.kiroPrerequisiteGate.set_up_kiro')
+                : i18nT('components.kiroPrerequisiteGate.set_up_your_coding_agent')}
+            </h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
               {/* One sentence in one key, so each language orders the host
                   phrase where its grammar puts it. Two keys rather than an

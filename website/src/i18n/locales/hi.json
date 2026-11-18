@@ -7985,6 +7985,7 @@
       "unzip_command_debian_ubuntu": "Debian या Ubuntu",
       "unzip_command_fedora_rhel": "Fedora या RHEL",
       "install_kiro_cli_then_run_on_host": "फिर Kiro CLI इंस्टॉल करने के लिए {{platform}} गेटवे होस्ट पर यह चलाओ।",
+      "set_up_your_coding_agent": "अपना कोडिंग एजेंट सेट अप करो",
       "setup_intro": "<0>{{platform}} गेटवे होस्ट</0> पर एक कोडिंग एजेंट चलाओ, फिर डैशबोर्ड अपने आप खुल जाएगा।",
       "setup_intro_unknown_platform": "<0>गेटवे होस्ट</0> पर एक कोडिंग एजेंट चलाओ, फिर डैशबोर्ड अपने आप खुल जाएगा।",
       "gateway_host": "गेटवे होस्ट",

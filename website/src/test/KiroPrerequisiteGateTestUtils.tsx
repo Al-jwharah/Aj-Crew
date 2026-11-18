@@ -6,6 +6,13 @@
 import type { KiroPrerequisiteStatus } from '../api/client'
 import type { AcpBackendProbe } from '../api/client'
 
+/**
+ * The first-run setup page's title in either form: the neutral one, or the Kiro
+ * one a closed LTS login gate shows. For "no setup page" assertions, where a
+ * check for one title alone would pass with the page drawn under the other.
+ */
+export const SETUP_TITLE = /^Set up (your coding agent|Kiro)$/
+
 export function probe(overrides: Partial<AcpBackendProbe> = {}): AcpBackendProbe {
   return {
     id: 'claude',
