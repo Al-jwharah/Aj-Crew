@@ -6,8 +6,10 @@ verify the install, and how to troubleshoot the failures that actually happen.
 Builds use plain `pip` + `npm`/Vite + `pytest`, driven by the repo-root
 [`Makefile`](../../Makefile). There is no proprietary build tooling.
 
+> **Availability:** Aj Crew does not currently publish a signed desktop installer or other prebuilt releases under its own name. Build from source or build the Docker image locally.
+>
 > **Platforms: macOS, Linux, and Windows.** macOS and Linux use the `Makefile` /
-> `setup.sh` paths below. Windows supports both the signed desktop installer and
+> `setup.sh` paths below. Windows supports the source build and
 > a native Python source install (`.\make.ps1 build`, launched via
 > `.\.venv\Scripts\python.exe -m aj_crew gateway`); all POSIX-only process,
 > signal, file-lock and metrics calls route through `aj_crew.platform_compat`.
