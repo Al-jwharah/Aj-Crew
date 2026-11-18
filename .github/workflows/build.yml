@@ -143,11 +143,12 @@ jobs:
   # (build-wheel's skip then skips this job through `needs`).
   build-windows-installer:
     name: Build Windows Installer (x64)
-    # `ajcrew-runners-windows` larger-runner group, targeted by GROUP not
-    # label; see "The Windows larger-runner group" in
-    # docs/ci/ci-and-reviews.md.
-    runs-on:
-      group: ajcrew-runners-windows
+    # The `ajcrew-runners-windows` larger-runner group, reached by its
+    # `ajcrew-windows-4-core` LABEL and only in the repository that owns the
+    # group. A fork cannot reach an organization group: a bare `group:` there
+    # fails the job at startup ("Required runner group not found"), so every
+    # other repository lands on the hosted image, as build-windows.yml does.
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest' }}
     # Consumes build-wheel's artifact rather than building its own wheel: that
     # job already stages the frontend dist into the package before building, so
     # its wheel is the one users install. Building a second wheel here would add
