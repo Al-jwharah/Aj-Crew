@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ajcrew"
 version = "0.13.0"
-description = "Personal AI agent that runs locally — chat via CLI, dashboard, desktop app, or messaging channels like Slack and Discord"
+description = "Self-hosted multi-agent AI workspace for development and automation"
 readme = "README.md"
 # macOS (x86_64 + arm64) and Linux (x86_64 + aarch64), CPython 3.12-3.13.
 # Must be declared in this [project] table: when it exists, setuptools reads
@@ -20,7 +20,7 @@ requires-python = ">=3.12"
 dynamic = ["dependencies", "optional-dependencies"]
 
 [project.urls]
-Homepage = "https://github.com/Al-jwharah/Aj-Crew"
+Homepage = "https://aljwharah.ai"
 
 [project.scripts]
 ajcrew = "aj_crew._bootstrap:main"
