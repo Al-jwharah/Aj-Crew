@@ -9,6 +9,8 @@ GitHub issue. Instead, report it privately:
   <https://github.com/Al-jwharah/Aj-Crew/security/advisories/new> (GitHub's private
   vulnerability reporting for this repository).
 
+- **Security contact:** [support@aljwharah.ai](mailto:support@aljwharah.ai) (once the mailbox is provisioned).
+
 Please include:
 - A description of the vulnerability
 - Steps to reproduce
@@ -26,8 +28,9 @@ contact, which does not handle reports about this fork:
 
 ## Supported Versions
 
-Only the latest release is actively supported with security patches. We recommend always
-running the most recent version.
+Aj Crew has not yet published an independent stable release. Security fixes are
+currently tracked against the main development branch. No production support
+or patch-response SLA is promised at this stage.
 
 ## Scope
 
