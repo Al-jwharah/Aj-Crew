@@ -4,7 +4,7 @@
   "private": true,
   "license": "Apache-2.0",
   "repository": "https://github.com/Al-jwharah/Aj-Crew",
-  "homepage": "https://github.com/Al-jwharah/Aj-Crew",
+  "homepage": "https://aljwharah.ai",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
